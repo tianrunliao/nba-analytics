@@ -1,0 +1,60 @@
+# Data sources for Phase 1. Every source listed here was probed on 2026-11-18.
+seasons:
+  # Prior-only season: used solely to build the first historical season's pre-season rating.
+  prior: ["2006-07"]
+  # From 2007-08: the first season with five-man lineup data (needed for player values).
+  historical: ["2007-08", "2008-09", "2009-10", "2010-11", "2011-12", "2012-13",
+               "2013-14", "2014-15", "2015-16", "2016-17", "2017-18", "2018-19", "2019-20",
+               "2020-21", "2021-22", "2022-23", "2023-24", "2024-25", "2025-26"]
+  # Current season: raw schedule snapshot only in Phase 1 (not modelled).
+  current: "2026-27"
+
+nba_stats:
+  season_type: "Regular Season"
+  request_timeout_s: 60
+  sleep_between_requests_s: 1.0
+  max_retries: 3
+  retry_backoff_s: 5.0
+
+injury_reports:
+  # Regular-season pre-game snapshots are fetched for these seasons. The archive itself
+  # starts in 2018-19 (2018-12-15 missing, 2019-01-15 present when probed).
+  regular_season_seasons: ["2019-20", "2020-21", "2021-22", "2022-23", "2023-24", "2024-25", "2025-26"]
+  # Snapshot before each team's first playoff game, for these seasons.
+  playoff_start_seasons: ["2018-19", "2019-20", "2020-21", "2021-22", "2022-23", "2023-24",
+                          "2024-25", "2025-26"]
+  base_url: "https://ak-static.cms.nba.com/referee/injury/Injury-Report_"
+  # URL naming switch (ET wall-clock), taken from nbainjuries 1.1.1 _util.py:
+  # before new_start the files are hourly (e.g. 05PM, published at 17:30 ET);
+  # from new_start they are quarter-hourly (e.g. 05_30PM, published at 17:30 ET).
+  new_start_et: "2025-12-22T09:00"
+  # How many earlier slots to try when the slot right before tip-off is missing.
+  max_slot_lookback: 6
+  sleep_between_requests_s: 1.0
+  request_timeout_s: 30
+  user_agent: "Mozilla/5.0"
+
+wikidata:
+  sparql_url: "https://query.wikidata.org/sparql"
+  user_agent: "nba-dynamic-sos-research/0.1"
+
+# Validation checks that are expected to fail for a documented reason. They are reported
+# as warnings with the reason; any other failure of an error-level check stops the build.
+known_exceptions:
+  "2012-13":
+    equal_games_per_team: "BOS-IND on 2013-04-16 was cancelled after the Boston Marathon bombing and never played"
+    game_count: "BOS-IND on 2013-04-16 was cancelled after the Boston Marathon bombing and never played"
+  "2019-20":
+    equal_games_per_team: "COVID-19 suspension; season finished with 22 teams in the Orlando bubble (64-75 games)"
+    game_count: "COVID-19 suspension; season finished with 22 teams in the Orlando bubble (64-75 games)"
+
+# NBA Cup knockout stage for seasons whose knockout games are not in the schedule yet
+# (Emirates NBA Cup 101, https://www.nba.com/news/nba-cup-101, updated 2026-10-28):
+# semifinals at the higher seed's arena from 2026-27 (Las Vegas, neutral, 2023-24..2025-26);
+# the 22 non-qualifiers play two extra games on Dec 6-7 and Dec 9-10, the two quarterfinal
+# losers of each conference play each other on Dec 7, 9 or 10. Earlier seasons take these
+# dates and venues from their (completed) schedules.
+nba_cup:
+  "2026-27":
+    semifinal_home_court: true
+    extra_game_dates: ["2026-12-06", "2026-12-09"]

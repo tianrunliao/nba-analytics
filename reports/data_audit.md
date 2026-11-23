@@ -1,0 +1,857 @@
+# 数据审计报告（Phase 1）
+
+生成时间（UTC）：2026-11-22T01:46:04+00:00
+
+本报告由 `python -m nba_sos.pipeline build` 自动生成，所有数字来自 `data/raw/` 中的原始快照。
+
+## 1. 数据来源与抓取时间
+
+| name | season | fetched_at | bytes |
+|---|---|---|---|
+| league_game_log | 2006-07 | 2026-11-22T00:59:42+00:00 | 388826.000 |
+| league_game_log | 2007-08 | 2026-11-22T00:59:53+00:00 | 388144.000 |
+| league_game_log | 2008-09 | 2026-11-22T01:00:10+00:00 | 388238.000 |
+| league_game_log | 2009-10 | 2026-11-22T01:00:29+00:00 | 388193.000 |
+| league_game_log | 2010-11 | 2026-11-22T01:00:45+00:00 | 388025.000 |
+| league_game_log | 2011-12 | 2026-11-22T01:01:04+00:00 | 312325.000 |
+| league_game_log | 2012-13 | 2026-11-19T00:57:24+00:00 | 388199.000 |
+| league_game_log | 2013-14 | 2026-11-19T00:57:36+00:00 | 388687.000 |
+| league_game_log | 2014-15 | 2026-11-19T00:58:02+00:00 | 388694.000 |
+| league_game_log | 2015-16 | 2026-11-19T00:58:28+00:00 | 388189.000 |
+| league_game_log | 2016-17 | 2026-11-19T00:58:55+00:00 | 388707.000 |
+| league_game_log | 2017-18 | 2026-11-19T00:59:16+00:00 | 388839.000 |
+| league_game_log | 2018-19 | 2026-11-19T00:59:35+00:00 | 389812.000 |
+| league_game_log | 2019-20 | 2026-11-19T01:00:00+00:00 | 335838.000 |
+| league_game_log | 2020-21 | 2026-11-18T21:03:01+00:00 | 342535.000 |
+| league_game_log | 2021-22 | 2026-11-18T21:03:09+00:00 | 389996.000 |
+| league_game_log | 2022-23 | 2026-11-18T21:03:19+00:00 | 390233.000 |
+| league_game_log | 2023-24 | 2026-11-18T21:03:28+00:00 | 390337.000 |
+| league_game_log | 2024-25 | 2026-11-18T21:03:38+00:00 | 390900.000 |
+| league_game_log | 2025-26 | 2026-11-18T21:03:48+00:00 | 391239.000 |
+| player_advanced | 2007-08 | 2026-11-22T01:00:08+00:00 | 171630.000 |
+| player_advanced | 2008-09 | 2026-11-22T01:00:27+00:00 | 169550.000 |
+| player_advanced | 2009-10 | 2026-11-22T01:00:43+00:00 | 168489.000 |
+| player_advanced | 2010-11 | 2026-11-22T01:01:02+00:00 | 172200.000 |
+| player_advanced | 2011-12 | 2026-11-22T01:01:20+00:00 | 181797.000 |
+| player_advanced | 2012-13 | 2026-11-22T01:01:28+00:00 | 178780.000 |
+| player_advanced | 2013-14 | 2026-11-19T01:38:26+00:00 | 183876.000 |
+| player_advanced | 2014-15 | 2026-11-19T01:38:31+00:00 | 187897.000 |
+| player_advanced | 2015-16 | 2026-11-19T01:38:33+00:00 | 182369.000 |
+| player_advanced | 2016-17 | 2026-11-19T01:38:37+00:00 | 186554.000 |
+| player_advanced | 2017-18 | 2026-11-19T01:38:42+00:00 | 207325.000 |
+| player_advanced | 2018-19 | 2026-11-19T01:38:46+00:00 | 204339.000 |
+| player_advanced | 2019-20 | 2026-11-19T01:38:50+00:00 | 204200.000 |
+| player_advanced | 2020-21 | 2026-11-19T01:38:55+00:00 | 208584.000 |
+| player_advanced | 2021-22 | 2026-11-19T01:38:58+00:00 | 232834.000 |
+| player_advanced | 2022-23 | 2026-11-19T01:39:02+00:00 | 208241.000 |
+| player_advanced | 2023-24 | 2026-11-19T01:39:05+00:00 | 220635.000 |
+| player_advanced | 2024-25 | 2026-11-19T01:39:07+00:00 | 219900.000 |
+| player_advanced | 2025-26 | 2026-11-19T01:39:10+00:00 | 225301.000 |
+| player_game_logs | 2007-08 | 2026-11-22T00:59:56+00:00 | 9509515.000 |
+| player_game_logs | 2008-09 | 2026-11-22T01:00:14+00:00 | 9409740.000 |
+| player_game_logs | 2009-10 | 2026-11-22T01:00:32+00:00 | 9488045.000 |
+| player_game_logs | 2010-11 | 2026-11-22T01:00:50+00:00 | 9627240.000 |
+| player_game_logs | 2011-12 | 2026-11-22T01:01:09+00:00 | 7889740.000 |
+| player_game_logs | 2012-13 | 2026-11-22T01:01:22+00:00 | 9796829.000 |
+| player_game_logs | 2013-14 | 2026-11-19T00:57:45+00:00 | 9783100.000 |
+| player_game_logs | 2014-15 | 2026-11-19T00:58:11+00:00 | 9922104.000 |
+| player_game_logs | 2015-16 | 2026-11-19T00:58:38+00:00 | 9963750.000 |
+| player_game_logs | 2016-17 | 2026-11-19T00:58:58+00:00 | 10027599.000 |
+| player_game_logs | 2017-18 | 2026-11-19T00:59:19+00:00 | 10015151.000 |
+| player_game_logs | 2018-19 | 2026-11-19T00:59:44+00:00 | 10023624.000 |
+| player_game_logs | 2019-20 | 2026-11-19T01:00:03+00:00 | 8578379.000 |
+| player_game_logs | 2020-21 | 2026-11-19T01:00:18+00:00 | 8835241.000 |
+| player_game_logs | 2021-22 | 2026-11-18T21:03:12+00:00 | 9737281.000 |
+| player_game_logs | 2022-23 | 2026-11-18T21:03:22+00:00 | 9948180.000 |
+| player_game_logs | 2023-24 | 2026-11-18T21:03:31+00:00 | 9878941.000 |
+| player_game_logs | 2024-25 | 2026-11-18T21:03:41+00:00 | 10110969.000 |
+| player_game_logs | 2025-26 | 2026-11-18T21:03:51+00:00 | 10249351.000 |
+| player_per100 | 2007-08 | 2026-11-22T01:00:09+00:00 | 137617.000 |
+| player_per100 | 2008-09 | 2026-11-22T01:00:28+00:00 | 135865.000 |
+| player_per100 | 2009-10 | 2026-11-22T01:00:44+00:00 | 134990.000 |
+| player_per100 | 2010-11 | 2026-11-22T01:01:03+00:00 | 138074.000 |
+| player_per100 | 2011-12 | 2026-11-22T01:01:21+00:00 | 146235.000 |
+| player_per100 | 2012-13 | 2026-11-22T01:01:29+00:00 | 143688.000 |
+| player_per100 | 2013-14 | 2026-11-19T01:38:29+00:00 | 147646.000 |
+| player_per100 | 2014-15 | 2026-11-19T01:38:32+00:00 | 150998.000 |
+| player_per100 | 2015-16 | 2026-11-19T01:38:35+00:00 | 146221.000 |
+| player_per100 | 2016-17 | 2026-11-19T01:38:38+00:00 | 149605.000 |
+| player_per100 | 2017-18 | 2026-11-19T01:38:44+00:00 | 166183.000 |
+| player_per100 | 2018-19 | 2026-11-19T01:38:49+00:00 | 163328.000 |
+| player_per100 | 2019-20 | 2026-11-19T01:38:52+00:00 | 163131.000 |
+| player_per100 | 2020-21 | 2026-11-19T01:38:57+00:00 | 166720.000 |
+| player_per100 | 2021-22 | 2026-11-19T01:39:01+00:00 | 186622.000 |
+| player_per100 | 2022-23 | 2026-11-19T01:39:04+00:00 | 166471.000 |
+| player_per100 | 2023-24 | 2026-11-19T01:39:06+00:00 | 176614.000 |
+| player_per100 | 2024-25 | 2026-11-19T01:39:08+00:00 | 175788.000 |
+| player_per100 | 2025-26 | 2026-11-19T01:39:11+00:00 | 179845.000 |
+| playoff_game_log | 2007-08 | 2026-11-22T01:00:03+00:00 | 27491.000 |
+| playoff_game_log | 2008-09 | 2026-11-22T01:00:23+00:00 | 27126.000 |
+| playoff_game_log | 2009-10 | 2026-11-22T01:00:38+00:00 | 26180.000 |
+| playoff_game_log | 2010-11 | 2026-11-22T01:00:58+00:00 | 25869.000 |
+| playoff_game_log | 2011-12 | 2026-11-22T01:01:15+00:00 | 26811.000 |
+| playoff_game_log | 2012-13 | 2026-11-22T01:01:23+00:00 | 27116.000 |
+| playoff_game_log | 2013-14 | 2026-11-19T00:57:56+00:00 | 28594.000 |
+| playoff_game_log | 2014-15 | 2026-11-19T00:58:22+00:00 | 26256.000 |
+| playoff_game_log | 2015-16 | 2026-11-19T00:58:49+00:00 | 27838.000 |
+| playoff_game_log | 2016-17 | 2026-11-19T00:59:10+00:00 | 25529.000 |
+| playoff_game_log | 2017-18 | 2026-11-19T00:59:30+00:00 | 26548.000 |
+| playoff_game_log | 2018-19 | 2026-11-19T00:59:55+00:00 | 26537.000 |
+| playoff_game_log | 2019-20 | 2026-11-19T01:00:11+00:00 | 26550.000 |
+| playoff_game_log | 2020-21 | 2026-11-19T01:00:19+00:00 | 27086.000 |
+| playoff_game_log | 2021-22 | 2026-11-19T01:00:24+00:00 | 27905.000 |
+| playoff_game_log | 2022-23 | 2026-11-19T01:00:27+00:00 | 26931.000 |
+| playoff_game_log | 2023-24 | 2026-11-19T01:00:32+00:00 | 26452.000 |
+| playoff_game_log | 2024-25 | 2026-11-19T01:00:35+00:00 | 27240.000 |
+| playoff_game_log | 2025-26 | 2026-11-19T01:00:39+00:00 | 27663.000 |
+| playoff_player_game_logs | 2004-05 | 2026-11-22T01:09:03+00:00 | 568314.000 |
+| playoff_player_game_logs | 2005-06 | 2026-11-22T01:09:06+00:00 | 596924.000 |
+| playoff_player_game_logs | 2006-07 | 2026-11-22T01:09:08+00:00 | 538563.000 |
+| playoff_player_game_logs | 2007-08 | 2026-11-22T01:00:07+00:00 | 613132.000 |
+| playoff_player_game_logs | 2008-09 | 2026-11-22T01:00:26+00:00 | 604107.000 |
+| playoff_player_game_logs | 2009-10 | 2026-11-22T01:00:42+00:00 | 579371.000 |
+| playoff_player_game_logs | 2010-11 | 2026-11-22T01:01:01+00:00 | 559864.000 |
+| playoff_player_game_logs | 2011-12 | 2026-11-22T01:01:18+00:00 | 605577.000 |
+| playoff_player_game_logs | 2012-13 | 2026-11-22T01:01:27+00:00 | 613493.000 |
+| playoff_player_game_logs | 2013-14 | 2026-11-19T00:58:01+00:00 | 661410.000 |
+| playoff_player_game_logs | 2014-15 | 2026-11-19T00:58:27+00:00 | 572516.000 |
+| playoff_player_game_logs | 2015-16 | 2026-11-19T00:58:53+00:00 | 662892.000 |
+| playoff_player_game_logs | 2016-17 | 2026-11-19T00:59:15+00:00 | 603112.000 |
+| playoff_player_game_logs | 2017-18 | 2026-11-19T00:59:33+00:00 | 601463.000 |
+| playoff_player_game_logs | 2018-19 | 2026-11-19T00:59:59+00:00 | 614904.000 |
+| playoff_player_game_logs | 2019-20 | 2026-11-19T01:00:16+00:00 | 588181.000 |
+| playoff_player_game_logs | 2020-21 | 2026-11-19T01:00:23+00:00 | 645981.000 |
+| playoff_player_game_logs | 2021-22 | 2026-11-19T01:00:26+00:00 | 657979.000 |
+| playoff_player_game_logs | 2022-23 | 2026-11-19T01:00:31+00:00 | 600922.000 |
+| playoff_player_game_logs | 2023-24 | 2026-11-19T01:00:34+00:00 | 587345.000 |
+| playoff_player_game_logs | 2024-25 | 2026-11-19T01:00:37+00:00 | 630708.000 |
+| playoff_player_game_logs | 2025-26 | 2026-11-19T01:00:41+00:00 | 673324.000 |
+| playoff_team_advanced | 2007-08 | 2026-11-22T01:00:05+00:00 | 48587.000 |
+| playoff_team_advanced | 2008-09 | 2026-11-22T01:00:25+00:00 | 48171.000 |
+| playoff_team_advanced | 2009-10 | 2026-11-22T01:00:41+00:00 | 46204.000 |
+| playoff_team_advanced | 2010-11 | 2026-11-22T01:01:00+00:00 | 45803.000 |
+| playoff_team_advanced | 2011-12 | 2026-11-22T01:01:17+00:00 | 47474.000 |
+| playoff_team_advanced | 2012-13 | 2026-11-22T01:01:25+00:00 | 47552.000 |
+| playoff_team_advanced | 2013-14 | 2026-11-19T00:57:58+00:00 | 50115.000 |
+| playoff_team_advanced | 2014-15 | 2026-11-19T00:58:25+00:00 | 45669.000 |
+| playoff_team_advanced | 2015-16 | 2026-11-19T00:58:51+00:00 | 48574.000 |
+| playoff_team_advanced | 2016-17 | 2026-11-19T00:59:12+00:00 | 44407.000 |
+| playoff_team_advanced | 2017-18 | 2026-11-19T00:59:32+00:00 | 46245.000 |
+| playoff_team_advanced | 2018-19 | 2026-11-19T00:59:57+00:00 | 46237.000 |
+| playoff_team_advanced | 2019-20 | 2026-11-19T01:00:14+00:00 | 46693.000 |
+| playoff_team_advanced | 2020-21 | 2026-11-19T01:00:22+00:00 | 47519.000 |
+| playoff_team_advanced | 2021-22 | 2026-11-19T01:00:25+00:00 | 48889.000 |
+| playoff_team_advanced | 2022-23 | 2026-11-19T01:00:29+00:00 | 47125.000 |
+| playoff_team_advanced | 2023-24 | 2026-11-19T01:00:33+00:00 | 46040.000 |
+| playoff_team_advanced | 2024-25 | 2026-11-19T01:00:36+00:00 | 47582.000 |
+| playoff_team_advanced | 2025-26 | 2026-11-19T01:00:40+00:00 | 48209.000 |
+| schedule | 2006-07 | 2026-11-22T00:59:50+00:00 | 2888594.000 |
+| schedule | 2007-08 | 2026-11-22T01:00:01+00:00 | 3049212.000 |
+| schedule | 2008-09 | 2026-11-22T01:00:20+00:00 | 3525934.000 |
+| schedule | 2009-10 | 2026-11-22T01:00:36+00:00 | 3536880.000 |
+| schedule | 2010-11 | 2026-11-22T01:00:55+00:00 | 3604058.000 |
+| schedule | 2011-12 | 2026-11-22T01:01:12+00:00 | 2856436.000 |
+| schedule | 2012-13 | 2026-11-19T00:57:33+00:00 | 3679127.000 |
+| schedule | 2013-14 | 2026-11-19T00:57:52+00:00 | 3785508.000 |
+| schedule | 2014-15 | 2026-11-19T00:58:19+00:00 | 3829670.000 |
+| schedule | 2015-16 | 2026-11-19T00:58:46+00:00 | 3738703.000 |
+| schedule | 2016-17 | 2026-11-19T00:59:06+00:00 | 3684701.000 |
+| schedule | 2017-18 | 2026-11-19T00:59:27+00:00 | 3611733.000 |
+| schedule | 2018-19 | 2026-11-19T00:59:52+00:00 | 3865561.000 |
+| schedule | 2019-20 | 2026-11-19T01:00:08+00:00 | 3155633.000 |
+| schedule | 2020-21 | 2026-11-18T21:03:06+00:00 | 3390028.000 |
+| schedule | 2021-22 | 2026-11-18T21:03:16+00:00 | 3764623.000 |
+| schedule | 2022-23 | 2026-11-18T21:03:26+00:00 | 3933640.000 |
+| schedule | 2023-24 | 2026-11-18T21:03:35+00:00 | 4422539.000 |
+| schedule | 2024-25 | 2026-11-18T21:03:45+00:00 | 4416252.000 |
+| schedule | 2025-26 | 2026-11-18T21:03:56+00:00 | 4435106.000 |
+| schedule_snapshot | 2026-27 | 2026-11-22T01:08:44+00:00 | 4120289.000 |
+| standings | 2006-07 | 2026-11-22T00:59:52+00:00 | 17598.000 |
+| standings | 2007-08 | 2026-11-22T01:00:02+00:00 | 17594.000 |
+| standings | 2008-09 | 2026-11-22T01:00:22+00:00 | 17549.000 |
+| standings | 2009-10 | 2026-11-22T01:00:37+00:00 | 17569.000 |
+| standings | 2010-11 | 2026-11-22T01:00:57+00:00 | 17536.000 |
+| standings | 2011-12 | 2026-11-22T01:01:14+00:00 | 17319.000 |
+| standings | 2012-13 | 2026-11-19T00:57:35+00:00 | 17556.000 |
+| standings | 2013-14 | 2026-11-19T00:57:55+00:00 | 17582.000 |
+| standings | 2014-15 | 2026-11-19T00:58:21+00:00 | 17542.000 |
+| standings | 2015-16 | 2026-11-19T00:58:48+00:00 | 17538.000 |
+| standings | 2016-17 | 2026-11-19T00:59:09+00:00 | 17574.000 |
+| standings | 2017-18 | 2026-11-19T00:59:29+00:00 | 17525.000 |
+| standings | 2018-19 | 2026-11-19T00:59:54+00:00 | 17577.000 |
+| standings | 2019-20 | 2026-11-19T01:00:10+00:00 | 26530.000 |
+| standings | 2020-21 | 2026-11-18T21:03:08+00:00 | 17361.000 |
+| standings | 2021-22 | 2026-11-18T21:03:18+00:00 | 17476.000 |
+| standings | 2022-23 | 2026-11-18T21:03:27+00:00 | 17449.000 |
+| standings | 2023-24 | 2026-11-18T21:03:37+00:00 | 17438.000 |
+| standings | 2024-25 | 2026-11-18T21:03:47+00:00 | 17632.000 |
+| standings | 2025-26 | 2026-11-18T21:03:57+00:00 | 17996.000 |
+| team_advanced | 2006-07 | 2026-11-22T00:59:45+00:00 | 735535.000 |
+| team_advanced | 2007-08 | 2026-11-22T00:59:54+00:00 | 735226.000 |
+| team_advanced | 2008-09 | 2026-11-22T01:00:13+00:00 | 735189.000 |
+| team_advanced | 2009-10 | 2026-11-22T01:00:31+00:00 | 734960.000 |
+| team_advanced | 2010-11 | 2026-11-22T01:00:48+00:00 | 734735.000 |
+| team_advanced | 2011-12 | 2026-11-22T01:01:07+00:00 | 584695.000 |
+| team_advanced | 2012-13 | 2026-11-19T00:57:25+00:00 | 726049.000 |
+| team_advanced | 2013-14 | 2026-11-19T00:57:37+00:00 | 727664.000 |
+| team_advanced | 2014-15 | 2026-11-19T00:58:03+00:00 | 727473.000 |
+| team_advanced | 2015-16 | 2026-11-19T00:58:29+00:00 | 727626.000 |
+| team_advanced | 2016-17 | 2026-11-19T00:58:56+00:00 | 728682.000 |
+| team_advanced | 2017-18 | 2026-11-19T00:59:17+00:00 | 729975.000 |
+| team_advanced | 2018-19 | 2026-11-19T00:59:36+00:00 | 732436.000 |
+| team_advanced | 2019-20 | 2026-11-19T01:00:01+00:00 | 628531.000 |
+| team_advanced | 2020-21 | 2026-11-18T21:03:02+00:00 | 641257.000 |
+| team_advanced | 2021-22 | 2026-11-18T21:03:10+00:00 | 731581.000 |
+| team_advanced | 2022-23 | 2026-11-18T21:03:20+00:00 | 732794.000 |
+| team_advanced | 2023-24 | 2026-11-18T21:03:30+00:00 | 732592.000 |
+| team_advanced | 2024-25 | 2026-11-18T21:03:39+00:00 | 732562.000 |
+| team_advanced | 2025-26 | 2026-11-18T21:03:49+00:00 | 733392.000 |
+| team_lineups | 2007-08 | 2026-11-22T01:02:41+00:00 | 116644.000 |
+| team_lineups | 2008-09 | 2026-11-22T01:03:53+00:00 | 168852.000 |
+| team_lineups | 2009-10 | 2026-11-22T01:05:03+00:00 | 123768.000 |
+| team_lineups | 2010-11 | 2026-11-22T01:06:16+00:00 | 161051.000 |
+| team_lineups | 2011-12 | 2026-11-22T01:07:27+00:00 | 132514.000 |
+| team_lineups | 2012-13 | 2026-11-22T01:08:41+00:00 | 151025.000 |
+| team_lineups | 2013-14 | 2026-11-19T01:45:23+00:00 | 89815.000 |
+| team_lineups | 2014-15 | 2026-11-19T01:46:43+00:00 | 123647.000 |
+| team_lineups | 2015-16 | 2026-11-19T01:47:17+00:00 | 95948.000 |
+| team_lineups | 2016-17 | 2026-11-19T01:47:51+00:00 | 85752.000 |
+| team_lineups | 2017-18 | 2026-11-19T01:48:25+00:00 | 90164.000 |
+| team_lineups | 2018-19 | 2026-11-19T01:49:02+00:00 | 151459.000 |
+| team_lineups | 2019-20 | 2026-11-19T01:49:41+00:00 | 123984.000 |
+| team_lineups | 2020-21 | 2026-11-19T01:50:16+00:00 | 145898.000 |
+| team_lineups | 2021-22 | 2026-11-19T01:50:52+00:00 | 132465.000 |
+| team_lineups | 2022-23 | 2026-11-19T01:51:31+00:00 | 159912.000 |
+| team_lineups | 2023-24 | 2026-11-19T01:52:08+00:00 | 161825.000 |
+| team_lineups | 2024-25 | 2026-11-19T01:52:43+00:00 | 301331.000 |
+| team_lineups | 2025-26 | 2026-11-19T01:54:11+00:00 | 211389.000 |
+
+
+上游接口不提供逐条记录的更新时间，`fetched_at` 是我们抓取的时间，无法据此还原数据修订历史。历史赛程是最终实际赛程（含改期后日期、NBA Cup 淘汰赛对阵），不是赛季开始时公布的版本。
+
+## 2. 覆盖范围
+
+| season | games | first | last | neutral | source_neutral | teams |
+|---|---|---|---|---|---|---|
+| 2006-07 | 1230 | 2006-10-31 | 2007-04-18 | 0 | 0 | 30 |
+| 2007-08 | 1230 | 2007-10-30 | 2008-04-16 | 0 | 0 | 30 |
+| 2008-09 | 1230 | 2008-10-28 | 2009-04-15 | 0 | 0 | 30 |
+| 2009-10 | 1230 | 2009-10-27 | 2010-04-14 | 0 | 0 | 30 |
+| 2010-11 | 1230 | 2010-10-26 | 2011-04-13 | 2 | 0 | 30 |
+| 2011-12 | 990 | 2011-12-25 | 2012-04-26 | 0 | 0 | 30 |
+| 2012-13 | 1229 | 2012-10-30 | 2013-04-17 | 1 | 0 | 30 |
+| 2013-14 | 1230 | 2013-10-29 | 2014-04-16 | 1 | 0 | 30 |
+| 2014-15 | 1230 | 2014-10-28 | 2015-04-15 | 2 | 0 | 30 |
+| 2015-16 | 1230 | 2015-10-27 | 2016-04-13 | 2 | 0 | 30 |
+| 2016-17 | 1230 | 2016-10-25 | 2017-04-12 | 3 | 0 | 30 |
+| 2017-18 | 1230 | 2017-10-17 | 2018-04-11 | 3 | 0 | 30 |
+| 2018-19 | 1230 | 2018-10-16 | 2019-04-10 | 3 | 0 | 30 |
+| 2019-20 | 1059 | 2019-10-22 | 2020-08-14 | 91 | 0 | 30 |
+| 2020-21 | 1080 | 2020-12-22 | 2021-05-16 | 0 | 0 | 30 |
+| 2021-22 | 1230 | 2021-10-19 | 2022-04-10 | 0 | 0 | 30 |
+| 2022-23 | 1230 | 2022-10-18 | 2023-04-09 | 2 | 0 | 30 |
+| 2023-24 | 1230 | 2023-10-24 | 2024-04-14 | 4 | 0 | 30 |
+| 2024-25 | 1230 | 2024-10-22 | 2025-04-13 | 5 | 5 | 30 |
+| 2025-26 | 1230 | 2025-10-21 | 2026-04-12 | 5 | 5 | 30 |
+
+
+2020-21 只用于计算 2021-22 的赛季前评级（72 场缩水赛季，多数比赛无观众，不用于估计主场优势）。
+
+
+赛程中被排除的非常规赛比赛（按 game_id 前缀：001 季前赛、002 常规赛、003 全明星、004 季后赛、005 附加赛、006 NBA Cup 决赛）：
+
+| season | prefix_001 | prefix_002 | prefix_003 | prefix_004 | prefix_009 | prefix_005 | prefix_006 |
+|---|---|---|---|---|---|---|---|
+| 2006-07 | 122 | 1230 | 8 | 79 | 36 | 0 | 0 |
+| 2007-08 | 120 | 1230 | 8 | 86 | 0 | 0 | 0 |
+| 2008-09 | 115 | 1230 | 7 | 85 | 0 | 0 | 0 |
+| 2009-10 | 119 | 1230 | 3 | 82 | 0 | 0 | 0 |
+| 2010-11 | 119 | 1230 | 3 | 81 | 0 | 0 | 0 |
+| 2011-12 | 30 | 990 | 3 | 84 | 0 | 0 | 0 |
+| 2012-13 | 116 | 1229 | 3 | 85 | 0 | 0 | 0 |
+| 2013-14 | 116 | 1230 | 3 | 89 | 0 | 0 | 0 |
+| 2014-15 | 118 | 1230 | 3 | 81 | 0 | 0 | 0 |
+| 2015-16 | 109 | 1230 | 3 | 86 | 0 | 0 | 0 |
+| 2016-17 | 102 | 1230 | 3 | 79 | 0 | 0 | 0 |
+| 2017-18 | 78 | 1230 | 3 | 82 | 0 | 0 | 0 |
+| 2018-19 | 80 | 1230 | 3 | 82 | 0 | 0 | 0 |
+| 2019-20 | 0 | 1059 | 2 | 83 | 0 | 1 | 0 |
+| 2020-21 | 49 | 1080 | 1 | 85 | 0 | 6 | 0 |
+| 2021-22 | 66 | 1230 | 4 | 87 | 0 | 6 | 0 |
+| 2022-23 | 70 | 1230 | 4 | 84 | 0 | 6 | 0 |
+| 2023-24 | 73 | 1230 | 4 | 82 | 0 | 6 | 1 |
+| 2024-25 | 73 | 1230 | 6 | 84 | 0 | 6 | 1 |
+| 2025-26 | 71 | 1230 | 7 | 85 | 0 | 6 | 1 |
+
+## 3. 验证结果
+
+共 654 项检查，未通过 8 项（错误 0，警告 8）。完整结果见 `reports/validation_results.csv`。
+
+
+未通过或需关注的项目：
+
+| check | season | severity | passed | detail |
+|---|---|---|---|---|
+| possession_source_agreement | 2006-07 | warning | True | max |POSS_home-POSS_away| = 3; equal in 40.1% of games |
+| neutral_flag_source_vs_venue | 2006-07 | warning | True | 0 neutral games; 0 neutral by venue but not flagged by source: [] |
+| possession_source_agreement | 2007-08 | warning | True | max |POSS_home-POSS_away| = 3; equal in 38.0% of games |
+| neutral_flag_source_vs_venue | 2007-08 | warning | True | 0 neutral games; 0 neutral by venue but not flagged by source: [] |
+| venue_timezone_vs_source_local_time | 2007-08 | warning | False | 6 of 1230 disagree, e.g. ['0020700232', '0020700678', '0020700750', '0020700779', '0020700812'] |
+| possession_source_agreement | 2008-09 | warning | True | max |POSS_home-POSS_away| = 3; equal in 36.4% of games |
+| neutral_flag_source_vs_venue | 2008-09 | warning | True | 0 neutral games; 0 neutral by venue but not flagged by source: [] |
+| venue_timezone_vs_source_local_time | 2008-09 | warning | False | 13 of 1230 disagree, e.g. ['0020800076', '0020800275', '0020800388', '0020800521', '0020800579'] |
+| possession_source_agreement | 2009-10 | warning | True | max |POSS_home-POSS_away| = 3; equal in 39.0% of games |
+| neutral_flag_source_vs_venue | 2009-10 | warning | True | 0 neutral games; 0 neutral by venue but not flagged by source: [] |
+| possession_source_agreement | 2010-11 | warning | True | max |POSS_home-POSS_away| = 4; equal in 36.7% of games |
+| neutral_flag_source_vs_venue | 2010-11 | warning | True | 2 neutral games; 2 neutral by venue but not flagged by source: ['0021000914', '0021000925'] |
+| possession_source_agreement | 2011-12 | warning | True | max |POSS_home-POSS_away| = 4; equal in 38.0% of games |
+| neutral_flag_source_vs_venue | 2011-12 | warning | True | 0 neutral games; 0 neutral by venue but not flagged by source: [] |
+| equal_games_per_team | 2012-13 | warning | False | games per team range 81-82 (known exception: BOS-IND on 2013-04-16 was cancelled after the Boston Marathon bombing and never played) |
+| game_count | 2012-13 | warning | False | 1229 games, expected 1230 (known exception: BOS-IND on 2013-04-16 was cancelled after the Boston Marathon bombing and never played) |
+| possession_source_agreement | 2012-13 | warning | True | max |POSS_home-POSS_away| = 3; equal in 36.6% of games |
+| neutral_flag_source_vs_venue | 2012-13 | warning | True | 1 neutral games; 1 neutral by venue but not flagged by source: ['0021200580'] |
+| possession_source_agreement | 2013-14 | warning | True | max |POSS_home-POSS_away| = 4; equal in 37.5% of games |
+| neutral_flag_source_vs_venue | 2013-14 | warning | True | 1 neutral games; 1 neutral by venue but not flagged by source: ['0021300579'] |
+| possession_source_agreement | 2014-15 | warning | True | max |POSS_home-POSS_away| = 3; equal in 36.5% of games |
+| neutral_flag_source_vs_venue | 2014-15 | warning | True | 2 neutral games; 2 neutral by venue but not flagged by source: ['0021400117', '0021400585'] |
+| possession_source_agreement | 2015-16 | warning | True | max |POSS_home-POSS_away| = 3; equal in 39.0% of games |
+| neutral_flag_source_vs_venue | 2015-16 | warning | True | 2 neutral games; 2 neutral by venue but not flagged by source: ['0021500282', '0021500588'] |
+| possession_source_agreement | 2016-17 | warning | True | max |POSS_home-POSS_away| = 3; equal in 38.1% of games |
+| neutral_flag_source_vs_venue | 2016-17 | warning | True | 3 neutral games; 3 neutral by venue but not flagged by source: ['0021600589', '0021600591', '0021600605'] |
+| possession_source_agreement | 2017-18 | warning | True | max |POSS_home-POSS_away| = 3; equal in 37.2% of games |
+| neutral_flag_source_vs_venue | 2017-18 | warning | True | 3 neutral games; 3 neutral by venue but not flagged by source: ['0021700365', '0021700376', '0021700614'] |
+| possession_source_agreement | 2018-19 | warning | True | max |POSS_home-POSS_away| = 3; equal in 36.0% of games |
+| neutral_flag_source_vs_venue | 2018-19 | warning | True | 3 neutral games; 3 neutral by venue but not flagged by source: ['0021800418', '0021800429', '0021800665'] |
+| equal_games_per_team | 2019-20 | warning | False | games per team range 64-75 (known exception: COVID-19 suspension; season finished with 22 teams in the Orlando bubble (64-75 games)) |
+| game_count | 2019-20 | warning | False | 1059 games, expected 1125 (known exception: COVID-19 suspension; season finished with 22 teams in the Orlando bubble (64-75 games)) |
+| possession_source_agreement | 2019-20 | warning | True | max |POSS_home-POSS_away| = 3; equal in 39.9% of games |
+| neutral_flag_source_vs_venue | 2019-20 | warning | True | 91 neutral games; 91 neutral by venue but not flagged by source: ['0021900369', '0021900380', '0021900669', '0021901231', '0021901232', '0021901233', '0021901234', '0021901235', '0021901236', '0021901237', '0021901238', '0021901239', '0021901240', '0021901241', '0021901242', '0021901243', '0021901244', '0021901245', '0021901246', '0021901247', '0021901248', '0021901249', '0021901250', '0021901251', '0021901252', '0021901253', '0021901254', '0021901255', '0021901256', '0021901257', '0021901258', '0021901259', '0021901260', '0021901261', '0021901262', '0021901263', '0021901264', '0021901265', '0021901266', '0021901267', '0021901268', '0021901269', '0021901270', '0021901271', '0021901272', '0021901273', '0021901274', '0021901275', '0021901276', '0021901277', '0021901278', '0021901279', '0021901280', '0021901281', '0021901282', '0021901283', '0021901284', '0021901285', '0021901286', '0021901287', '0021901288', '0021901289', '0021901290', '0021901291', '0021901292', '0021901293', '0021901294', '0021901295', '0021901296', '0021901297', '0021901298', '0021901299', '0021901301', '0021901300', '0021901302', '0021901303', '0021901304', '0021901305', '0021901306', '0021901307', '0021901308', '0021901310', '0021901311', '0021901313', '0021901314', '0021901309', '0021901312', '0021901318', '0021901316', '0021901317', '0021901315'] |
+| possession_source_agreement | 2020-21 | warning | True | max |POSS_home-POSS_away| = 3; equal in 33.9% of games |
+| neutral_flag_source_vs_venue | 2020-21 | warning | True | 0 neutral games; 0 neutral by venue but not flagged by source: [] |
+| possession_source_agreement | 2021-22 | warning | True | max |POSS_home-POSS_away| = 4; equal in 35.7% of games |
+| neutral_flag_source_vs_venue | 2021-22 | warning | True | 0 neutral games; 0 neutral by venue but not flagged by source: [] |
+| possession_source_agreement | 2022-23 | warning | True | max |POSS_home-POSS_away| = 3; equal in 36.7% of games |
+| neutral_flag_source_vs_venue | 2022-23 | warning | True | 2 neutral games; 2 neutral by venue but not flagged by source: ['0022200439', '0022200678'] |
+| possession_source_agreement | 2023-24 | warning | True | max |POSS_home-POSS_away| = 3; equal in 36.4% of games |
+| neutral_flag_source_vs_venue | 2023-24 | warning | True | 4 neutral games; 4 neutral by venue but not flagged by source: ['0022300172', '0022301229', '0022301230', '0022300527'] |
+| venue_timezone_vs_source_local_time | 2023-24 | warning | False | 1 of 1226 disagree, e.g. ['0022301165'] |
+| possession_source_agreement | 2024-25 | warning | True | max |POSS_home-POSS_away| = 3; equal in 38.0% of games |
+| neutral_flag_source_vs_venue | 2024-25 | warning | True | 5 neutral games; 0 neutral by venue but not flagged by source: [] |
+| player_minutes_sum_to_team_minutes | 2024-25 | warning | False | 4 team-games differ by >1.0 min |
+| possession_source_agreement | 2025-26 | warning | True | max |POSS_home-POSS_away| = 4; equal in 35.8% of games |
+| neutral_flag_source_vs_venue | 2025-26 | warning | True | 5 neutral games; 0 neutral by venue but not flagged by source: [] |
+
+## 4. 中立场地与场馆
+
+`is_neutral` = 源数据 `isNeutral` 或场馆被标为中立场地（国际赛、拉斯维加斯 NBA Cup）。源数据在 2024-25 之前没有标记这些比赛。
+
+| season | game_id | game_date | home_team | away_team | arena_name | arena_city | source_is_neutral | game_label | game_sublabel |
+|---|---|---|---|---|---|---|---|---|---|
+| 2010-11 | 0021000914 | 2011-03-04 | NJN | TOR | The O2 Arena | London | False |  |  |
+| 2010-11 | 0021000925 | 2011-03-05 | NJN | TOR | The O2 Arena | London | False |  |  |
+| 2012-13 | 0021200580 | 2013-01-17 | DET | NYK | The O2 Arena | London | False |  |  |
+| 2013-14 | 0021300579 | 2014-01-16 | ATL | BKN | The O2 Arena | London | False |  |  |
+| 2014-15 | 0021400117 | 2014-11-12 | MIN | HOU | Mexico City Arena | Mexico City, Mexico | False |  |  |
+| 2014-15 | 0021400585 | 2015-01-15 | MIL | NYK | The O2 Arena | London | False |  |  |
+| 2015-16 | 0021500282 | 2015-12-03 | SAC | BOS | Mexico City Arena | Mexico City, Mexico | False |  |  |
+| 2015-16 | 0021500588 | 2016-01-14 | ORL | TOR | The O2 Arena | London | False |  |  |
+| 2016-17 | 0021600589 | 2017-01-12 | DEN | IND | The O2 Arena | London | False |  |  |
+| 2016-17 | 0021600591 | 2017-01-12 | PHX | DAL | Mexico City Arena | Mexico City, Mexico | False |  |  |
+| 2016-17 | 0021600605 | 2017-01-14 | PHX | SAS | Mexico City Arena | Mexico City, Mexico | False |  |  |
+| 2017-18 | 0021700365 | 2017-12-07 | BKN | OKC | Mexico City Arena | Mexico City, Mexico | False |  |  |
+| 2017-18 | 0021700376 | 2017-12-09 | BKN | MIA | Mexico City Arena | Mexico City, Mexico | False |  |  |
+| 2017-18 | 0021700614 | 2018-01-11 | PHI | BOS | The O2 Arena | London | False |  |  |
+| 2018-19 | 0021800418 | 2018-12-13 | ORL | CHI | Arena Ciudad de Mexico | Mexico City, Mexico | False |  |  |
+| 2018-19 | 0021800429 | 2018-12-15 | ORL | UTA | Arena Ciudad de Mexico | Mexico City, Mexico | False |  |  |
+| 2018-19 | 0021800665 | 2019-01-17 | WAS | NYK | The O2 Arena | London | False |  |  |
+| 2019-20 | 0021900369 | 2019-12-12 | DET | DAL | Arena Ciudad de Mexico | Mexico City, Mexico | False |  |  |
+| 2019-20 | 0021900380 | 2019-12-14 | PHX | SAS | Arena Ciudad de Mexico | Mexico City, Mexico | False |  |  |
+| 2019-20 | 0021900669 | 2020-01-24 | CHA | MIL | AccorHotels Arena | Paris | False |  |  |
+| 2019-20 | 0021901231 | 2020-07-30 | NOP | UTA | HP Field House | Orlando | False |  |  |
+| 2019-20 | 0021901232 | 2020-07-30 | LAL | LAC | AdventHealth Arena | Orlando | False |  |  |
+| 2019-20 | 0021901233 | 2020-07-31 | BKN | ORL | HP Field House | Orlando | False |  |  |
+| 2019-20 | 0021901234 | 2020-07-31 | POR | MEM | AdventHealth Arena | Orlando | False |  |  |
+| 2019-20 | 0021901235 | 2020-07-31 | WAS | PHX | VISA Athletic Center | Orlando | False |  |  |
+| 2019-20 | 0021901236 | 2020-07-31 | MIL | BOS | HP Field House | Orlando | False |  |  |
+| 2019-20 | 0021901237 | 2020-07-31 | SAS | SAC | VISA Athletic Center | Orlando | False |  |  |
+| 2019-20 | 0021901238 | 2020-07-31 | DAL | HOU | AdventHealth Arena | Orlando | False |  |  |
+| 2019-20 | 0021901239 | 2020-08-01 | DEN | MIA | HP Field House | Orlando | False |  |  |
+| 2019-20 | 0021901240 | 2020-08-01 | OKC | UTA | AdventHealth Arena | Orlando | False |  |  |
+| 2019-20 | 0021901241 | 2020-08-01 | LAC | NOP | HP Field House | Orlando | False |  |  |
+| 2019-20 | 0021901242 | 2020-08-01 | IND | PHI | VISA Athletic Center | Orlando | False |  |  |
+| 2019-20 | 0021901243 | 2020-08-01 | TOR | LAL | AdventHealth Arena | Orlando | False |  |  |
+| 2019-20 | 0021901244 | 2020-08-02 | BKN | WAS | HP Field House | Orlando | False |  |  |
+| 2019-20 | 0021901245 | 2020-08-02 | BOS | POR | AdventHealth Arena | Orlando | False |  |  |
+| 2019-20 | 0021901246 | 2020-08-02 | MEM | SAS | VISA Athletic Center | Orlando | False |  |  |
+| 2019-20 | 0021901247 | 2020-08-02 | ORL | SAC | HP Field House | Orlando | False |  |  |
+| 2019-20 | 0021901248 | 2020-08-02 | HOU | MIL | AdventHealth Arena | Orlando | False |  |  |
+| 2019-20 | 0021901249 | 2020-08-02 | PHX | DAL | VISA Athletic Center | Orlando | False |  |  |
+| 2019-20 | 0021901250 | 2020-08-03 | MIA | TOR | HP Field House | Orlando | False |  |  |
+| 2019-20 | 0021901251 | 2020-08-03 | OKC | DEN | AdventHealth Arena | Orlando | False |  |  |
+| 2019-20 | 0021901252 | 2020-08-03 | WAS | IND | VISA Athletic Center | Orlando | False |  |  |
+| 2019-20 | 0021901253 | 2020-08-03 | NOP | MEM | HP Field House | Orlando | False |  |  |
+| 2019-20 | 0021901254 | 2020-08-03 | PHI | SAS | VISA Athletic Center | Orlando | False |  |  |
+| 2019-20 | 0021901255 | 2020-08-03 | UTA | LAL | AdventHealth Arena | Orlando | False |  |  |
+| 2019-20 | 0021901256 | 2020-08-04 | MIL | BKN | VISA Athletic Center | Orlando | False |  |  |
+| 2019-20 | 0021901257 | 2020-08-04 | SAC | DAL | HP Field House | Orlando | False |  |  |
+| 2019-20 | 0021901258 | 2020-08-04 | LAC | PHX | AdventHealth Arena | Orlando | False |  |  |
+| 2019-20 | 0021901259 | 2020-08-04 | IND | ORL | VISA Athletic Center | Orlando | False |  |  |
+| 2019-20 | 0021901260 | 2020-08-04 | MIA | BOS | HP Field House | Orlando | False |  |  |
+| 2019-20 | 0021901261 | 2020-08-04 | POR | HOU | AdventHealth Arena | Orlando | False |  |  |
+| 2019-20 | 0021901262 | 2020-08-05 | UTA | MEM | HP Field House | Orlando | False |  |  |
+| 2019-20 | 0021901263 | 2020-08-05 | WAS | PHI | AdventHealth Arena | Orlando | False |  |  |
+| 2019-20 | 0021901264 | 2020-08-05 | SAS | DEN | VISA Athletic Center | Orlando | False |  |  |
+| 2019-20 | 0021901265 | 2020-08-05 | LAL | OKC | HP Field House | Orlando | False |  |  |
+| 2019-20 | 0021901266 | 2020-08-05 | ORL | TOR | VISA Athletic Center | Orlando | False |  |  |
+| 2019-20 | 0021901267 | 2020-08-05 | BOS | BKN | AdventHealth Arena | Orlando | False |  |  |
+| 2019-20 | 0021901268 | 2020-08-06 | SAC | NOP | HP Field House | Orlando | False |  |  |
+| 2019-20 | 0021901269 | 2020-08-06 | MIL | MIA | AdventHealth Arena | Orlando | False |  |  |
+| 2019-20 | 0021901270 | 2020-08-06 | PHX | IND | VISA Athletic Center | Orlando | False |  |  |
+| 2019-20 | 0021901271 | 2020-08-06 | DAL | LAC | HP Field House | Orlando | False |  |  |
+| 2019-20 | 0021901272 | 2020-08-06 | DEN | POR | VISA Athletic Center | Orlando | False |  |  |
+| 2019-20 | 0021901273 | 2020-08-06 | HOU | LAL | AdventHealth Arena | Orlando | False |  |  |
+| 2019-20 | 0021901274 | 2020-08-07 | SAS | UTA | HP Field House | Orlando | False |  |  |
+| 2019-20 | 0021901275 | 2020-08-07 | MEM | OKC | VISA Athletic Center | Orlando | False |  |  |
+| 2019-20 | 0021901276 | 2020-08-07 | BKN | SAC | AdventHealth Arena | Orlando | False |  |  |
+| 2019-20 | 0021901277 | 2020-08-07 | PHI | ORL | HP Field House | Orlando | False |  |  |
+| 2019-20 | 0021901278 | 2020-08-07 | NOP | WAS | VISA Athletic Center | Orlando | False |  |  |
+| 2019-20 | 0021901279 | 2020-08-07 | TOR | BOS | AdventHealth Arena | Orlando | False |  |  |
+| 2019-20 | 0021901280 | 2020-08-08 | POR | LAC | HP Field House | Orlando | False |  |  |
+| 2019-20 | 0021901281 | 2020-08-08 | DEN | UTA | AdventHealth Arena | Orlando | False |  |  |
+| 2019-20 | 0021901282 | 2020-08-08 | IND | LAL | HP Field House | Orlando | False |  |  |
+| 2019-20 | 0021901283 | 2020-08-08 | MIA | PHX | VISA Athletic Center | Orlando | False |  |  |
+| 2019-20 | 0021901284 | 2020-08-08 | DAL | MIL | AdventHealth Arena | Orlando | False |  |  |
+| 2019-20 | 0021901285 | 2020-08-09 | OKC | WAS | AdventHealth Arena | Orlando | False |  |  |
+| 2019-20 | 0021901286 | 2020-08-09 | TOR | MEM | VISA Athletic Center | Orlando | False |  |  |
+| 2019-20 | 0021901287 | 2020-08-09 | NOP | SAS | HP Field House | Orlando | False |  |  |
+| 2019-20 | 0021901288 | 2020-08-09 | BOS | ORL | AdventHealth Arena | Orlando | False |  |  |
+| 2019-20 | 0021901289 | 2020-08-09 | POR | PHI | VISA Athletic Center | Orlando | False |  |  |
+| 2019-20 | 0021901290 | 2020-08-09 | SAC | HOU | HP Field House | Orlando | False |  |  |
+| 2019-20 | 0021901291 | 2020-08-09 | LAC | BKN | AdventHealth Arena | Orlando | False |  |  |
+| 2019-20 | 0021901292 | 2020-08-10 | PHX | OKC | HP Field House | Orlando | False |  |  |
+| 2019-20 | 0021901293 | 2020-08-10 | UTA | DAL | AdventHealth Arena | Orlando | False |  |  |
+| 2019-20 | 0021901294 | 2020-08-10 | MIL | TOR | HP Field House | Orlando | False |  |  |
+| 2019-20 | 0021901295 | 2020-08-10 | MIA | IND | VISA Athletic Center | Orlando | False |  |  |
+| 2019-20 | 0021901296 | 2020-08-10 | LAL | DEN | AdventHealth Arena | Orlando | False |  |  |
+| 2019-20 | 0021901297 | 2020-08-11 | ORL | BKN | AdventHealth Arena | Orlando | False |  |  |
+| 2019-20 | 0021901298 | 2020-08-11 | SAS | HOU | HP Field House | Orlando | False |  |  |
+| 2019-20 | 0021901299 | 2020-08-11 | PHI | PHX | VISA Athletic Center | Orlando | False |  |  |
+| 2019-20 | 0021901301 | 2020-08-11 | MEM | BOS | AdventHealth Arena | Orlando | False |  |  |
+| 2019-20 | 0021901300 | 2020-08-11 | DAL | POR | HP Field House | Orlando | False |  |  |
+| 2019-20 | 0021901302 | 2020-08-11 | SAC | NOP | AdventHealth Arena | Orlando | False |  |  |
+| 2019-20 | 0021901303 | 2020-08-11 | WAS | MIL | VISA Athletic Center | Orlando | False |  |  |
+| 2019-20 | 0021901304 | 2020-08-12 | HOU | IND | AdventHealth Arena | Orlando | False |  |  |
+| 2019-20 | 0021901305 | 2020-08-12 | PHI | TOR | HP Field House | Orlando | False |  |  |
+| 2019-20 | 0021901306 | 2020-08-12 | OKC | MIA | VISA Athletic Center | Orlando | False |  |  |
+| 2019-20 | 0021901307 | 2020-08-12 | DEN | LAC | AdventHealth Arena | Orlando | False |  |  |
+| 2019-20 | 0021901308 | 2020-08-13 | BOS | WAS | AdventHealth Arena | Orlando | False |  |  |
+| 2019-20 | 0021901310 | 2020-08-13 | LAL | SAC | HP Field House | Orlando | False |  |  |
+| 2019-20 | 0021901311 | 2020-08-13 | MEM | MIL | VISA Athletic Center | Orlando | False |  |  |
+| 2019-20 | 0021901313 | 2020-08-13 | PHX | DAL | AdventHealth Arena | Orlando | False |  |  |
+| 2019-20 | 0021901314 | 2020-08-13 | UTA | SAS | HP Field House | Orlando | False |  |  |
+| 2019-20 | 0021901309 | 2020-08-13 | BKN | POR | AdventHealth Arena | Orlando | False |  |  |
+| 2019-20 | 0021901312 | 2020-08-13 | ORL | NOP | VISA Athletic Center | Orlando | False |  |  |
+| 2019-20 | 0021901318 | 2020-08-14 | TOR | DEN | HP Field House | Orlando | False |  |  |
+| 2019-20 | 0021901316 | 2020-08-14 | IND | MIA | AdventHealth Arena | Orlando | False |  |  |
+| 2019-20 | 0021901317 | 2020-08-14 | LAC | OKC | HP Field House | Orlando | False |  |  |
+| 2019-20 | 0021901315 | 2020-08-14 | HOU | PHI | AdventHealth Arena | Orlando | False |  |  |
+| 2022-23 | 0022200439 | 2022-12-17 | SAS | MIA | Mexico City Arena | Mexico City, Mexico | False |  |  |
+| 2022-23 | 0022200678 | 2023-01-19 | DET | CHI | Accor Arena | Paris | False |  |  |
+| 2023-24 | 0022300172 | 2023-11-09 | ORL | ATL | Arena CDMX | Mexico City | False | NBA Mexico City Game |  |
+| 2023-24 | 0022301229 | 2023-12-07 | MIL | IND | T-Mobile Arena | Las Vegas | False | Emirates NBA Cup | East Semifinal |
+| 2023-24 | 0022301230 | 2023-12-07 | LAL | NOP | T-Mobile Arena | Las Vegas | False | Emirates NBA Cup | West Semifinal |
+| 2023-24 | 0022300527 | 2024-01-11 | CLE | BKN | Accor Arena | Paris | False | NBA Paris Game |  |
+| 2024-25 | 0022400147 | 2024-11-02 | WAS | MIA | Arena CDMX | Mexico City | True | NBA Mexico City Game |  |
+| 2024-25 | 0022401229 | 2024-12-14 | MIL | ATL | T-Mobile Arena | Las Vegas | True | Emirates NBA Cup | East Semifinal |
+| 2024-25 | 0022401230 | 2024-12-14 | OKC | HOU | T-Mobile Arena | Las Vegas | True | Emirates NBA Cup | West Semifinal |
+| 2024-25 | 0022400621 | 2025-01-23 | IND | SAS | Accor Arena | Paris | True | NBA Paris Games |  |
+| 2024-25 | 0022400633 | 2025-01-25 | SAS | IND | Accor Arena | Paris | True | NBA Paris Games |  |
+| 2025-26 | 0022500147 | 2025-11-01 | DET | DAL | Arena CDMX | Mexico City | True | NBA Mexico City Game |  |
+| 2025-26 | 0022501229 | 2025-12-13 | ORL | NYK | T-Mobile Arena | Las Vegas | True | Emirates NBA Cup | East Semifinal |
+| 2025-26 | 0022501230 | 2025-12-13 | OKC | SAS | T-Mobile Arena | Las Vegas | True | Emirates NBA Cup | West Semifinal |
+| 2025-26 | 0022500578 | 2026-01-15 | ORL | MEM | Uber Arena | Berlin | True | NBA Berlin Game |  |
+| 2025-26 | 0022500602 | 2026-01-18 | MEM | ORL | The O2 Arena | London | True | NBA London Game |  |
+
+
+场馆：77 个名称/城市组合映射到 51 座实体场馆（`configs/venue_aliases.csv` 人工整理，坐标来自 Wikidata P625，时区由坐标离线推算）。
+
+| venue_id | wikidata_qid | latitude | longitude | timezone | neutral_site |
+|---|---|---|---|---|---|
+| ATLANTA_STATE_FARM | Q1123297 | 33.757 | -84.396 | America/New_York | False |
+| AUBURN_HILLS_PALACE | Q1327633 | 42.697 | -83.246 | America/Detroit | False |
+| AUSTIN_MOODY | Q79477138 | 30.281 | -97.730 | America/Chicago | False |
+| BERLIN_UBER | Q265463 | 52.506 | 13.443 | Europe/Berlin | True |
+| BOSTON_TD_GARDEN | Q432105 | 42.366 | -71.062 | America/New_York | False |
+| BROOKLYN_BARCLAYS | Q807966 | 40.683 | -73.975 | America/New_York | False |
+| CHARLOTTE_SPECTRUM | Q983870 | 35.225 | -80.839 | America/New_York | False |
+| CHICAGO_UNITED | Q639975 | 41.881 | -87.674 | America/Chicago | False |
+| CLEVELAND_ROCKET | Q387157 | 41.496 | -81.688 | America/New_York | False |
+| DALLAS_AAC | Q463345 | 32.791 | -96.810 | America/Chicago | False |
+| DENVER_BALL | Q795470 | 39.749 | -105.007 | America/Denver | False |
+| DETROIT_LCA | Q18154984 | 42.341 | -83.055 | America/Detroit | False |
+| EAST_RUTHERFORD_MEADOWLANDS | Q538218 | 40.812 | -74.067 | America/New_York | False |
+| HOUSTON_TOYOTA | Q1166157 | 29.751 | -95.362 | America/Chicago | False |
+| INDIANAPOLIS_GAINBRIDGE | Q545007 | 39.764 | -86.156 | America/Indiana/Indianapolis | False |
+| INGLEWOOD_INTUIT | Q54958436 | 33.945 | -118.343 | America/Los_Angeles | False |
+| LAS_VEGAS_TMOBILE | Q3338973 | 36.103 | -115.178 | America/Los_Angeles | True |
+| LA_CRYPTO | Q186080 | 34.043 | -118.267 | America/Los_Angeles | False |
+| LONDON_O2 | Q5364202 | 51.503 | 0.003 | Europe/London | True |
+| MANCHESTER_COOP_LIVE | Q111962681 | 53.487 | -2.200 | Europe/London | True |
+| MEMPHIS_FEDEX | Q641212 | 35.138 | -90.051 | America/Chicago | False |
+| MEXICO_CITY_ARENA | Q6826206 | 19.497 | -99.175 | America/Mexico_City | True |
+| MIAMI_KASEYA | Q420129 | 25.781 | -80.188 | America/New_York | False |
+| MILWAUKEE_BRADLEY | Q737976 | 43.044 | -87.917 | America/Chicago | False |
+| MILWAUKEE_FISERV | Q20372160 | 43.045 | -87.918 | America/Chicago | False |
+| MILWAUKEE_PANTHER | Q1142808 | 43.042 | -87.917 | America/Chicago | False |
+| MINNEAPOLIS_TARGET | Q282675 | 44.979 | -93.276 | America/Chicago | False |
+| NEWARK_PRUDENTIAL | Q849027 | 40.734 | -74.171 | America/New_York | False |
+| NEW_ORLEANS_SMOOTHIE_KING | Q1515840 | 29.949 | -90.082 | America/Chicago | False |
+| NEW_YORK_MSG | Q186125 | 40.751 | -73.993 | America/New_York | False |
+| OAKLAND_ORACLE | Q1139021 | 37.750 | -122.203 | America/Los_Angeles | False |
+| OKC_PAYCOM | Q665434 | 35.463 | -97.515 | America/Chicago | False |
+| ORLANDO_AMWAY_ARENA | Q481794 | 28.549 | -81.387 | America/New_York | False |
+| ORLANDO_BUBBLE_ADVENTHEALTH | Q112620308 | 28.339 | -81.554 | America/New_York | True |
+| ORLANDO_BUBBLE_FIELD_HOUSE | Q112620434 | 28.338 | -81.557 | America/New_York | True |
+| ORLANDO_BUBBLE_VISA | Q112620319 | 28.339 | -81.556 | America/New_York | True |
+| ORLANDO_KIA | Q481795 | 28.539 | -81.384 | America/New_York | False |
+| PARIS_ACCOR | Q537720 | 48.839 | 2.379 | Europe/Paris | True |
+| PHILADELPHIA_XFINITY | Q818735 | 39.901 | -75.172 | America/New_York | False |
+| PHOENIX_ARENA | Q1538690 | 33.446 | -112.071 | America/Phoenix | False |
+| PORTLAND_MODA | Q1347442 | 45.532 | -122.667 | America/Los_Angeles | False |
+| SACRAMENTO_GOLDEN1 | Q7011384 | 38.580 | -121.500 | America/Los_Angeles | False |
+| SACRAMENTO_SLEEP_TRAIN | Q93831 | 38.649 | -121.518 | America/Los_Angeles | False |
+| SAN_ANTONIO_ALAMODOME | Q1618347 | 29.417 | -98.479 | America/Chicago | False |
+| SAN_ANTONIO_FROST_BANK | Q298573 | 29.427 | -98.438 | America/Chicago | False |
+| SAN_FRANCISCO_CHASE | Q15262098 | 37.768 | -122.387 | America/Los_Angeles | False |
+| SEATTLE_KEYARENA | Q977529 | 47.622 | -122.354 | America/Los_Angeles | False |
+| SLC_DELTA | Q82294 | 40.768 | -111.901 | America/Denver | False |
+| TAMPA_AMALIE | Q940199 | 27.943 | -82.452 | America/New_York | False |
+| TORONTO_SCOTIABANK | Q406972 | 43.643 | -79.379 | America/Toronto | False |
+| WASHINGTON_CAPITAL_ONE | Q223240 | 38.898 | -77.021 | America/New_York | False |
+
+## 5. 对阵次数矩阵
+
+每队对阵合计：最小 64，最大 82。与传统 4/4/3/2 结构不一致的球队-关系组合：295 个。
+
+| season | relation | actual | traditional | n_teams |
+|---|---|---|---|---|
+| 2011-12 | other_conference | {1: 12, 2: 3} | {2: 15} | 30 |
+| 2011-12 | same_conference_other_division | {3: 5, 4: 5} | {4: 6, 3: 4} | 8 |
+| 2011-12 | same_conference_other_division | {3: 6, 4: 4} | {4: 6, 3: 4} | 13 |
+| 2011-12 | same_conference_other_division | {3: 7, 4: 3} | {4: 6, 3: 4} | 8 |
+| 2011-12 | same_conference_other_division | {3: 8, 4: 2} | {4: 6, 3: 4} | 1 |
+| 2011-12 | same_division | {3: 1, 4: 3} | {4: 4} | 8 |
+| 2011-12 | same_division | {3: 2, 4: 2} | {4: 4} | 13 |
+| 2011-12 | same_division | {3: 3, 4: 1} | {4: 4} | 8 |
+| 2012-13 | same_conference_other_division | {2: 1, 3: 3, 4: 6} | {4: 6, 3: 4} | 2 |
+| 2019-20 | other_conference | {1: 1, 2: 13} | {2: 15} | 1 |
+| 2019-20 | other_conference | {1: 1, 2: 14} | {2: 15} | 2 |
+| 2019-20 | other_conference | {1: 2, 2: 12} | {2: 15} | 1 |
+| 2019-20 | other_conference | {1: 2, 2: 13} | {2: 15} | 2 |
+| 2019-20 | other_conference | {1: 3, 2: 11} | {2: 15} | 1 |
+| 2019-20 | other_conference | {1: 3, 2: 12} | {2: 15} | 6 |
+| 2019-20 | other_conference | {1: 4, 2: 10} | {2: 15} | 2 |
+| 2019-20 | other_conference | {1: 4, 2: 11} | {2: 15} | 3 |
+| 2019-20 | other_conference | {1: 5, 2: 10} | {2: 15} | 3 |
+| 2019-20 | other_conference | {1: 5, 2: 8} | {2: 15} | 1 |
+| 2019-20 | other_conference | {1: 5, 2: 9} | {2: 15} | 1 |
+| 2019-20 | other_conference | {1: 6, 2: 8} | {2: 15} | 1 |
+| 2019-20 | other_conference | {1: 6, 2: 9} | {2: 15} | 1 |
+| 2019-20 | other_conference | {1: 7, 2: 8} | {2: 15} | 1 |
+| 2019-20 | other_conference | {1: 8, 2: 7} | {2: 15} | 1 |
+| 2019-20 | other_conference | {2: 14} | {2: 15} | 1 |
+| 2019-20 | same_conference_other_division | {1: 1, 2: 1, 3: 4, 4: 4} | {4: 6, 3: 4} | 1 |
+| 2019-20 | same_conference_other_division | {1: 1, 2: 1, 3: 5, 4: 3} | {4: 6, 3: 4} | 2 |
+| 2019-20 | same_conference_other_division | {1: 1, 2: 2, 3: 3, 4: 4} | {4: 6, 3: 4} | 1 |
+| 2019-20 | same_conference_other_division | {1: 1, 2: 2, 3: 4, 4: 3} | {4: 6, 3: 4} | 2 |
+| 2019-20 | same_conference_other_division | {1: 1, 2: 2, 3: 5, 4: 2} | {4: 6, 3: 4} | 1 |
+| 2019-20 | same_conference_other_division | {1: 1, 2: 2, 3: 6, 4: 1} | {4: 6, 3: 4} | 1 |
+| 2019-20 | same_conference_other_division | {1: 1, 2: 3, 3: 4, 4: 2} | {4: 6, 3: 4} | 1 |
+| 2019-20 | same_conference_other_division | {1: 1, 3: 4, 4: 5} | {4: 6, 3: 4} | 1 |
+| 2019-20 | same_conference_other_division | {2: 1, 3: 3, 4: 6} | {4: 6, 3: 4} | 1 |
+| 2019-20 | same_conference_other_division | {2: 1, 3: 4, 4: 5} | {4: 6, 3: 4} | 1 |
+| 2019-20 | same_conference_other_division | {2: 1, 3: 5, 4: 4} | {4: 6, 3: 4} | 4 |
+| 2019-20 | same_conference_other_division | {2: 1, 3: 7, 4: 2} | {4: 6, 3: 4} | 1 |
+| 2019-20 | same_conference_other_division | {2: 1, 3: 8, 4: 1} | {4: 6, 3: 4} | 2 |
+| 2019-20 | same_conference_other_division | {2: 2, 3: 4, 4: 4} | {4: 6, 3: 4} | 1 |
+| 2019-20 | same_conference_other_division | {2: 2, 3: 5, 4: 3} | {4: 6, 3: 4} | 2 |
+| 2019-20 | same_conference_other_division | {2: 2, 3: 6, 4: 2} | {4: 6, 3: 4} | 2 |
+| 2019-20 | same_conference_other_division | {2: 3, 3: 3, 4: 4} | {4: 6, 3: 4} | 1 |
+| 2019-20 | same_conference_other_division | {2: 3, 3: 4, 4: 3} | {4: 6, 3: 4} | 1 |
+| 2019-20 | same_conference_other_division | {2: 3, 3: 6, 4: 1} | {4: 6, 3: 4} | 1 |
+| 2019-20 | same_conference_other_division | {3: 6, 4: 4} | {4: 6, 3: 4} | 2 |
+| 2019-20 | same_conference_other_division | {3: 7, 4: 3} | {4: 6, 3: 4} | 1 |
+| 2019-20 | same_division | {2: 1, 3: 1, 4: 2} | {4: 4} | 5 |
+| 2019-20 | same_division | {2: 1, 3: 2, 4: 1} | {4: 4} | 1 |
+| 2019-20 | same_division | {2: 1, 4: 3} | {4: 4} | 3 |
+| 2019-20 | same_division | {2: 3, 3: 1} | {4: 4} | 1 |
+| 2019-20 | same_division | {3: 1, 4: 3} | {4: 4} | 4 |
+| 2019-20 | same_division | {3: 2, 4: 2} | {4: 4} | 6 |
+| 2019-20 | same_division | {3: 3, 4: 1} | {4: 4} | 6 |
+| 2019-20 | same_division | {3: 4} | {4: 4} | 1 |
+| 2020-21 | same_conference_other_division | {3: 10} | {4: 6, 3: 4} | 30 |
+| 2020-21 | same_division | {3: 4} | {4: 4} | 30 |
+| 2023-24 | other_conference | {2: 14, 3: 1} | {2: 15} | 4 |
+| 2023-24 | same_conference_other_division | {3: 5, 4: 4, 5: 1} | {4: 6, 3: 4} | 1 |
+| 2023-24 | same_conference_other_division | {3: 5, 4: 5} | {4: 6, 3: 4} | 5 |
+| 2023-24 | same_conference_other_division | {3: 6, 4: 3, 5: 1} | {4: 6, 3: 4} | 5 |
+| 2023-24 | same_conference_other_division | {3: 6, 4: 4} | {4: 6, 3: 4} | 1 |
+| 2023-24 | same_division | {4: 2, 5: 2} | {4: 4} | 1 |
+| 2023-24 | same_division | {4: 3, 5: 1} | {4: 4} | 6 |
+| 2024-25 | other_conference | {2: 14, 3: 1} | {2: 15} | 4 |
+| 2024-25 | same_conference_other_division | {3: 5, 4: 4, 5: 1} | {4: 6, 3: 4} | 4 |
+| 2024-25 | same_conference_other_division | {3: 5, 4: 5} | {4: 6, 3: 4} | 4 |
+| 2024-25 | same_conference_other_division | {3: 6, 4: 2, 5: 2} | {4: 6, 3: 4} | 2 |
+| 2025-26 | other_conference | {2: 14, 3: 1} | {2: 15} | 4 |
+| 2025-26 | same_conference_other_division | {3: 5, 4: 4, 5: 1} | {4: 6, 3: 4} | 1 |
+| 2025-26 | same_conference_other_division | {3: 5, 4: 5} | {4: 6, 3: 4} | 9 |
+| 2025-26 | same_conference_other_division | {3: 6, 4: 2, 5: 2} | {4: 6, 3: 4} | 1 |
+| 2025-26 | same_conference_other_division | {3: 6, 4: 3, 5: 1} | {4: 6, 3: 4} | 1 |
+| 2025-26 | same_division | {4: 3, 5: 1} | {4: 4} | 6 |
+
+## 6. 伤病报告
+
+| season | games | with_report | team_games | usable | not_submitted | game_not_in_report | usable_share |
+|---|---|---|---|---|---|---|---|
+| 2007-08 | 1230 | 0 | 2460 | 0 | 0 | 2460 | 0.000 |
+| 2008-09 | 1230 | 0 | 2460 | 0 | 0 | 2460 | 0.000 |
+| 2009-10 | 1230 | 0 | 2460 | 0 | 0 | 2460 | 0.000 |
+| 2010-11 | 1230 | 0 | 2460 | 0 | 0 | 2460 | 0.000 |
+| 2011-12 | 990 | 0 | 1980 | 0 | 0 | 1980 | 0.000 |
+| 2012-13 | 1229 | 0 | 2458 | 0 | 0 | 2458 | 0.000 |
+| 2013-14 | 1230 | 0 | 2460 | 0 | 0 | 2460 | 0.000 |
+| 2014-15 | 1230 | 0 | 2460 | 0 | 0 | 2460 | 0.000 |
+| 2015-16 | 1230 | 0 | 2460 | 0 | 0 | 2460 | 0.000 |
+| 2016-17 | 1230 | 0 | 2460 | 0 | 0 | 2460 | 0.000 |
+| 2017-18 | 1230 | 0 | 2460 | 0 | 0 | 2460 | 0.000 |
+| 2018-19 | 1230 | 0 | 2460 | 0 | 0 | 2460 | 0.000 |
+| 2019-20 | 1059 | 1055 | 2118 | 2094 | 0 | 24 | 0.989 |
+| 2020-21 | 1080 | 1056 | 2160 | 2109 | 3 | 48 | 0.976 |
+| 2021-22 | 1230 | 1230 | 2460 | 2460 | 0 | 0 | 1.000 |
+| 2022-23 | 1230 | 1230 | 2460 | 2460 | 0 | 0 | 1.000 |
+| 2023-24 | 1230 | 1230 | 2460 | 2458 | 0 | 2 | 0.999 |
+| 2024-25 | 1230 | 1230 | 2460 | 2460 | 0 | 0 | 1.000 |
+| 2025-26 | 1230 | 1230 | 2460 | 2460 | 0 | 0 | 1.000 |
+
+
+所选报告发布时间到开赛的间隔（分钟）：中位数 30，最小 1，最大 210。所有所选报告均早于开赛。
+
+
+解析报告文件 3719 份，解析失败 3 份；无法归位的换行碎片合计 11 个。
+
+| report_path | parse_error |
+|---|---|
+| injury_reports/2019-12-16/Injury-Report_2019-12-16_08PM.pdf | ValueError: Injury-Report_2019-12-16_08PM.pdf: column header not found on page 1 |
+| injury_reports/2019-12-17/Injury-Report_2019-12-17_05PM.pdf | ValueError: Injury-Report_2019-12-17_05PM.pdf: column header not found on page 1 |
+| injury_reports/2019-12-17/Injury-Report_2019-12-17_08PM.pdf | ValueError: Injury-Report_2019-12-17_08PM.pdf: column header not found on page 1 |
+
+
+球员名匹配到 nba_api 球员 ID：
+
+| match_method | n | share |
+|---|---|---|
+| season_team | 76348 | 0.918 |
+| unmatched | 5608 | 0.067 |
+| season_unique_name | 1215 | 0.015 |
+
+
+未匹配的球员大多是整季未出场的球员（双向合同、长期伤病），他们此前的上场时间本来就是 0。匹配时用到了该赛季完整的球员名单，这只是身份识别，不进入任何特征值。
+
+
+状态不在 {Out, Doubtful, Questionable, Probable, Available} 内的行：0。
+
+
+一致性审计（赛后核对，不作为特征）：赛前各状态球员最终实际上场的比例：
+
+| injury_status | n | share_played |
+|---|---|---|
+| Available | 11609 | 0.846 |
+| Doubtful | 454 | 0.018 |
+| Out | 61285 | 0.001 |
+| Probable | 1402 | 0.906 |
+| Questionable | 2813 | 0.541 |
+
+## 7. 赛前特征
+
+| feature | null_share |
+|---|---|
+| team_id | 0.000 |
+| opponent_id | 0.000 |
+| season_games_played | 0.000 |
+| season_win_pct_to_date | 0.012 |
+| season_off_rating_to_date | 0.012 |
+| season_def_rating_to_date | 0.012 |
+| season_net_rating_to_date | 0.012 |
+| season_pace_to_date | 0.012 |
+| season_avg_margin_to_date | 0.012 |
+| rest_days | 0.012 |
+| games_last_4_days | 0.000 |
+| games_last_7_days | 0.000 |
+| travel_distance_km | 0.000 |
+| timezone_change_hours | 0.000 |
+| consecutive_road_games | 0.000 |
+| turnaround_hours | 0.012 |
+| prev_overtime_periods | 0.012 |
+| tipoff_local_hour | 0.000 |
+| prev_tipoff_local_hour | 0.012 |
+| body_clock_tipoff_hour | 0.000 |
+| n_out | 0.638 |
+| n_doubtful | 0.638 |
+| n_questionable | 0.638 |
+| n_probable | 0.638 |
+| missing_minutes_prior_avg | 0.638 |
+| n_missing_unmatched | 0.638 |
+| n_missing_players | 0.638 |
+| is_back_to_back | 0.012 |
+
+
+结果类特征只用比赛日期（ET）严格早于当天的比赛；每季第一场的累计值和休息天数为空，不填补。伤病类特征在没有可用赛前快照时为空，不按 0 填补。`as_of_timestamp` = max(此前日期最晚一场比赛开赛 + 4 小时, 所用伤病报告发布时间)，构建时检查它早于开赛。
+
+| feature | count | mean | std | min | 25% | 50% | 75% | max |
+|---|---|---|---|---|---|---|---|---|
+| rest_days | 45046.00 | 1.16 | 3.27 | 0.00 | 1.00 | 1.00 | 1.00 | 145.00 |
+| games_last_4_days | 45616.00 | 2.23 | 0.55 | 1.00 | 2.00 | 2.00 | 3.00 | 3.00 |
+| games_last_7_days | 45616.00 | 3.59 | 0.74 | 1.00 | 3.00 | 4.00 | 4.00 | 5.00 |
+| travel_distance_km | 45616.00 | 877.88 | 881.43 | 0.00 | 0.00 | 708.51 | 1376.98 | 8316.61 |
+| timezone_change_hours | 45616.00 | 0.00 | 0.86 | -7.00 | 0.00 | 0.00 | 0.00 | 7.00 |
+| consecutive_road_games | 45616.00 | 1.02 | 1.38 | 0.00 | 0.00 | 1.00 | 2.00 | 13.00 |
+| missing_minutes_prior_avg | 16501.00 | 59.01 | 46.60 | 0.00 | 25.68 | 51.54 | 82.80 | 324.35 |
+
+## 8. 静态 SOS
+
+`retro_*` 用对手全季最终战绩，仅作描述；`causal_*` 用对手截至赛前的战绩，是可用于预测的版本。排名 1 = 赛程最难。每季前 5 名（按 retro_owp）：
+
+| season | team | win_pct | retro_owp | retro_owp_rank | causal_owp_mean | causal_owp_mean_rank | retro_opp_net_rating | causal_opp_net_rating_mean |
+|---|---|---|---|---|---|---|---|---|
+| 2007-08 | SAS | 0.683 | 0.513 | 1 | 0.498 | 14 | 0.265 | 0.288 |
+| 2007-08 | POR | 0.500 | 0.512 | 2 | 0.525 | 1 | 0.433 | 0.602 |
+| 2007-08 | LAC | 0.280 | 0.512 | 3 | 0.495 | 19 | 0.707 | 0.156 |
+| 2007-08 | LAL | 0.695 | 0.511 | 4 | 0.523 | 2 | 0.031 | 0.503 |
+| 2007-08 | SEA | 0.244 | 0.510 | 5 | 0.508 | 5 | 0.703 | 0.357 |
+| 2008-09 | IND | 0.439 | 0.508 | 1 | 0.521 | 2 | 0.407 | 0.651 |
+| 2008-09 | MIA | 0.524 | 0.507 | 2 | 0.495 | 19 | 0.275 | 0.106 |
+| 2008-09 | MEM | 0.293 | 0.506 | 3 | 0.482 | 26 | 0.383 | -0.312 |
+| 2008-09 | BOS | 0.756 | 0.505 | 4 | 0.530 | 1 | -0.073 | 0.520 |
+| 2008-09 | WAS | 0.232 | 0.504 | 5 | 0.519 | 3 | 0.551 | 0.675 |
+| 2009-10 | HOU | 0.512 | 0.513 | 1 | 0.507 | 7 | 0.393 | 0.327 |
+| 2009-10 | GSW | 0.317 | 0.509 | 2 | 0.505 | 13 | 0.342 | 0.252 |
+| 2009-10 | MIN | 0.183 | 0.508 | 3 | 0.506 | 11 | 0.580 | 0.824 |
+| 2009-10 | SAS | 0.610 | 0.508 | 4 | 0.506 | 10 | -0.031 | 0.280 |
+| 2009-10 | LAL | 0.695 | 0.508 | 5 | 0.506 | 9 | 0.063 | -0.020 |
+| 2010-11 | NOH | 0.561 | 0.515 | 1 | 0.517 | 3 | 0.378 | 0.659 |
+| 2010-11 | PHX | 0.488 | 0.513 | 2 | 0.505 | 12 | 0.427 | -0.164 |
+| 2010-11 | POR | 0.585 | 0.513 | 3 | 0.515 | 6 | 0.301 | 0.152 |
+| 2010-11 | MIN | 0.207 | 0.513 | 4 | 0.514 | 7 | 0.675 | 0.490 |
+| 2010-11 | SAC | 0.293 | 0.511 | 5 | 0.527 | 1 | 0.536 | 0.799 |
+| 2011-12 | DAL | 0.545 | 0.527 | 1 | 0.520 | 5 | 0.687 | 0.322 |
+| 2011-12 | LAL | 0.621 | 0.516 | 2 | 0.535 | 1 | 0.353 | 0.823 |
+| 2011-12 | OKC | 0.712 | 0.516 | 3 | 0.478 | 26 | 0.110 | -0.869 |
+| 2011-12 | PHX | 0.500 | 0.514 | 4 | 0.525 | 3 | 0.348 | 0.602 |
+| 2011-12 | NOH | 0.318 | 0.513 | 5 | 0.487 | 22 | 0.498 | -0.100 |
+| 2012-13 | NOH | 0.329 | 0.516 | 1 | 0.533 | 1 | 0.721 | 0.951 |
+| 2012-13 | POR | 0.402 | 0.513 | 2 | 0.497 | 20 | 0.598 | 0.090 |
+| 2012-13 | SAC | 0.341 | 0.513 | 3 | 0.499 | 17 | 0.560 | 0.142 |
+| 2012-13 | DEN | 0.695 | 0.513 | 4 | 0.516 | 5 | 0.191 | 0.182 |
+| 2012-13 | PHX | 0.305 | 0.513 | 5 | 0.523 | 3 | 0.669 | 0.842 |
+| 2013-14 | LAL | 0.329 | 0.519 | 1 | 0.511 | 11 | 0.851 | 0.454 |
+| 2013-14 | SAC | 0.341 | 0.519 | 2 | 0.507 | 13 | 0.713 | 0.559 |
+| 2013-14 | DEN | 0.439 | 0.518 | 3 | 0.509 | 12 | 0.628 | 0.203 |
+| 2013-14 | HOU | 0.659 | 0.517 | 4 | 0.513 | 9 | 0.364 | 0.411 |
+| 2013-14 | MEM | 0.610 | 0.516 | 5 | 0.515 | 8 | 0.473 | 0.489 |
+| 2014-15 | DAL | 0.610 | 0.515 | 1 | 0.524 | 4 | 0.366 | 0.697 |
+| 2014-15 | UTA | 0.463 | 0.513 | 2 | 0.504 | 12 | 0.390 | 0.352 |
+| 2014-15 | SAC | 0.354 | 0.512 | 3 | 0.524 | 5 | 0.558 | 0.538 |
+| 2014-15 | MEM | 0.671 | 0.512 | 4 | 0.536 | 2 | 0.268 | 0.727 |
+| 2014-15 | HOU | 0.683 | 0.512 | 5 | 0.541 | 1 | 0.274 | 1.071 |
+| 2015-16 | DAL | 0.512 | 0.508 | 1 | 0.501 | 12 | 0.294 | 0.156 |
+| 2015-16 | LAL | 0.207 | 0.508 | 2 | 0.498 | 19 | 0.677 | 0.591 |
+| 2015-16 | POR | 0.537 | 0.505 | 3 | 0.499 | 15 | 0.138 | -0.136 |
+| 2015-16 | MIL | 0.402 | 0.504 | 4 | 0.507 | 5 | 0.276 | 0.075 |
+| 2015-16 | HOU | 0.500 | 0.504 | 5 | 0.501 | 11 | 0.136 | 0.080 |
+| 2016-17 | MEM | 0.524 | 0.512 | 1 | 0.499 | 17 | 0.429 | 0.224 |
+| 2016-17 | MIN | 0.378 | 0.511 | 2 | 0.523 | 1 | 0.436 | 0.783 |
+| 2016-17 | SAC | 0.390 | 0.509 | 3 | 0.515 | 5 | 0.559 | 0.892 |
+| 2016-17 | OKC | 0.573 | 0.508 | 4 | 0.512 | 6 | 0.344 | 0.574 |
+| 2016-17 | NOP | 0.415 | 0.507 | 5 | 0.506 | 11 | 0.362 | -0.163 |
+| 2017-18 | UTA | 0.585 | 0.512 | 1 | 0.515 | 4 | 0.145 | 0.465 |
+| 2017-18 | DAL | 0.293 | 0.507 | 2 | 0.521 | 1 | 0.315 | 0.456 |
+| 2017-18 | PHX | 0.256 | 0.507 | 3 | 0.506 | 9 | 0.550 | 0.195 |
+| 2017-18 | MIN | 0.573 | 0.506 | 4 | 0.493 | 24 | 0.084 | -0.158 |
+| 2017-18 | MEM | 0.268 | 0.505 | 5 | 0.508 | 7 | 0.387 | 0.240 |
+| 2018-19 | MEM | 0.402 | 0.511 | 1 | 0.510 | 7 | 0.453 | 0.354 |
+| 2018-19 | MIN | 0.439 | 0.511 | 2 | 0.512 | 6 | 0.411 | 0.682 |
+| 2018-19 | DEN | 0.659 | 0.510 | 3 | 0.523 | 1 | 0.166 | 0.634 |
+| 2018-19 | PHX | 0.232 | 0.510 | 4 | 0.515 | 3 | 0.667 | 0.473 |
+| 2018-19 | DAL | 0.402 | 0.509 | 5 | 0.505 | 13 | 0.345 | 0.389 |
+| 2019-20 | LAL | 0.732 | 0.523 | 1 | 0.535 | 3 | 0.384 | 0.520 |
+| 2019-20 | NOP | 0.417 | 0.517 | 2 | 0.519 | 9 | 0.653 | 0.776 |
+| 2019-20 | SAS | 0.451 | 0.513 | 3 | 0.534 | 4 | 0.393 | 1.009 |
+| 2019-20 | POR | 0.473 | 0.512 | 4 | 0.514 | 13 | 0.445 | 0.280 |
+| 2019-20 | LAC | 0.681 | 0.511 | 5 | 0.518 | 10 | 0.076 | 0.568 |
+| 2020-21 | HOU | 0.236 | 0.505 | 1 | 0.504 | 11 | 0.424 | 0.106 |
+| 2020-21 | MIN | 0.319 | 0.505 | 2 | 0.498 | 17 | 0.326 | 0.139 |
+| 2020-21 | OKC | 0.306 | 0.505 | 3 | 0.512 | 3 | 0.535 | 0.554 |
+| 2020-21 | NOP | 0.431 | 0.504 | 4 | 0.505 | 7 | 0.112 | 0.131 |
+| 2020-21 | SAC | 0.431 | 0.504 | 4 | 0.492 | 24 | 0.252 | -0.524 |
+| 2021-22 | GSW | 0.646 | 0.507 | 1 | 0.498 | 20 | 0.029 | -0.156 |
+| 2021-22 | LAC | 0.512 | 0.505 | 2 | 0.509 | 9 | 0.102 | 0.062 |
+| 2021-22 | NOP | 0.439 | 0.505 | 3 | 0.531 | 1 | 0.205 | 0.772 |
+| 2021-22 | TOR | 0.585 | 0.503 | 4 | 0.505 | 12 | 0.099 | -0.014 |
+| 2021-22 | DET | 0.280 | 0.502 | 5 | 0.511 | 8 | 0.395 | 0.759 |
+| 2022-23 | BKN | 0.549 | 0.506 | 1 | 0.516 | 4 | 0.167 | 0.162 |
+| 2022-23 | TOR | 0.500 | 0.506 | 2 | 0.475 | 30 | 0.103 | -0.232 |
+| 2022-23 | PHI | 0.659 | 0.506 | 3 | 0.505 | 13 | 0.039 | 0.186 |
+| 2022-23 | PHX | 0.549 | 0.504 | 4 | 0.529 | 1 | 0.066 | 0.626 |
+| 2022-23 | NYK | 0.573 | 0.504 | 5 | 0.511 | 8 | 0.045 | 0.357 |
+| 2023-24 | SAC | 0.561 | 0.520 | 1 | 0.498 | 17 | 0.536 | -0.067 |
+| 2023-24 | SAS | 0.268 | 0.515 | 2 | 0.494 | 20 | 0.680 | 0.005 |
+| 2023-24 | UTA | 0.378 | 0.515 | 3 | 0.504 | 11 | 0.660 | 0.570 |
+| 2023-24 | LAL | 0.573 | 0.515 | 4 | 0.519 | 2 | 0.453 | 0.643 |
+| 2023-24 | POR | 0.256 | 0.513 | 5 | 0.491 | 24 | 0.728 | 0.355 |
+| 2024-25 | HOU | 0.634 | 0.514 | 1 | 0.499 | 15 | 0.389 | 0.237 |
+| 2024-25 | NOP | 0.256 | 0.512 | 2 | 0.508 | 9 | 0.797 | 0.939 |
+| 2024-25 | UTA | 0.207 | 0.510 | 3 | 0.510 | 8 | 0.779 | 0.851 |
+| 2024-25 | DAL | 0.476 | 0.509 | 4 | 0.503 | 13 | 0.384 | -0.083 |
+| 2024-25 | GSW | 0.585 | 0.508 | 5 | 0.522 | 3 | 0.170 | 0.677 |
+| 2025-26 | PHX | 0.549 | 0.512 | 1 | 0.512 | 4 | 0.322 | 0.606 |
+| 2025-26 | OKC | 0.780 | 0.511 | 2 | 0.506 | 11 | -0.083 | -0.328 |
+| 2025-26 | GSW | 0.451 | 0.508 | 3 | 0.502 | 17 | 0.256 | 0.263 |
+| 2025-26 | SAS | 0.756 | 0.506 | 4 | 0.510 | 7 | 0.005 | 0.489 |
+| 2025-26 | ORL | 0.549 | 0.504 | 5 | 0.505 | 12 | 0.257 | -0.085 |
+
+
+retro 与 causal OWP 的 Spearman 相关：2007-08 0.61，2008-09 0.37，2009-10 0.47，2010-11 0.68，2011-12 0.54，2012-13 0.61，2013-14 0.68，2014-15 0.86，2015-16 0.24，2016-17 0.46，2017-18 0.30，2018-19 0.56，2019-20 0.69，2020-21 0.33，2021-22 0.47，2022-23 0.18，2023-24 0.26，2024-25 0.73，2025-26 0.50
+
+## 9. 基线模型：赛季前评级 + 主场优势
+
+扩展窗口滚动回测：每个测试赛季只用更早的赛季训练。`b` 是上季净效率差到本季净胜分的系数，`hca` 是主场优势（分），`sigma` 是训练残差标准差。
+
+| test_season | train_seasons | b | hca | sigma | n_games | preseason_log_loss | constant_log_loss | preseason_brier | constant_brier | preseason_margin_mae | constant_margin_mae | preseason_margin_rmse | constant_margin_rmse | preseason_ece |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 2014-15 | 2013-14 | 0.461 | 2.612 | 12.865 | 1230 | 0.653 | 0.682 | 0.231 | 0.244 | 10.346 | 10.813 | 13.006 | 13.467 | 0.025 |
+| 2015-16 | 2013-14,2014-15 | 0.485 | 2.508 | 12.934 | 1230 | 0.623 | 0.677 | 0.216 | 0.242 | 9.801 | 10.703 | 12.437 | 13.331 | 0.073 |
+| 2016-17 | 2013-14,2014-15,2015-16 | 0.563 | 2.568 | 12.759 | 1230 | 0.630 | 0.679 | 0.220 | 0.243 | 10.062 | 10.993 | 12.843 | 13.696 | 0.034 |
+| 2017-18 | 2013-14,2014-15,2015-16,2016-17 | 0.584 | 2.706 | 12.778 | 1230 | 0.646 | 0.681 | 0.227 | 0.244 | 10.243 | 10.801 | 13.142 | 13.660 | 0.022 |
+| 2018-19 | 2013-14,2014-15,2015-16,2016-17,2017-18 | 0.587 | 2.588 | 12.851 | 1230 | 0.638 | 0.676 | 0.224 | 0.242 | 10.723 | 11.376 | 13.682 | 14.403 | 0.023 |
+| 2019-20 | 2013-14,2014-15,2015-16,2016-17,2017-18,2018-19 | 0.605 | 2.609 | 12.993 | 1059 | 0.657 | 0.690 | 0.233 | 0.248 | 10.660 | 11.247 | 13.612 | 14.097 | 0.033 |
+| 2020-21 | 2013-14,2014-15,2015-16,2016-17,2017-18,2018-19,2019-20 | 0.598 | 2.574 | 13.072 | 1080 | 0.695 | 0.692 | 0.250 | 0.249 | 12.050 | 12.060 | 15.184 | 15.264 | 0.068 |
+| 2021-22 | 2013-14,2014-15,2015-16,2016-17,2017-18,2018-19,2019-20,2020-21 | 0.570 | 2.387 | 13.326 | 1230 | 0.663 | 0.691 | 0.235 | 0.249 | 11.686 | 12.216 | 14.818 | 15.320 | 0.025 |
+| 2022-23 | 2013-14,2014-15,2015-16,2016-17,2017-18,2018-19,2019-20,2020-21,2021-22 | 0.568 | 2.310 | 13.505 | 1230 | 0.662 | 0.680 | 0.235 | 0.243 | 10.491 | 10.889 | 13.379 | 13.661 | 0.017 |
+| 2023-24 | 2013-14,2014-15,2015-16,2016-17,2017-18,2018-19,2019-20,2020-21,2021-22,2022-23 | 0.553 | 2.332 | 13.492 | 1230 | 0.658 | 0.691 | 0.233 | 0.249 | 11.861 | 12.449 | 15.094 | 15.641 | 0.046 |
+| 2024-25 | 2013-14,2014-15,2015-16,2016-17,2017-18,2018-19,2019-20,2020-21,2021-22,2022-23,2023-24 | 0.566 | 2.311 | 13.648 | 1230 | 0.655 | 0.691 | 0.232 | 0.249 | 11.863 | 12.604 | 15.157 | 15.885 | 0.025 |
+| 2025-26 | 2013-14,2014-15,2015-16,2016-17,2017-18,2018-19,2019-20,2020-21,2021-22,2022-23,2023-24,2024-25 | 0.570 | 2.258 | 13.783 | 1230 | 0.658 | 0.688 | 0.233 | 0.247 | 12.460 | 13.097 | 15.814 | 16.416 | 0.022 |
+| pooled |  |  |  |  | 14439 | 0.653 | 0.685 | 0.230 | 0.246 | 11.014 | 11.604 | 14.049 | 14.606 | 0.012 |
+
+
+合并测试集的校准表：
+
+| bin_lo | bin_hi | n | mean_pred | observed |
+|---|---|---|---|---|
+| 0.100 | 0.200 | 1 | 0.193 | 0.000 |
+| 0.200 | 0.300 | 95 | 0.271 | 0.158 |
+| 0.300 | 0.400 | 1005 | 0.364 | 0.338 |
+| 0.400 | 0.500 | 2685 | 0.456 | 0.444 |
+| 0.500 | 0.600 | 4731 | 0.552 | 0.540 |
+| 0.600 | 0.700 | 3981 | 0.646 | 0.656 |
+| 0.700 | 0.800 | 1782 | 0.739 | 0.741 |
+| 0.800 | 0.900 | 159 | 0.825 | 0.836 |

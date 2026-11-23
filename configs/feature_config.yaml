@@ -1,0 +1,11 @@
+# Pre-game feature definitions (Phase 1).
+# Info cut-off: a team's features for a game use only games whose ET game date is
+# strictly earlier than that game's ET date.
+schedule_density:
+  # Window counts INCLUDE the current game: games_last_4_days = games on [d-3, d].
+  windows_days: [4, 7]
+injury:
+  # Statuses whose players are counted as missing.
+  missing_statuses: ["Out", "Doubtful"]
+travel:
+  distance_unit: km

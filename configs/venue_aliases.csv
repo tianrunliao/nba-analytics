@@ -1,0 +1,78 @@
+arena_name,arena_city,venue_id,wikidata_qid,neutral_site,note
+AT&T Center,San Antonio,SAN_ANTONIO_FROST_BANK,Q298573,False,renamed Frost Bank Center
+Accor Arena,Paris,PARIS_ACCOR,Q537720,True,NBA Paris Game
+Alamodome,San Antonio,SAN_ANTONIO_ALAMODOME,Q1618347,False,SAS designated home game in home city
+Amalie Arena,Tampa,TAMPA_AMALIE,Q940199,False,TOR temporary home 2020-21 (prior season only)
+American Airlines Center,Dallas,DALLAS_AAC,Q463345,False,
+AmericanAirlines Arena,Miami,MIAMI_KASEYA,Q420129,False,former name
+Amway Center,Orlando,ORLANDO_KIA,Q481795,False,renamed Kia Center
+Arena CDMX,Mexico City,MEXICO_CITY_ARENA,Q6826206,True,NBA Mexico City Game
+Ball Arena,Denver,DENVER_BALL,Q795470,False,
+Bankers Life Fieldhouse,Indianapolis,INDIANAPOLIS_GAINBRIDGE,Q545007,False,renamed Gainbridge Fieldhouse
+Barclays Center,Brooklyn,BROOKLYN_BARCLAYS,Q807966,False,
+Capital One Arena,Washington,WASHINGTON_CAPITAL_ONE,Q223240,False,
+Chase Center,San Francisco,SAN_FRANCISCO_CHASE,Q15262098,False,
+Chesapeake Energy Arena,Oklahoma City,OKC_PAYCOM,Q665434,False,renamed Paycom Center
+Crypto.com Arena,Los Angeles,LA_CRYPTO,Q186080,False,
+Delta Center,Salt Lake City,SLC_DELTA,Q82294,False,
+FTX Arena,Miami,MIAMI_KASEYA,Q420129,False,former name
+FedExForum,Memphis,MEMPHIS_FEDEX,Q641212,False,
+Fiserv Forum,Milwaukee,MILWAUKEE_FISERV,Q20372160,False,
+Footprint Center,Phoenix,PHOENIX_ARENA,Q1538690,False,former name
+Frost Bank Center,San Antonio,SAN_ANTONIO_FROST_BANK,Q298573,False,
+Gainbridge Fieldhouse,Indianapolis,INDIANAPOLIS_GAINBRIDGE,Q545007,False,
+Golden 1 Center,Sacramento,SACRAMENTO_GOLDEN1,Q7011384,False,
+Intuit Dome,Inglewood,INGLEWOOD_INTUIT,Q54958436,False,LAC home from 2024-25
+Kaseya Center,Miami,MIAMI_KASEYA,Q420129,False,
+Kia Center,Orlando,ORLANDO_KIA,Q481795,False,
+Little Caesars Arena,Detroit,DETROIT_LCA,Q18154984,False,
+Madison Square Garden,New York,NEW_YORK_MSG,Q186125,False,"current MSG (Q186125), not historical buildings"
+Mexico City Arena,"Mexico City, Mexico",MEXICO_CITY_ARENA,Q6826206,True,NBA Mexico City Game
+Miami-Dade Arena,Miami,MIAMI_KASEYA,Q420129,False,former name
+Moda Center,Portland,PORTLAND_MODA,Q1347442,False,
+Moody Center,Austin,AUSTIN_MOODY,Q79477138,False,SAS designated home games in Austin; not flagged neutral by source
+Mortgage Matchup Center,Phoenix,PHOENIX_ARENA,Q1538690,False,
+PHX Arena,Phoenix,PHOENIX_ARENA,Q1538690,False,former name
+Paycom Center,Oklahoma City,OKC_PAYCOM,Q665434,False,
+Phoenix Suns Arena,Phoenix,PHOENIX_ARENA,Q1538690,False,former name
+Rocket Arena,Cleveland,CLEVELAND_ROCKET,Q387157,False,
+Rocket Mortgage FieldHouse,Cleveland,CLEVELAND_ROCKET,Q387157,False,renamed Rocket Arena
+STAPLES Center,Los Angeles,LA_CRYPTO,Q186080,False,renamed Crypto.com Arena
+Scotiabank Arena,Toronto,TORONTO_SCOTIABANK,Q406972,False,
+Smoothie King Center,New Orleans,NEW_ORLEANS_SMOOTHIE_KING,Q1515840,False,
+Spectrum Center,Charlotte,CHARLOTTE_SPECTRUM,Q983870,False,
+State Farm Arena,Atlanta,ATLANTA_STATE_FARM,Q1123297,False,"Atlanta arena, not Payne Arena (Hidalgo)"
+T-Mobile Arena,Las Vegas,LAS_VEGAS_TMOBILE,Q3338973,True,NBA Cup semifinals
+TD Garden,Boston,BOSTON_TD_GARDEN,Q432105,False,
+Target Center,Minneapolis,MINNEAPOLIS_TARGET,Q282675,False,
+The O2 Arena,London,LONDON_O2,Q5364202,True,NBA London Game
+Toyota Center,Houston,HOUSTON_TOYOTA,Q1166157,False,"Houston, not Kennewick"
+Uber Arena,Berlin,BERLIN_UBER,Q265463,True,NBA Berlin Game
+United Center,Chicago,CHICAGO_UNITED,Q639975,False,
+Vivint Arena,Salt Lake City,SLC_DELTA,Q82294,False,renamed Delta Center
+Wells Fargo Center,Philadelphia,PHILADELPHIA_XFINITY,Q818735,False,renamed Xfinity Mobile Arena
+Xfinity Mobile Arena,Philadelphia,PHILADELPHIA_XFINITY,Q818735,False,
+Co-op Live,Manchester,MANCHESTER_COOP_LIVE,Q111962681,True,NBA Manchester Game (2026-27)
+AccorHotels Arena,Paris,PARIS_ACCOR,Q537720,True,former name; NBA Paris Game 2019-20
+AdventHealth Arena,Orlando,ORLANDO_BUBBLE_ADVENTHEALTH,Q112620308,True,2019-20 restart bubble (ESPN Wide World of Sports)
+HP Field House,Orlando,ORLANDO_BUBBLE_FIELD_HOUSE,Q112620434,True,2019-20 restart bubble; now State Farm Field House
+VISA Athletic Center,Orlando,ORLANDO_BUBBLE_VISA,Q112620319,True,2019-20 restart bubble
+Air Canada Centre,Toronto,TORONTO_SCOTIABANK,Q406972,False,former name
+Arena Ciudad de Mexico,"Mexico City, Mexico",MEXICO_CITY_ARENA,Q6826206,True,former name
+BMO Harris Bradley Center,Milwaukee,MILWAUKEE_BRADLEY,Q737976,False,MIL home until 2017-18 (separate building)
+EnergySolutions Arena,Salt Lake City,SLC_DELTA,Q82294,False,former name
+Vivint Smart Home Arena,Salt Lake City,SLC_DELTA,Q82294,False,former name
+ORACLE Arena,Oakland,OAKLAND_ORACLE,Q1139021,False,GSW home until 2018-19 (separate building)
+Palace of Auburn Hills,Detroit,AUBURN_HILLS_PALACE,Q1327633,False,DET home until 2016-17 (separate building)
+Pepsi Center,Denver,DENVER_BALL,Q795470,False,former name
+Philips Arena,Atlanta,ATLANTA_STATE_FARM,Q1123297,False,former name
+Quicken Loans Arena,Cleveland,CLEVELAND_ROCKET,Q387157,False,former name
+Sleep Train Arena,Sacramento,SACRAMENTO_SLEEP_TRAIN,Q93831,False,SAC home until 2015-16 (separate building)
+Talking Stick Resort Arena,Phoenix,PHOENIX_ARENA,Q1538690,False,former name
+US Airways Center,Phoenix,PHOENIX_ARENA,Q1538690,False,former name
+UW-Milwaukee Panther Arena,Milwaukee,MILWAUKEE_PANTHER,Q1142808,False,one MIL home game 2017-18
+Amway Arena,Orlando,ORLANDO_AMWAY_ARENA,Q481794,False,ORL home until 2009-10 (former building; not Amway Center)
+IZOD Center,New Jersey,EAST_RUTHERFORD_MEADOWLANDS,Q538218,False,NJN home until 2009-10
+KeyArena,Seattle,SEATTLE_KEYARENA,Q977529,False,SEA home until 2007-08 (now Climate Pledge Arena)
+Prudential Center,Newark,NEWARK_PRUDENTIAL,Q849027,False,NJN home 2010-12
+Wachovia Center,Philadelphia,PHILADELPHIA_XFINITY,Q818735,False,former name

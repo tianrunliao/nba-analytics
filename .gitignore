@@ -1,0 +1,20 @@
+# environment
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.DS_Store
+
+# data: fetched from stats.nba.com / NBA.com / Wikidata, rebuilt with the pipeline;
+# not redistributed (NBA terms of use)
+/data/
+/models/
+/app/
+/notebooks/
+
+# real NBA payloads used as test fixtures (not redistributed; tests skip without them)
+tests/fixtures/raw_subset/
+tests/fixtures/injury_reports/
+
+# private design notes
+nba_dynamic_sos_plan.md

@@ -1,0 +1,655 @@
+check,season,passed,detail,severity
+team_count,2006-07,True,30 teams,error
+game_id_unique,2006-07,True,unique,error
+two_team_rows_per_game,2006-07,True,every game has home+away rows,error
+game_in_schedule,2006-07,True,every game found in schedule,error
+equal_games_per_team,2006-07,True,every team plays 82,error
+game_count,2006-07,True,1230 games,error
+home_ne_away,2006-07,True,ok,error
+home_matches_schedule,2006-07,True,ok,error
+matchup_string_home_flag,2006-07,True,non-neutral games: MATCHUP 'vs.' agrees with schedule home team,error
+scores_present,2006-07,True,ok,error
+no_ties,2006-07,True,ok,error
+wl_matches_score,2006-07,True,ok,error
+plus_minus_matches_margin,2006-07,True,ok,error
+possessions_present,2006-07,True,ok,error
+possession_source_agreement,2006-07,True,max |POSS_home-POSS_away| = 3; equal in 40.1% of games,warning
+game_date_matches_schedule,2006-07,True,ok,error
+tipoff_present,2006-07,True,ok,error
+tipoff_et_date_matches_game_date,2006-07,True,ok,error
+venue_mapped,2006-07,True,ok,error
+neutral_flag_source_vs_venue,2006-07,True,0 neutral games; 0 neutral by venue but not flagged by source: [],warning
+one_game_per_team_per_date,2006-07,True,ok,error
+conference_division_present,2006-07,True,ok,error
+conference_division_sizes,2006-07,True,"2x15 conferences, 6x5 divisions",error
+venue_coordinates_present,2006-07,True,ok,error
+venue_timezone_vs_source_local_time,2006-07,True,1230 home games agree,warning
+team_count,2007-08,True,30 teams,error
+game_id_unique,2007-08,True,unique,error
+two_team_rows_per_game,2007-08,True,every game has home+away rows,error
+game_in_schedule,2007-08,True,every game found in schedule,error
+equal_games_per_team,2007-08,True,every team plays 82,error
+game_count,2007-08,True,1230 games,error
+home_ne_away,2007-08,True,ok,error
+home_matches_schedule,2007-08,True,ok,error
+matchup_string_home_flag,2007-08,True,non-neutral games: MATCHUP 'vs.' agrees with schedule home team,error
+scores_present,2007-08,True,ok,error
+no_ties,2007-08,True,ok,error
+wl_matches_score,2007-08,True,ok,error
+plus_minus_matches_margin,2007-08,True,ok,error
+possessions_present,2007-08,True,ok,error
+possession_source_agreement,2007-08,True,max |POSS_home-POSS_away| = 3; equal in 38.0% of games,warning
+game_date_matches_schedule,2007-08,True,ok,error
+tipoff_present,2007-08,True,ok,error
+tipoff_et_date_matches_game_date,2007-08,True,ok,error
+venue_mapped,2007-08,True,ok,error
+neutral_flag_source_vs_venue,2007-08,True,0 neutral games; 0 neutral by venue but not flagged by source: [],warning
+one_game_per_team_per_date,2007-08,True,ok,error
+conference_division_present,2007-08,True,ok,error
+conference_division_sizes,2007-08,True,"2x15 conferences, 6x5 divisions",error
+venue_coordinates_present,2007-08,True,ok,error
+venue_timezone_vs_source_local_time,2007-08,False,"6 of 1230 disagree, e.g. ['0020700232', '0020700678', '0020700750', '0020700779', '0020700812']",warning
+player_logs_cover_team_games,2007-08,True,ok,error
+player_minutes_sum_to_team_minutes,2007-08,True,max diff 0.00 min,warning
+team_count,2008-09,True,30 teams,error
+game_id_unique,2008-09,True,unique,error
+two_team_rows_per_game,2008-09,True,every game has home+away rows,error
+game_in_schedule,2008-09,True,every game found in schedule,error
+equal_games_per_team,2008-09,True,every team plays 82,error
+game_count,2008-09,True,1230 games,error
+home_ne_away,2008-09,True,ok,error
+home_matches_schedule,2008-09,True,ok,error
+matchup_string_home_flag,2008-09,True,non-neutral games: MATCHUP 'vs.' agrees with schedule home team,error
+scores_present,2008-09,True,ok,error
+no_ties,2008-09,True,ok,error
+wl_matches_score,2008-09,True,ok,error
+plus_minus_matches_margin,2008-09,True,ok,error
+possessions_present,2008-09,True,ok,error
+possession_source_agreement,2008-09,True,max |POSS_home-POSS_away| = 3; equal in 36.4% of games,warning
+game_date_matches_schedule,2008-09,True,ok,error
+tipoff_present,2008-09,True,ok,error
+tipoff_et_date_matches_game_date,2008-09,True,ok,error
+venue_mapped,2008-09,True,ok,error
+neutral_flag_source_vs_venue,2008-09,True,0 neutral games; 0 neutral by venue but not flagged by source: [],warning
+one_game_per_team_per_date,2008-09,True,ok,error
+conference_division_present,2008-09,True,ok,error
+conference_division_sizes,2008-09,True,"2x15 conferences, 6x5 divisions",error
+venue_coordinates_present,2008-09,True,ok,error
+venue_timezone_vs_source_local_time,2008-09,False,"13 of 1230 disagree, e.g. ['0020800076', '0020800275', '0020800388', '0020800521', '0020800579']",warning
+player_logs_cover_team_games,2008-09,True,ok,error
+player_minutes_sum_to_team_minutes,2008-09,True,max diff 0.01 min,warning
+team_count,2009-10,True,30 teams,error
+game_id_unique,2009-10,True,unique,error
+two_team_rows_per_game,2009-10,True,every game has home+away rows,error
+game_in_schedule,2009-10,True,every game found in schedule,error
+equal_games_per_team,2009-10,True,every team plays 82,error
+game_count,2009-10,True,1230 games,error
+home_ne_away,2009-10,True,ok,error
+home_matches_schedule,2009-10,True,ok,error
+matchup_string_home_flag,2009-10,True,non-neutral games: MATCHUP 'vs.' agrees with schedule home team,error
+scores_present,2009-10,True,ok,error
+no_ties,2009-10,True,ok,error
+wl_matches_score,2009-10,True,ok,error
+plus_minus_matches_margin,2009-10,True,ok,error
+possessions_present,2009-10,True,ok,error
+possession_source_agreement,2009-10,True,max |POSS_home-POSS_away| = 3; equal in 39.0% of games,warning
+game_date_matches_schedule,2009-10,True,ok,error
+tipoff_present,2009-10,True,ok,error
+tipoff_et_date_matches_game_date,2009-10,True,ok,error
+venue_mapped,2009-10,True,ok,error
+neutral_flag_source_vs_venue,2009-10,True,0 neutral games; 0 neutral by venue but not flagged by source: [],warning
+one_game_per_team_per_date,2009-10,True,ok,error
+conference_division_present,2009-10,True,ok,error
+conference_division_sizes,2009-10,True,"2x15 conferences, 6x5 divisions",error
+venue_coordinates_present,2009-10,True,ok,error
+venue_timezone_vs_source_local_time,2009-10,True,1230 home games agree,warning
+player_logs_cover_team_games,2009-10,True,ok,error
+player_minutes_sum_to_team_minutes,2009-10,True,max diff 0.00 min,warning
+team_count,2010-11,True,30 teams,error
+game_id_unique,2010-11,True,unique,error
+two_team_rows_per_game,2010-11,True,every game has home+away rows,error
+game_in_schedule,2010-11,True,every game found in schedule,error
+equal_games_per_team,2010-11,True,every team plays 82,error
+game_count,2010-11,True,1230 games,error
+home_ne_away,2010-11,True,ok,error
+home_matches_schedule,2010-11,True,ok,error
+matchup_string_home_flag,2010-11,True,non-neutral games: MATCHUP 'vs.' agrees with schedule home team,error
+scores_present,2010-11,True,ok,error
+no_ties,2010-11,True,ok,error
+wl_matches_score,2010-11,True,ok,error
+plus_minus_matches_margin,2010-11,True,ok,error
+possessions_present,2010-11,True,ok,error
+possession_source_agreement,2010-11,True,max |POSS_home-POSS_away| = 4; equal in 36.7% of games,warning
+game_date_matches_schedule,2010-11,True,ok,error
+tipoff_present,2010-11,True,ok,error
+tipoff_et_date_matches_game_date,2010-11,True,ok,error
+venue_mapped,2010-11,True,ok,error
+neutral_flag_source_vs_venue,2010-11,True,"2 neutral games; 2 neutral by venue but not flagged by source: ['0021000914', '0021000925']",warning
+one_game_per_team_per_date,2010-11,True,ok,error
+conference_division_present,2010-11,True,ok,error
+conference_division_sizes,2010-11,True,"2x15 conferences, 6x5 divisions",error
+venue_coordinates_present,2010-11,True,ok,error
+venue_timezone_vs_source_local_time,2010-11,True,1228 home games agree,warning
+player_logs_cover_team_games,2010-11,True,ok,error
+player_minutes_sum_to_team_minutes,2010-11,True,max diff 0.00 min,warning
+team_count,2011-12,True,30 teams,error
+game_id_unique,2011-12,True,unique,error
+two_team_rows_per_game,2011-12,True,every game has home+away rows,error
+game_in_schedule,2011-12,True,every game found in schedule,error
+equal_games_per_team,2011-12,True,every team plays 66,error
+game_count,2011-12,True,990 games,error
+home_ne_away,2011-12,True,ok,error
+home_matches_schedule,2011-12,True,ok,error
+matchup_string_home_flag,2011-12,True,non-neutral games: MATCHUP 'vs.' agrees with schedule home team,error
+scores_present,2011-12,True,ok,error
+no_ties,2011-12,True,ok,error
+wl_matches_score,2011-12,True,ok,error
+plus_minus_matches_margin,2011-12,True,ok,error
+possessions_present,2011-12,True,ok,error
+possession_source_agreement,2011-12,True,max |POSS_home-POSS_away| = 4; equal in 38.0% of games,warning
+game_date_matches_schedule,2011-12,True,ok,error
+tipoff_present,2011-12,True,ok,error
+tipoff_et_date_matches_game_date,2011-12,True,ok,error
+venue_mapped,2011-12,True,ok,error
+neutral_flag_source_vs_venue,2011-12,True,0 neutral games; 0 neutral by venue but not flagged by source: [],warning
+one_game_per_team_per_date,2011-12,True,ok,error
+conference_division_present,2011-12,True,ok,error
+conference_division_sizes,2011-12,True,"2x15 conferences, 6x5 divisions",error
+venue_coordinates_present,2011-12,True,ok,error
+venue_timezone_vs_source_local_time,2011-12,True,990 home games agree,warning
+player_logs_cover_team_games,2011-12,True,ok,error
+player_minutes_sum_to_team_minutes,2011-12,True,max diff 0.00 min,warning
+team_count,2012-13,True,30 teams,error
+game_id_unique,2012-13,True,unique,error
+two_team_rows_per_game,2012-13,True,every game has home+away rows,error
+game_in_schedule,2012-13,True,every game found in schedule,error
+equal_games_per_team,2012-13,False,games per team range 81-82 (known exception: BOS-IND on 2013-04-16 was cancelled after the Boston Marathon bombing and never played),warning
+game_count,2012-13,False,"1229 games, expected 1230 (known exception: BOS-IND on 2013-04-16 was cancelled after the Boston Marathon bombing and never played)",warning
+home_ne_away,2012-13,True,ok,error
+home_matches_schedule,2012-13,True,ok,error
+matchup_string_home_flag,2012-13,True,non-neutral games: MATCHUP 'vs.' agrees with schedule home team,error
+scores_present,2012-13,True,ok,error
+no_ties,2012-13,True,ok,error
+wl_matches_score,2012-13,True,ok,error
+plus_minus_matches_margin,2012-13,True,ok,error
+possessions_present,2012-13,True,ok,error
+possession_source_agreement,2012-13,True,max |POSS_home-POSS_away| = 3; equal in 36.6% of games,warning
+game_date_matches_schedule,2012-13,True,ok,error
+tipoff_present,2012-13,True,ok,error
+tipoff_et_date_matches_game_date,2012-13,True,ok,error
+venue_mapped,2012-13,True,ok,error
+neutral_flag_source_vs_venue,2012-13,True,1 neutral games; 1 neutral by venue but not flagged by source: ['0021200580'],warning
+one_game_per_team_per_date,2012-13,True,ok,error
+conference_division_present,2012-13,True,ok,error
+conference_division_sizes,2012-13,True,"2x15 conferences, 6x5 divisions",error
+venue_coordinates_present,2012-13,True,ok,error
+venue_timezone_vs_source_local_time,2012-13,True,1228 home games agree,warning
+player_logs_cover_team_games,2012-13,True,ok,error
+player_minutes_sum_to_team_minutes,2012-13,True,max diff 0.00 min,warning
+team_count,2013-14,True,30 teams,error
+game_id_unique,2013-14,True,unique,error
+two_team_rows_per_game,2013-14,True,every game has home+away rows,error
+game_in_schedule,2013-14,True,every game found in schedule,error
+equal_games_per_team,2013-14,True,every team plays 82,error
+game_count,2013-14,True,1230 games,error
+home_ne_away,2013-14,True,ok,error
+home_matches_schedule,2013-14,True,ok,error
+matchup_string_home_flag,2013-14,True,non-neutral games: MATCHUP 'vs.' agrees with schedule home team,error
+scores_present,2013-14,True,ok,error
+no_ties,2013-14,True,ok,error
+wl_matches_score,2013-14,True,ok,error
+plus_minus_matches_margin,2013-14,True,ok,error
+possessions_present,2013-14,True,ok,error
+possession_source_agreement,2013-14,True,max |POSS_home-POSS_away| = 4; equal in 37.5% of games,warning
+game_date_matches_schedule,2013-14,True,ok,error
+tipoff_present,2013-14,True,ok,error
+tipoff_et_date_matches_game_date,2013-14,True,ok,error
+venue_mapped,2013-14,True,ok,error
+neutral_flag_source_vs_venue,2013-14,True,1 neutral games; 1 neutral by venue but not flagged by source: ['0021300579'],warning
+one_game_per_team_per_date,2013-14,True,ok,error
+conference_division_present,2013-14,True,ok,error
+conference_division_sizes,2013-14,True,"2x15 conferences, 6x5 divisions",error
+venue_coordinates_present,2013-14,True,ok,error
+venue_timezone_vs_source_local_time,2013-14,True,1229 home games agree,warning
+player_logs_cover_team_games,2013-14,True,ok,error
+player_minutes_sum_to_team_minutes,2013-14,True,max diff 0.08 min,warning
+team_count,2014-15,True,30 teams,error
+game_id_unique,2014-15,True,unique,error
+two_team_rows_per_game,2014-15,True,every game has home+away rows,error
+game_in_schedule,2014-15,True,every game found in schedule,error
+equal_games_per_team,2014-15,True,every team plays 82,error
+game_count,2014-15,True,1230 games,error
+home_ne_away,2014-15,True,ok,error
+home_matches_schedule,2014-15,True,ok,error
+matchup_string_home_flag,2014-15,True,non-neutral games: MATCHUP 'vs.' agrees with schedule home team,error
+scores_present,2014-15,True,ok,error
+no_ties,2014-15,True,ok,error
+wl_matches_score,2014-15,True,ok,error
+plus_minus_matches_margin,2014-15,True,ok,error
+possessions_present,2014-15,True,ok,error
+possession_source_agreement,2014-15,True,max |POSS_home-POSS_away| = 3; equal in 36.5% of games,warning
+game_date_matches_schedule,2014-15,True,ok,error
+tipoff_present,2014-15,True,ok,error
+tipoff_et_date_matches_game_date,2014-15,True,ok,error
+venue_mapped,2014-15,True,ok,error
+neutral_flag_source_vs_venue,2014-15,True,"2 neutral games; 2 neutral by venue but not flagged by source: ['0021400117', '0021400585']",warning
+one_game_per_team_per_date,2014-15,True,ok,error
+conference_division_present,2014-15,True,ok,error
+conference_division_sizes,2014-15,True,"2x15 conferences, 6x5 divisions",error
+venue_coordinates_present,2014-15,True,ok,error
+venue_timezone_vs_source_local_time,2014-15,True,1228 home games agree,warning
+player_logs_cover_team_games,2014-15,True,ok,error
+player_minutes_sum_to_team_minutes,2014-15,True,max diff 0.00 min,warning
+team_count,2015-16,True,30 teams,error
+game_id_unique,2015-16,True,unique,error
+two_team_rows_per_game,2015-16,True,every game has home+away rows,error
+game_in_schedule,2015-16,True,every game found in schedule,error
+equal_games_per_team,2015-16,True,every team plays 82,error
+game_count,2015-16,True,1230 games,error
+home_ne_away,2015-16,True,ok,error
+home_matches_schedule,2015-16,True,ok,error
+matchup_string_home_flag,2015-16,True,non-neutral games: MATCHUP 'vs.' agrees with schedule home team,error
+scores_present,2015-16,True,ok,error
+no_ties,2015-16,True,ok,error
+wl_matches_score,2015-16,True,ok,error
+plus_minus_matches_margin,2015-16,True,ok,error
+possessions_present,2015-16,True,ok,error
+possession_source_agreement,2015-16,True,max |POSS_home-POSS_away| = 3; equal in 39.0% of games,warning
+game_date_matches_schedule,2015-16,True,ok,error
+tipoff_present,2015-16,True,ok,error
+tipoff_et_date_matches_game_date,2015-16,True,ok,error
+venue_mapped,2015-16,True,ok,error
+neutral_flag_source_vs_venue,2015-16,True,"2 neutral games; 2 neutral by venue but not flagged by source: ['0021500282', '0021500588']",warning
+one_game_per_team_per_date,2015-16,True,ok,error
+conference_division_present,2015-16,True,ok,error
+conference_division_sizes,2015-16,True,"2x15 conferences, 6x5 divisions",error
+venue_coordinates_present,2015-16,True,ok,error
+venue_timezone_vs_source_local_time,2015-16,True,1228 home games agree,warning
+player_logs_cover_team_games,2015-16,True,ok,error
+player_minutes_sum_to_team_minutes,2015-16,True,max diff 0.00 min,warning
+team_count,2016-17,True,30 teams,error
+game_id_unique,2016-17,True,unique,error
+two_team_rows_per_game,2016-17,True,every game has home+away rows,error
+game_in_schedule,2016-17,True,every game found in schedule,error
+equal_games_per_team,2016-17,True,every team plays 82,error
+game_count,2016-17,True,1230 games,error
+home_ne_away,2016-17,True,ok,error
+home_matches_schedule,2016-17,True,ok,error
+matchup_string_home_flag,2016-17,True,non-neutral games: MATCHUP 'vs.' agrees with schedule home team,error
+scores_present,2016-17,True,ok,error
+no_ties,2016-17,True,ok,error
+wl_matches_score,2016-17,True,ok,error
+plus_minus_matches_margin,2016-17,True,ok,error
+possessions_present,2016-17,True,ok,error
+possession_source_agreement,2016-17,True,max |POSS_home-POSS_away| = 3; equal in 38.1% of games,warning
+game_date_matches_schedule,2016-17,True,ok,error
+tipoff_present,2016-17,True,ok,error
+tipoff_et_date_matches_game_date,2016-17,True,ok,error
+venue_mapped,2016-17,True,ok,error
+neutral_flag_source_vs_venue,2016-17,True,"3 neutral games; 3 neutral by venue but not flagged by source: ['0021600589', '0021600591', '0021600605']",warning
+one_game_per_team_per_date,2016-17,True,ok,error
+conference_division_present,2016-17,True,ok,error
+conference_division_sizes,2016-17,True,"2x15 conferences, 6x5 divisions",error
+venue_coordinates_present,2016-17,True,ok,error
+venue_timezone_vs_source_local_time,2016-17,True,1227 home games agree,warning
+player_logs_cover_team_games,2016-17,True,ok,error
+player_minutes_sum_to_team_minutes,2016-17,True,max diff 0.00 min,warning
+team_count,2017-18,True,30 teams,error
+game_id_unique,2017-18,True,unique,error
+two_team_rows_per_game,2017-18,True,every game has home+away rows,error
+game_in_schedule,2017-18,True,every game found in schedule,error
+equal_games_per_team,2017-18,True,every team plays 82,error
+game_count,2017-18,True,1230 games,error
+home_ne_away,2017-18,True,ok,error
+home_matches_schedule,2017-18,True,ok,error
+matchup_string_home_flag,2017-18,True,non-neutral games: MATCHUP 'vs.' agrees with schedule home team,error
+scores_present,2017-18,True,ok,error
+no_ties,2017-18,True,ok,error
+wl_matches_score,2017-18,True,ok,error
+plus_minus_matches_margin,2017-18,True,ok,error
+possessions_present,2017-18,True,ok,error
+possession_source_agreement,2017-18,True,max |POSS_home-POSS_away| = 3; equal in 37.2% of games,warning
+game_date_matches_schedule,2017-18,True,ok,error
+tipoff_present,2017-18,True,ok,error
+tipoff_et_date_matches_game_date,2017-18,True,ok,error
+venue_mapped,2017-18,True,ok,error
+neutral_flag_source_vs_venue,2017-18,True,"3 neutral games; 3 neutral by venue but not flagged by source: ['0021700365', '0021700376', '0021700614']",warning
+one_game_per_team_per_date,2017-18,True,ok,error
+conference_division_present,2017-18,True,ok,error
+conference_division_sizes,2017-18,True,"2x15 conferences, 6x5 divisions",error
+venue_coordinates_present,2017-18,True,ok,error
+venue_timezone_vs_source_local_time,2017-18,True,1227 home games agree,warning
+player_logs_cover_team_games,2017-18,True,ok,error
+player_minutes_sum_to_team_minutes,2017-18,True,max diff 0.00 min,warning
+team_count,2018-19,True,30 teams,error
+game_id_unique,2018-19,True,unique,error
+two_team_rows_per_game,2018-19,True,every game has home+away rows,error
+game_in_schedule,2018-19,True,every game found in schedule,error
+equal_games_per_team,2018-19,True,every team plays 82,error
+game_count,2018-19,True,1230 games,error
+home_ne_away,2018-19,True,ok,error
+home_matches_schedule,2018-19,True,ok,error
+matchup_string_home_flag,2018-19,True,non-neutral games: MATCHUP 'vs.' agrees with schedule home team,error
+scores_present,2018-19,True,ok,error
+no_ties,2018-19,True,ok,error
+wl_matches_score,2018-19,True,ok,error
+plus_minus_matches_margin,2018-19,True,ok,error
+possessions_present,2018-19,True,ok,error
+possession_source_agreement,2018-19,True,max |POSS_home-POSS_away| = 3; equal in 36.0% of games,warning
+game_date_matches_schedule,2018-19,True,ok,error
+tipoff_present,2018-19,True,ok,error
+tipoff_et_date_matches_game_date,2018-19,True,ok,error
+venue_mapped,2018-19,True,ok,error
+neutral_flag_source_vs_venue,2018-19,True,"3 neutral games; 3 neutral by venue but not flagged by source: ['0021800418', '0021800429', '0021800665']",warning
+one_game_per_team_per_date,2018-19,True,ok,error
+conference_division_present,2018-19,True,ok,error
+conference_division_sizes,2018-19,True,"2x15 conferences, 6x5 divisions",error
+venue_coordinates_present,2018-19,True,ok,error
+venue_timezone_vs_source_local_time,2018-19,True,1227 home games agree,warning
+player_logs_cover_team_games,2018-19,True,ok,error
+player_minutes_sum_to_team_minutes,2018-19,True,max diff 0.00 min,warning
+team_count,2019-20,True,30 teams,error
+game_id_unique,2019-20,True,unique,error
+two_team_rows_per_game,2019-20,True,every game has home+away rows,error
+game_in_schedule,2019-20,True,every game found in schedule,error
+equal_games_per_team,2019-20,False,games per team range 64-75 (known exception: COVID-19 suspension; season finished with 22 teams in the Orlando bubble (64-75 games)),warning
+game_count,2019-20,False,"1059 games, expected 1125 (known exception: COVID-19 suspension; season finished with 22 teams in the Orlando bubble (64-75 games))",warning
+home_ne_away,2019-20,True,ok,error
+home_matches_schedule,2019-20,True,ok,error
+matchup_string_home_flag,2019-20,True,non-neutral games: MATCHUP 'vs.' agrees with schedule home team,error
+scores_present,2019-20,True,ok,error
+no_ties,2019-20,True,ok,error
+wl_matches_score,2019-20,True,ok,error
+plus_minus_matches_margin,2019-20,True,ok,error
+possessions_present,2019-20,True,ok,error
+possession_source_agreement,2019-20,True,max |POSS_home-POSS_away| = 3; equal in 39.9% of games,warning
+game_date_matches_schedule,2019-20,True,ok,error
+tipoff_present,2019-20,True,ok,error
+tipoff_et_date_matches_game_date,2019-20,True,ok,error
+venue_mapped,2019-20,True,ok,error
+neutral_flag_source_vs_venue,2019-20,True,"91 neutral games; 91 neutral by venue but not flagged by source: ['0021900369', '0021900380', '0021900669', '0021901231', '0021901232', '0021901233', '0021901234', '0021901235', '0021901236', '0021901237', '0021901238', '0021901239', '0021901240', '0021901241', '0021901242', '0021901243', '0021901244', '0021901245', '0021901246', '0021901247', '0021901248', '0021901249', '0021901250', '0021901251', '0021901252', '0021901253', '0021901254', '0021901255', '0021901256', '0021901257', '0021901258', '0021901259', '0021901260', '0021901261', '0021901262', '0021901263', '0021901264', '0021901265', '0021901266', '0021901267', '0021901268', '0021901269', '0021901270', '0021901271', '0021901272', '0021901273', '0021901274', '0021901275', '0021901276', '0021901277', '0021901278', '0021901279', '0021901280', '0021901281', '0021901282', '0021901283', '0021901284', '0021901285', '0021901286', '0021901287', '0021901288', '0021901289', '0021901290', '0021901291', '0021901292', '0021901293', '0021901294', '0021901295', '0021901296', '0021901297', '0021901298', '0021901299', '0021901301', '0021901300', '0021901302', '0021901303', '0021901304', '0021901305', '0021901306', '0021901307', '0021901308', '0021901310', '0021901311', '0021901313', '0021901314', '0021901309', '0021901312', '0021901318', '0021901316', '0021901317', '0021901315']",warning
+one_game_per_team_per_date,2019-20,True,ok,error
+conference_division_present,2019-20,True,ok,error
+conference_division_sizes,2019-20,True,"2x15 conferences, 6x5 divisions",error
+venue_coordinates_present,2019-20,True,ok,error
+venue_timezone_vs_source_local_time,2019-20,True,968 home games agree,warning
+player_logs_cover_team_games,2019-20,True,ok,error
+player_minutes_sum_to_team_minutes,2019-20,True,max diff 0.00 min,warning
+team_count,2020-21,True,30 teams,error
+game_id_unique,2020-21,True,unique,error
+two_team_rows_per_game,2020-21,True,every game has home+away rows,error
+game_in_schedule,2020-21,True,every game found in schedule,error
+equal_games_per_team,2020-21,True,every team plays 72,error
+game_count,2020-21,True,1080 games,error
+home_ne_away,2020-21,True,ok,error
+home_matches_schedule,2020-21,True,ok,error
+matchup_string_home_flag,2020-21,True,non-neutral games: MATCHUP 'vs.' agrees with schedule home team,error
+scores_present,2020-21,True,ok,error
+no_ties,2020-21,True,ok,error
+wl_matches_score,2020-21,True,ok,error
+plus_minus_matches_margin,2020-21,True,ok,error
+possessions_present,2020-21,True,ok,error
+possession_source_agreement,2020-21,True,max |POSS_home-POSS_away| = 3; equal in 33.9% of games,warning
+game_date_matches_schedule,2020-21,True,ok,error
+tipoff_present,2020-21,True,ok,error
+tipoff_et_date_matches_game_date,2020-21,True,ok,error
+venue_mapped,2020-21,True,ok,error
+neutral_flag_source_vs_venue,2020-21,True,0 neutral games; 0 neutral by venue but not flagged by source: [],warning
+one_game_per_team_per_date,2020-21,True,ok,error
+conference_division_present,2020-21,True,ok,error
+conference_division_sizes,2020-21,True,"2x15 conferences, 6x5 divisions",error
+venue_coordinates_present,2020-21,True,ok,error
+venue_timezone_vs_source_local_time,2020-21,True,1080 home games agree,warning
+player_logs_cover_team_games,2020-21,True,ok,error
+player_minutes_sum_to_team_minutes,2020-21,True,max diff 0.00 min,warning
+team_count,2021-22,True,30 teams,error
+game_id_unique,2021-22,True,unique,error
+two_team_rows_per_game,2021-22,True,every game has home+away rows,error
+game_in_schedule,2021-22,True,every game found in schedule,error
+equal_games_per_team,2021-22,True,every team plays 82,error
+game_count,2021-22,True,1230 games,error
+home_ne_away,2021-22,True,ok,error
+home_matches_schedule,2021-22,True,ok,error
+matchup_string_home_flag,2021-22,True,non-neutral games: MATCHUP 'vs.' agrees with schedule home team,error
+scores_present,2021-22,True,ok,error
+no_ties,2021-22,True,ok,error
+wl_matches_score,2021-22,True,ok,error
+plus_minus_matches_margin,2021-22,True,ok,error
+possessions_present,2021-22,True,ok,error
+possession_source_agreement,2021-22,True,max |POSS_home-POSS_away| = 4; equal in 35.7% of games,warning
+game_date_matches_schedule,2021-22,True,ok,error
+tipoff_present,2021-22,True,ok,error
+tipoff_et_date_matches_game_date,2021-22,True,ok,error
+venue_mapped,2021-22,True,ok,error
+neutral_flag_source_vs_venue,2021-22,True,0 neutral games; 0 neutral by venue but not flagged by source: [],warning
+one_game_per_team_per_date,2021-22,True,ok,error
+conference_division_present,2021-22,True,ok,error
+conference_division_sizes,2021-22,True,"2x15 conferences, 6x5 divisions",error
+venue_coordinates_present,2021-22,True,ok,error
+venue_timezone_vs_source_local_time,2021-22,True,1230 home games agree,warning
+player_logs_cover_team_games,2021-22,True,ok,error
+player_minutes_sum_to_team_minutes,2021-22,True,max diff 0.00 min,warning
+team_count,2022-23,True,30 teams,error
+game_id_unique,2022-23,True,unique,error
+two_team_rows_per_game,2022-23,True,every game has home+away rows,error
+game_in_schedule,2022-23,True,every game found in schedule,error
+equal_games_per_team,2022-23,True,every team plays 82,error
+game_count,2022-23,True,1230 games,error
+home_ne_away,2022-23,True,ok,error
+home_matches_schedule,2022-23,True,ok,error
+matchup_string_home_flag,2022-23,True,non-neutral games: MATCHUP 'vs.' agrees with schedule home team,error
+scores_present,2022-23,True,ok,error
+no_ties,2022-23,True,ok,error
+wl_matches_score,2022-23,True,ok,error
+plus_minus_matches_margin,2022-23,True,ok,error
+possessions_present,2022-23,True,ok,error
+possession_source_agreement,2022-23,True,max |POSS_home-POSS_away| = 3; equal in 36.7% of games,warning
+game_date_matches_schedule,2022-23,True,ok,error
+tipoff_present,2022-23,True,ok,error
+tipoff_et_date_matches_game_date,2022-23,True,ok,error
+venue_mapped,2022-23,True,ok,error
+neutral_flag_source_vs_venue,2022-23,True,"2 neutral games; 2 neutral by venue but not flagged by source: ['0022200439', '0022200678']",warning
+one_game_per_team_per_date,2022-23,True,ok,error
+conference_division_present,2022-23,True,ok,error
+conference_division_sizes,2022-23,True,"2x15 conferences, 6x5 divisions",error
+venue_coordinates_present,2022-23,True,ok,error
+venue_timezone_vs_source_local_time,2022-23,True,1228 home games agree,warning
+player_logs_cover_team_games,2022-23,True,ok,error
+player_minutes_sum_to_team_minutes,2022-23,True,max diff 0.00 min,warning
+team_count,2023-24,True,30 teams,error
+game_id_unique,2023-24,True,unique,error
+two_team_rows_per_game,2023-24,True,every game has home+away rows,error
+game_in_schedule,2023-24,True,every game found in schedule,error
+equal_games_per_team,2023-24,True,every team plays 82,error
+game_count,2023-24,True,1230 games,error
+home_ne_away,2023-24,True,ok,error
+home_matches_schedule,2023-24,True,ok,error
+matchup_string_home_flag,2023-24,True,non-neutral games: MATCHUP 'vs.' agrees with schedule home team,error
+scores_present,2023-24,True,ok,error
+no_ties,2023-24,True,ok,error
+wl_matches_score,2023-24,True,ok,error
+plus_minus_matches_margin,2023-24,True,ok,error
+possessions_present,2023-24,True,ok,error
+possession_source_agreement,2023-24,True,max |POSS_home-POSS_away| = 3; equal in 36.4% of games,warning
+game_date_matches_schedule,2023-24,True,ok,error
+tipoff_present,2023-24,True,ok,error
+tipoff_et_date_matches_game_date,2023-24,True,ok,error
+venue_mapped,2023-24,True,ok,error
+neutral_flag_source_vs_venue,2023-24,True,"4 neutral games; 4 neutral by venue but not flagged by source: ['0022300172', '0022301229', '0022301230', '0022300527']",warning
+one_game_per_team_per_date,2023-24,True,ok,error
+conference_division_present,2023-24,True,ok,error
+conference_division_sizes,2023-24,True,"2x15 conferences, 6x5 divisions",error
+venue_coordinates_present,2023-24,True,ok,error
+venue_timezone_vs_source_local_time,2023-24,False,"1 of 1226 disagree, e.g. ['0022301165']",warning
+player_logs_cover_team_games,2023-24,True,ok,error
+player_minutes_sum_to_team_minutes,2023-24,True,max diff 0.00 min,warning
+team_count,2024-25,True,30 teams,error
+game_id_unique,2024-25,True,unique,error
+two_team_rows_per_game,2024-25,True,every game has home+away rows,error
+game_in_schedule,2024-25,True,every game found in schedule,error
+equal_games_per_team,2024-25,True,every team plays 82,error
+game_count,2024-25,True,1230 games,error
+home_ne_away,2024-25,True,ok,error
+home_matches_schedule,2024-25,True,ok,error
+matchup_string_home_flag,2024-25,True,non-neutral games: MATCHUP 'vs.' agrees with schedule home team,error
+scores_present,2024-25,True,ok,error
+no_ties,2024-25,True,ok,error
+wl_matches_score,2024-25,True,ok,error
+plus_minus_matches_margin,2024-25,True,ok,error
+possessions_present,2024-25,True,ok,error
+possession_source_agreement,2024-25,True,max |POSS_home-POSS_away| = 3; equal in 38.0% of games,warning
+game_date_matches_schedule,2024-25,True,ok,error
+tipoff_present,2024-25,True,ok,error
+tipoff_et_date_matches_game_date,2024-25,True,ok,error
+venue_mapped,2024-25,True,ok,error
+neutral_flag_source_vs_venue,2024-25,True,5 neutral games; 0 neutral by venue but not flagged by source: [],warning
+one_game_per_team_per_date,2024-25,True,ok,error
+conference_division_present,2024-25,True,ok,error
+conference_division_sizes,2024-25,True,"2x15 conferences, 6x5 divisions",error
+venue_coordinates_present,2024-25,True,ok,error
+venue_timezone_vs_source_local_time,2024-25,True,1225 home games agree,warning
+player_logs_cover_team_games,2024-25,True,ok,error
+player_minutes_sum_to_team_minutes,2024-25,False,4 team-games differ by >1.0 min,warning
+team_count,2025-26,True,30 teams,error
+game_id_unique,2025-26,True,unique,error
+two_team_rows_per_game,2025-26,True,every game has home+away rows,error
+game_in_schedule,2025-26,True,every game found in schedule,error
+equal_games_per_team,2025-26,True,every team plays 82,error
+game_count,2025-26,True,1230 games,error
+home_ne_away,2025-26,True,ok,error
+home_matches_schedule,2025-26,True,ok,error
+matchup_string_home_flag,2025-26,True,non-neutral games: MATCHUP 'vs.' agrees with schedule home team,error
+scores_present,2025-26,True,ok,error
+no_ties,2025-26,True,ok,error
+wl_matches_score,2025-26,True,ok,error
+plus_minus_matches_margin,2025-26,True,ok,error
+possessions_present,2025-26,True,ok,error
+possession_source_agreement,2025-26,True,max |POSS_home-POSS_away| = 4; equal in 35.8% of games,warning
+game_date_matches_schedule,2025-26,True,ok,error
+tipoff_present,2025-26,True,ok,error
+tipoff_et_date_matches_game_date,2025-26,True,ok,error
+venue_mapped,2025-26,True,ok,error
+neutral_flag_source_vs_venue,2025-26,True,5 neutral games; 0 neutral by venue but not flagged by source: [],warning
+one_game_per_team_per_date,2025-26,True,ok,error
+conference_division_present,2025-26,True,ok,error
+conference_division_sizes,2025-26,True,"2x15 conferences, 6x5 divisions",error
+venue_coordinates_present,2025-26,True,ok,error
+venue_timezone_vs_source_local_time,2025-26,True,1225 home games agree,warning
+player_logs_cover_team_games,2025-26,True,ok,error
+player_minutes_sum_to_team_minutes,2025-26,True,max diff 0.14 min,warning
+playoff_two_team_rows,2007-08,True,ok,error
+playoff_game_in_schedule,2007-08,True,ok,error
+playoff_game_id_unique,2007-08,True,ok,error
+playoff_venue_mapped,2007-08,True,ok,error
+playoff_possessions_present,2007-08,True,ok,error
+playoff_wl_matches_score,2007-08,True,ok,error
+playoff_two_team_rows,2008-09,True,ok,error
+playoff_game_in_schedule,2008-09,True,ok,error
+playoff_game_id_unique,2008-09,True,ok,error
+playoff_venue_mapped,2008-09,True,ok,error
+playoff_possessions_present,2008-09,True,ok,error
+playoff_wl_matches_score,2008-09,True,ok,error
+playoff_two_team_rows,2009-10,True,ok,error
+playoff_game_in_schedule,2009-10,True,ok,error
+playoff_game_id_unique,2009-10,True,ok,error
+playoff_venue_mapped,2009-10,True,ok,error
+playoff_possessions_present,2009-10,True,ok,error
+playoff_wl_matches_score,2009-10,True,ok,error
+playoff_two_team_rows,2010-11,True,ok,error
+playoff_game_in_schedule,2010-11,True,ok,error
+playoff_game_id_unique,2010-11,True,ok,error
+playoff_venue_mapped,2010-11,True,ok,error
+playoff_possessions_present,2010-11,True,ok,error
+playoff_wl_matches_score,2010-11,True,ok,error
+playoff_two_team_rows,2011-12,True,ok,error
+playoff_game_in_schedule,2011-12,True,ok,error
+playoff_game_id_unique,2011-12,True,ok,error
+playoff_venue_mapped,2011-12,True,ok,error
+playoff_possessions_present,2011-12,True,ok,error
+playoff_wl_matches_score,2011-12,True,ok,error
+playoff_two_team_rows,2012-13,True,ok,error
+playoff_game_in_schedule,2012-13,True,ok,error
+playoff_game_id_unique,2012-13,True,ok,error
+playoff_venue_mapped,2012-13,True,ok,error
+playoff_possessions_present,2012-13,True,ok,error
+playoff_wl_matches_score,2012-13,True,ok,error
+playoff_two_team_rows,2013-14,True,ok,error
+playoff_game_in_schedule,2013-14,True,ok,error
+playoff_game_id_unique,2013-14,True,ok,error
+playoff_venue_mapped,2013-14,True,ok,error
+playoff_possessions_present,2013-14,True,ok,error
+playoff_wl_matches_score,2013-14,True,ok,error
+playoff_two_team_rows,2014-15,True,ok,error
+playoff_game_in_schedule,2014-15,True,ok,error
+playoff_game_id_unique,2014-15,True,ok,error
+playoff_venue_mapped,2014-15,True,ok,error
+playoff_possessions_present,2014-15,True,ok,error
+playoff_wl_matches_score,2014-15,True,ok,error
+playoff_two_team_rows,2015-16,True,ok,error
+playoff_game_in_schedule,2015-16,True,ok,error
+playoff_game_id_unique,2015-16,True,ok,error
+playoff_venue_mapped,2015-16,True,ok,error
+playoff_possessions_present,2015-16,True,ok,error
+playoff_wl_matches_score,2015-16,True,ok,error
+playoff_two_team_rows,2016-17,True,ok,error
+playoff_game_in_schedule,2016-17,True,ok,error
+playoff_game_id_unique,2016-17,True,ok,error
+playoff_venue_mapped,2016-17,True,ok,error
+playoff_possessions_present,2016-17,True,ok,error
+playoff_wl_matches_score,2016-17,True,ok,error
+playoff_two_team_rows,2017-18,True,ok,error
+playoff_game_in_schedule,2017-18,True,ok,error
+playoff_game_id_unique,2017-18,True,ok,error
+playoff_venue_mapped,2017-18,True,ok,error
+playoff_possessions_present,2017-18,True,ok,error
+playoff_wl_matches_score,2017-18,True,ok,error
+playoff_two_team_rows,2018-19,True,ok,error
+playoff_game_in_schedule,2018-19,True,ok,error
+playoff_game_id_unique,2018-19,True,ok,error
+playoff_venue_mapped,2018-19,True,ok,error
+playoff_possessions_present,2018-19,True,ok,error
+playoff_wl_matches_score,2018-19,True,ok,error
+playoff_two_team_rows,2019-20,True,ok,error
+playoff_game_in_schedule,2019-20,True,ok,error
+playoff_game_id_unique,2019-20,True,ok,error
+playoff_venue_mapped,2019-20,True,ok,error
+playoff_possessions_present,2019-20,True,ok,error
+playoff_wl_matches_score,2019-20,True,ok,error
+playoff_two_team_rows,2020-21,True,ok,error
+playoff_game_in_schedule,2020-21,True,ok,error
+playoff_game_id_unique,2020-21,True,ok,error
+playoff_venue_mapped,2020-21,True,ok,error
+playoff_possessions_present,2020-21,True,ok,error
+playoff_wl_matches_score,2020-21,True,ok,error
+playoff_two_team_rows,2021-22,True,ok,error
+playoff_game_in_schedule,2021-22,True,ok,error
+playoff_game_id_unique,2021-22,True,ok,error
+playoff_venue_mapped,2021-22,True,ok,error
+playoff_possessions_present,2021-22,True,ok,error
+playoff_wl_matches_score,2021-22,True,ok,error
+playoff_two_team_rows,2022-23,True,ok,error
+playoff_game_in_schedule,2022-23,True,ok,error
+playoff_game_id_unique,2022-23,True,ok,error
+playoff_venue_mapped,2022-23,True,ok,error
+playoff_possessions_present,2022-23,True,ok,error
+playoff_wl_matches_score,2022-23,True,ok,error
+playoff_two_team_rows,2023-24,True,ok,error
+playoff_game_in_schedule,2023-24,True,ok,error
+playoff_game_id_unique,2023-24,True,ok,error
+playoff_venue_mapped,2023-24,True,ok,error
+playoff_possessions_present,2023-24,True,ok,error
+playoff_wl_matches_score,2023-24,True,ok,error
+playoff_two_team_rows,2024-25,True,ok,error
+playoff_game_in_schedule,2024-25,True,ok,error
+playoff_game_id_unique,2024-25,True,ok,error
+playoff_venue_mapped,2024-25,True,ok,error
+playoff_possessions_present,2024-25,True,ok,error
+playoff_wl_matches_score,2024-25,True,ok,error
+playoff_two_team_rows,2025-26,True,ok,error
+playoff_game_in_schedule,2025-26,True,ok,error
+playoff_game_id_unique,2025-26,True,ok,error
+playoff_venue_mapped,2025-26,True,ok,error
+playoff_possessions_present,2025-26,True,ok,error
+playoff_wl_matches_score,2025-26,True,ok,error
+features_as_of_before_tipoff,all,True,every as_of_timestamp < tipoff,error
+matchup_matrix_symmetric,all,True,N_ij == N_ji,error

@@ -1,0 +1,1427 @@
+{
+  "2011-12": {
+    "tau_days": 10.0,
+    "c_d_theta_full": 1.0957649553190485,
+    "c_d_momentum": 0.4079834044557391,
+    "c_d_h_start": 0.7945712237681817,
+    "c_d_h_inplay": -1.1770623782824987,
+    "c_home_flag": 5.492019086478185,
+    "se_d_theta_full": 0.20868751860667373,
+    "se_d_momentum": 0.4698151970645063,
+    "se_d_h_start": 0.6145697819662745,
+    "se_d_h_inplay": 1.0063949927330913,
+    "se_home_flag": 0.7942030395706566,
+    "sigma": 14.473940522014507,
+    "n_train_games": 334,
+    "rs_coefs": {
+      "hca_2007-08": 3.228858069820847,
+      "hca_2008-09": 3.1371142268677286,
+      "hca_2009-10": 2.4724879619004922,
+      "hca_2010-11": 2.8670326628716474,
+      "hca_2011-12": 2.7030878137823784,
+      "b_b2b": -1.976083665237619,
+      "b_min": -0.6850831528312146,
+      "b_val": -0.6841337492858003
+    },
+    "miss_table": [
+      {
+        "injury_status": "Available",
+        "rotation": false,
+        "p_miss": 0.39937106918238996,
+        "n": 318
+      },
+      {
+        "injury_status": "Available",
+        "rotation": true,
+        "p_miss": 0.035443037974683546,
+        "n": 395
+      },
+      {
+        "injury_status": "Doubtful",
+        "rotation": false,
+        "p_miss": 1.0,
+        "n": 44
+      },
+      {
+        "injury_status": "Doubtful",
+        "rotation": true,
+        "p_miss": 1.0,
+        "n": 109
+      },
+      {
+        "injury_status": "Out",
+        "rotation": false,
+        "p_miss": 0.9947619047619047,
+        "n": 4200
+      },
+      {
+        "injury_status": "Out",
+        "rotation": true,
+        "p_miss": 0.9992345962495216,
+        "n": 2613
+      },
+      {
+        "injury_status": "Probable",
+        "rotation": false,
+        "p_miss": 0.25925925925925924,
+        "n": 135
+      },
+      {
+        "injury_status": "Probable",
+        "rotation": true,
+        "p_miss": 0.04904632152588556,
+        "n": 367
+      },
+      {
+        "injury_status": "Questionable",
+        "rotation": false,
+        "p_miss": 0.6324324324324324,
+        "n": 185
+      },
+      {
+        "injury_status": "Questionable",
+        "rotation": true,
+        "p_miss": 0.4594059405940594,
+        "n": 505
+      }
+    ],
+    "miss_table_lookahead": true
+  },
+  "2012-13": {
+    "tau_days": 10.0,
+    "c_d_theta_full": 1.1899017131756606,
+    "c_d_momentum": 0.22098519129375577,
+    "c_d_h_start": 1.1335629746737592,
+    "c_d_h_inplay": -0.6538354767395139,
+    "c_home_flag": 5.371648843481058,
+    "se_d_theta_full": 0.1834011056634421,
+    "se_d_momentum": 0.3767825544661183,
+    "se_d_h_start": 0.5309551842033898,
+    "se_d_h_inplay": 0.7422851439533925,
+    "se_home_flag": 0.684133625028442,
+    "sigma": 13.928043328320454,
+    "n_train_games": 418,
+    "rs_coefs": {
+      "hca_2007-08": 3.260395928901421,
+      "hca_2008-09": 3.1653265179912737,
+      "hca_2009-10": 2.5019268683756213,
+      "hca_2010-11": 2.9020993987712025,
+      "hca_2011-12": 2.7238595075918144,
+      "hca_2012-13": 2.9454379281540723,
+      "b_b2b": -1.8074156181179184,
+      "b_min": -0.6147957851653387,
+      "b_val": -0.6705274199210333
+    },
+    "miss_table": [
+      {
+        "injury_status": "Available",
+        "rotation": false,
+        "p_miss": 0.39937106918238996,
+        "n": 318
+      },
+      {
+        "injury_status": "Available",
+        "rotation": true,
+        "p_miss": 0.035443037974683546,
+        "n": 395
+      },
+      {
+        "injury_status": "Doubtful",
+        "rotation": false,
+        "p_miss": 1.0,
+        "n": 44
+      },
+      {
+        "injury_status": "Doubtful",
+        "rotation": true,
+        "p_miss": 1.0,
+        "n": 109
+      },
+      {
+        "injury_status": "Out",
+        "rotation": false,
+        "p_miss": 0.9947619047619047,
+        "n": 4200
+      },
+      {
+        "injury_status": "Out",
+        "rotation": true,
+        "p_miss": 0.9992345962495216,
+        "n": 2613
+      },
+      {
+        "injury_status": "Probable",
+        "rotation": false,
+        "p_miss": 0.25925925925925924,
+        "n": 135
+      },
+      {
+        "injury_status": "Probable",
+        "rotation": true,
+        "p_miss": 0.04904632152588556,
+        "n": 367
+      },
+      {
+        "injury_status": "Questionable",
+        "rotation": false,
+        "p_miss": 0.6324324324324324,
+        "n": 185
+      },
+      {
+        "injury_status": "Questionable",
+        "rotation": true,
+        "p_miss": 0.4594059405940594,
+        "n": 505
+      }
+    ],
+    "miss_table_lookahead": true
+  },
+  "2013-14": {
+    "tau_days": 10.0,
+    "c_d_theta_full": 1.2509328568075455,
+    "c_d_momentum": 0.04869905927855005,
+    "c_d_h_start": 1.4162667109844211,
+    "c_d_h_inplay": -0.18085757596125396,
+    "c_home_flag": 5.145503310224431,
+    "se_d_theta_full": 0.16244444034885222,
+    "se_d_momentum": 0.3150699015403263,
+    "se_d_h_start": 0.5105255855619563,
+    "se_d_h_inplay": 0.6051535344792778,
+    "se_home_flag": 0.6219044382817813,
+    "sigma": 13.881226341999625,
+    "n_train_games": 503,
+    "rs_coefs": {
+      "hca_2007-08": 3.2586656239440734,
+      "hca_2008-09": 3.166232257868031,
+      "hca_2009-10": 2.502855128905234,
+      "hca_2010-11": 2.9009438819098325,
+      "hca_2011-12": 2.7246974400974953,
+      "hca_2012-13": 2.9440023333737693,
+      "hca_2013-14": 2.2944952509283922,
+      "b_b2b": -1.8143337704850642,
+      "b_min": -0.72503790235904,
+      "b_val": -0.6518718204169018
+    },
+    "miss_table": [
+      {
+        "injury_status": "Available",
+        "rotation": false,
+        "p_miss": 0.39937106918238996,
+        "n": 318
+      },
+      {
+        "injury_status": "Available",
+        "rotation": true,
+        "p_miss": 0.035443037974683546,
+        "n": 395
+      },
+      {
+        "injury_status": "Doubtful",
+        "rotation": false,
+        "p_miss": 1.0,
+        "n": 44
+      },
+      {
+        "injury_status": "Doubtful",
+        "rotation": true,
+        "p_miss": 1.0,
+        "n": 109
+      },
+      {
+        "injury_status": "Out",
+        "rotation": false,
+        "p_miss": 0.9947619047619047,
+        "n": 4200
+      },
+      {
+        "injury_status": "Out",
+        "rotation": true,
+        "p_miss": 0.9992345962495216,
+        "n": 2613
+      },
+      {
+        "injury_status": "Probable",
+        "rotation": false,
+        "p_miss": 0.25925925925925924,
+        "n": 135
+      },
+      {
+        "injury_status": "Probable",
+        "rotation": true,
+        "p_miss": 0.04904632152588556,
+        "n": 367
+      },
+      {
+        "injury_status": "Questionable",
+        "rotation": false,
+        "p_miss": 0.6324324324324324,
+        "n": 185
+      },
+      {
+        "injury_status": "Questionable",
+        "rotation": true,
+        "p_miss": 0.4594059405940594,
+        "n": 505
+      }
+    ],
+    "miss_table_lookahead": true
+  },
+  "2014-15": {
+    "tau_days": 40.0,
+    "c_d_theta_full": 1.245522675866552,
+    "c_d_momentum": 0.24600426829962635,
+    "c_d_h_start": 1.285088221053264,
+    "c_d_h_inplay": -0.027240686106616216,
+    "c_home_flag": 4.739750892376507,
+    "se_d_theta_full": 0.1509850668224002,
+    "se_d_momentum": 0.3404839319386361,
+    "se_d_h_start": 0.48902311264288395,
+    "se_d_h_inplay": 0.5904338348215968,
+    "se_home_flag": 0.570657275681648,
+    "sigma": 13.806310590127092,
+    "n_train_games": 592,
+    "rs_coefs": {
+      "hca_2007-08": 3.27982650332513,
+      "hca_2008-09": 3.186627076838779,
+      "hca_2009-10": 2.5245499313015483,
+      "hca_2010-11": 2.921216184743838,
+      "hca_2011-12": 2.7355001691720555,
+      "hca_2012-13": 2.964746965427749,
+      "hca_2013-14": 2.309257097061798,
+      "hca_2014-15": 2.0030968272809013,
+      "b_b2b": -1.6862085893646235,
+      "b_min": -0.6589101695186982,
+      "b_val": -0.6859652922426338
+    },
+    "miss_table": [
+      {
+        "injury_status": "Available",
+        "rotation": false,
+        "p_miss": 0.39937106918238996,
+        "n": 318
+      },
+      {
+        "injury_status": "Available",
+        "rotation": true,
+        "p_miss": 0.035443037974683546,
+        "n": 395
+      },
+      {
+        "injury_status": "Doubtful",
+        "rotation": false,
+        "p_miss": 1.0,
+        "n": 44
+      },
+      {
+        "injury_status": "Doubtful",
+        "rotation": true,
+        "p_miss": 1.0,
+        "n": 109
+      },
+      {
+        "injury_status": "Out",
+        "rotation": false,
+        "p_miss": 0.9947619047619047,
+        "n": 4200
+      },
+      {
+        "injury_status": "Out",
+        "rotation": true,
+        "p_miss": 0.9992345962495216,
+        "n": 2613
+      },
+      {
+        "injury_status": "Probable",
+        "rotation": false,
+        "p_miss": 0.25925925925925924,
+        "n": 135
+      },
+      {
+        "injury_status": "Probable",
+        "rotation": true,
+        "p_miss": 0.04904632152588556,
+        "n": 367
+      },
+      {
+        "injury_status": "Questionable",
+        "rotation": false,
+        "p_miss": 0.6324324324324324,
+        "n": 185
+      },
+      {
+        "injury_status": "Questionable",
+        "rotation": true,
+        "p_miss": 0.4594059405940594,
+        "n": 505
+      }
+    ],
+    "miss_table_lookahead": true
+  },
+  "2015-16": {
+    "tau_days": 40.0,
+    "c_d_theta_full": 1.2712964179269985,
+    "c_d_momentum": 0.3386337107077929,
+    "c_d_h_start": 1.2999120663278727,
+    "c_d_h_inplay": -0.0615949215996135,
+    "c_home_flag": 4.419438166289256,
+    "se_d_theta_full": 0.14291047295668638,
+    "se_d_momentum": 0.32948409054417593,
+    "se_d_h_start": 0.46919586109460715,
+    "se_d_h_inplay": 0.403306799050236,
+    "se_home_flag": 0.536159642473846,
+    "sigma": 13.843915188338158,
+    "n_train_games": 673,
+    "rs_coefs": {
+      "hca_2007-08": 3.3020299998481484,
+      "hca_2008-09": 3.2061760558434527,
+      "hca_2009-10": 2.544926571481635,
+      "hca_2010-11": 2.946020525325057,
+      "hca_2011-12": 2.7501207084273247,
+      "hca_2012-13": 2.9917948821956237,
+      "hca_2013-14": 2.3309340257208184,
+      "hca_2014-15": 2.0308377949529066,
+      "hca_2015-16": 2.3544778016448813,
+      "b_b2b": -1.568542870721058,
+      "b_min": -0.6006081764296656,
+      "b_val": -0.675698282404782
+    },
+    "miss_table": [
+      {
+        "injury_status": "Available",
+        "rotation": false,
+        "p_miss": 0.39937106918238996,
+        "n": 318
+      },
+      {
+        "injury_status": "Available",
+        "rotation": true,
+        "p_miss": 0.035443037974683546,
+        "n": 395
+      },
+      {
+        "injury_status": "Doubtful",
+        "rotation": false,
+        "p_miss": 1.0,
+        "n": 44
+      },
+      {
+        "injury_status": "Doubtful",
+        "rotation": true,
+        "p_miss": 1.0,
+        "n": 109
+      },
+      {
+        "injury_status": "Out",
+        "rotation": false,
+        "p_miss": 0.9947619047619047,
+        "n": 4200
+      },
+      {
+        "injury_status": "Out",
+        "rotation": true,
+        "p_miss": 0.9992345962495216,
+        "n": 2613
+      },
+      {
+        "injury_status": "Probable",
+        "rotation": false,
+        "p_miss": 0.25925925925925924,
+        "n": 135
+      },
+      {
+        "injury_status": "Probable",
+        "rotation": true,
+        "p_miss": 0.04904632152588556,
+        "n": 367
+      },
+      {
+        "injury_status": "Questionable",
+        "rotation": false,
+        "p_miss": 0.6324324324324324,
+        "n": 185
+      },
+      {
+        "injury_status": "Questionable",
+        "rotation": true,
+        "p_miss": 0.4594059405940594,
+        "n": 505
+      }
+    ],
+    "miss_table_lookahead": true
+  },
+  "2016-17": {
+    "tau_days": 40.0,
+    "c_d_theta_full": 1.2838531979915573,
+    "c_d_momentum": 0.2799689546457854,
+    "c_d_h_start": 1.170204513088237,
+    "c_d_h_inplay": 0.2200913746717028,
+    "c_home_flag": 4.814085983671036,
+    "se_d_theta_full": 0.13188981421770513,
+    "se_d_momentum": 0.32113645724449225,
+    "se_d_h_start": 0.43216321589106055,
+    "se_d_h_inplay": 0.3231471220235184,
+    "se_home_flag": 0.511726407742514,
+    "sigma": 14.061153451829485,
+    "n_train_games": 759,
+    "rs_coefs": {
+      "hca_2007-08": 3.298496147460327,
+      "hca_2008-09": 3.2017288126228998,
+      "hca_2009-10": 2.540280897817975,
+      "hca_2010-11": 2.941810584722314,
+      "hca_2011-12": 2.746898494289428,
+      "hca_2012-13": 2.987352601567497,
+      "hca_2013-14": 2.325512447305898,
+      "hca_2014-15": 2.027024259381902,
+      "hca_2015-16": 2.3511112034100665,
+      "hca_2016-17": 2.739312615683598,
+      "b_b2b": -1.5891120917723816,
+      "b_min": -0.5554336840127958,
+      "b_val": -0.6855913710008575
+    },
+    "miss_table": [
+      {
+        "injury_status": "Available",
+        "rotation": false,
+        "p_miss": 0.39937106918238996,
+        "n": 318
+      },
+      {
+        "injury_status": "Available",
+        "rotation": true,
+        "p_miss": 0.035443037974683546,
+        "n": 395
+      },
+      {
+        "injury_status": "Doubtful",
+        "rotation": false,
+        "p_miss": 1.0,
+        "n": 44
+      },
+      {
+        "injury_status": "Doubtful",
+        "rotation": true,
+        "p_miss": 1.0,
+        "n": 109
+      },
+      {
+        "injury_status": "Out",
+        "rotation": false,
+        "p_miss": 0.9947619047619047,
+        "n": 4200
+      },
+      {
+        "injury_status": "Out",
+        "rotation": true,
+        "p_miss": 0.9992345962495216,
+        "n": 2613
+      },
+      {
+        "injury_status": "Probable",
+        "rotation": false,
+        "p_miss": 0.25925925925925924,
+        "n": 135
+      },
+      {
+        "injury_status": "Probable",
+        "rotation": true,
+        "p_miss": 0.04904632152588556,
+        "n": 367
+      },
+      {
+        "injury_status": "Questionable",
+        "rotation": false,
+        "p_miss": 0.6324324324324324,
+        "n": 185
+      },
+      {
+        "injury_status": "Questionable",
+        "rotation": true,
+        "p_miss": 0.4594059405940594,
+        "n": 505
+      }
+    ],
+    "miss_table_lookahead": true
+  },
+  "2017-18": {
+    "tau_days": 40.0,
+    "c_d_theta_full": 1.3233667503139954,
+    "c_d_momentum": 0.18240691188942768,
+    "c_d_h_start": 1.1565161797068677,
+    "c_d_h_inplay": 0.38807122881227923,
+    "c_home_flag": 4.526081077603154,
+    "se_d_theta_full": 0.12615219929712848,
+    "se_d_momentum": 0.31664965028954034,
+    "se_d_h_start": 0.4274279399995213,
+    "se_d_h_inplay": 0.3084596069712712,
+    "se_home_flag": 0.4934399451134335,
+    "sigma": 14.251831058440118,
+    "n_train_games": 838,
+    "rs_coefs": {
+      "hca_2007-08": 3.2997792363543605,
+      "hca_2008-09": 3.2044176756722558,
+      "hca_2009-10": 2.5431354744932584,
+      "hca_2010-11": 2.9431985860582475,
+      "hca_2011-12": 2.7483801650227053,
+      "hca_2012-13": 2.988582624726993,
+      "hca_2013-14": 2.3282619275339154,
+      "hca_2014-15": 2.027495911729682,
+      "hca_2015-16": 2.351578957282779,
+      "hca_2016-17": 2.7389914686988823,
+      "hca_2017-18": 1.8188480428980254,
+      "b_b2b": -1.5788804344206453,
+      "b_min": -0.6078182446846455,
+      "b_val": -0.6805418666532767
+    },
+    "miss_table": [
+      {
+        "injury_status": "Available",
+        "rotation": false,
+        "p_miss": 0.39937106918238996,
+        "n": 318
+      },
+      {
+        "injury_status": "Available",
+        "rotation": true,
+        "p_miss": 0.035443037974683546,
+        "n": 395
+      },
+      {
+        "injury_status": "Doubtful",
+        "rotation": false,
+        "p_miss": 1.0,
+        "n": 44
+      },
+      {
+        "injury_status": "Doubtful",
+        "rotation": true,
+        "p_miss": 1.0,
+        "n": 109
+      },
+      {
+        "injury_status": "Out",
+        "rotation": false,
+        "p_miss": 0.9947619047619047,
+        "n": 4200
+      },
+      {
+        "injury_status": "Out",
+        "rotation": true,
+        "p_miss": 0.9992345962495216,
+        "n": 2613
+      },
+      {
+        "injury_status": "Probable",
+        "rotation": false,
+        "p_miss": 0.25925925925925924,
+        "n": 135
+      },
+      {
+        "injury_status": "Probable",
+        "rotation": true,
+        "p_miss": 0.04904632152588556,
+        "n": 367
+      },
+      {
+        "injury_status": "Questionable",
+        "rotation": false,
+        "p_miss": 0.6324324324324324,
+        "n": 185
+      },
+      {
+        "injury_status": "Questionable",
+        "rotation": true,
+        "p_miss": 0.4594059405940594,
+        "n": 505
+      }
+    ],
+    "miss_table_lookahead": true
+  },
+  "2018-19": {
+    "tau_days": 10.0,
+    "c_d_theta_full": 1.2980508239789992,
+    "c_d_momentum": -0.18240541938556243,
+    "c_d_h_start": 0.6202348932904697,
+    "c_d_h_inplay": 0.3803443400005051,
+    "c_home_flag": 4.685264362028262,
+    "se_d_theta_full": 0.12107593285152497,
+    "se_d_momentum": 0.23703990627751242,
+    "se_d_h_start": 0.3445270495989148,
+    "se_d_h_inplay": 0.30301830962988463,
+    "se_home_flag": 0.4733378336715641,
+    "sigma": 14.325396981277136,
+    "n_train_games": 920,
+    "rs_coefs": {
+      "hca_2007-08": 3.296822502108559,
+      "hca_2008-09": 3.201050438817754,
+      "hca_2009-10": 2.5396017746783297,
+      "hca_2010-11": 2.939904441289398,
+      "hca_2011-12": 2.746105737957056,
+      "hca_2012-13": 2.985125272045096,
+      "hca_2013-14": 2.3246114140733463,
+      "hca_2014-15": 2.024339923655268,
+      "hca_2015-16": 2.3488514912318372,
+      "hca_2016-17": 2.736749279213958,
+      "hca_2017-18": 1.8172384337196672,
+      "hca_2018-19": 2.4578735782561956,
+      "b_b2b": -1.596182541615853,
+      "b_min": -0.5879673289977113,
+      "b_val": -0.6842889161833354
+    },
+    "miss_table": [
+      {
+        "injury_status": "Available",
+        "rotation": false,
+        "p_miss": 0.39937106918238996,
+        "n": 318
+      },
+      {
+        "injury_status": "Available",
+        "rotation": true,
+        "p_miss": 0.035443037974683546,
+        "n": 395
+      },
+      {
+        "injury_status": "Doubtful",
+        "rotation": false,
+        "p_miss": 1.0,
+        "n": 44
+      },
+      {
+        "injury_status": "Doubtful",
+        "rotation": true,
+        "p_miss": 1.0,
+        "n": 109
+      },
+      {
+        "injury_status": "Out",
+        "rotation": false,
+        "p_miss": 0.9947619047619047,
+        "n": 4200
+      },
+      {
+        "injury_status": "Out",
+        "rotation": true,
+        "p_miss": 0.9992345962495216,
+        "n": 2613
+      },
+      {
+        "injury_status": "Probable",
+        "rotation": false,
+        "p_miss": 0.25925925925925924,
+        "n": 135
+      },
+      {
+        "injury_status": "Probable",
+        "rotation": true,
+        "p_miss": 0.04904632152588556,
+        "n": 367
+      },
+      {
+        "injury_status": "Questionable",
+        "rotation": false,
+        "p_miss": 0.6324324324324324,
+        "n": 185
+      },
+      {
+        "injury_status": "Questionable",
+        "rotation": true,
+        "p_miss": 0.4594059405940594,
+        "n": 505
+      }
+    ],
+    "miss_table_lookahead": true
+  },
+  "2019-20": {
+    "tau_days": 10.0,
+    "c_d_theta_full": 1.3497173685954793,
+    "c_d_momentum": -0.1814914398910515,
+    "c_d_h_start": 0.5344286566498124,
+    "c_d_h_inplay": 0.40625149938200644,
+    "c_home_flag": 4.576426192693819,
+    "se_d_theta_full": 0.1168852558759519,
+    "se_d_momentum": 0.22648972648214785,
+    "se_d_h_start": 0.29210847752615876,
+    "se_d_h_inplay": 0.2757844754262321,
+    "se_home_flag": 0.44970383277375814,
+    "sigma": 14.20341326199704,
+    "n_train_games": 1002,
+    "rs_coefs": {
+      "hca_2007-08": 3.2928661717438548,
+      "hca_2008-09": 3.1964208051502236,
+      "hca_2009-10": 2.5347479876970547,
+      "hca_2010-11": 2.9354303516557416,
+      "hca_2011-12": 2.7429305550043526,
+      "hca_2012-13": 2.98042742333817,
+      "hca_2013-14": 2.3194477139374468,
+      "hca_2014-15": 2.020121594534578,
+      "hca_2015-16": 2.345187542938368,
+      "hca_2016-17": 2.733694808088648,
+      "hca_2017-18": 1.8151515292100036,
+      "hca_2018-19": 2.4560403233210675,
+      "hca_2019-20": 2.033113526664832,
+      "b_b2b": -1.6193519654098345,
+      "b_min": -0.5554185813770744,
+      "b_val": -0.6906882573060863
+    },
+    "miss_table": [
+      {
+        "injury_status": "Available",
+        "rotation": false,
+        "p_miss": 0.39937106918238996,
+        "n": 318
+      },
+      {
+        "injury_status": "Available",
+        "rotation": true,
+        "p_miss": 0.035443037974683546,
+        "n": 395
+      },
+      {
+        "injury_status": "Doubtful",
+        "rotation": false,
+        "p_miss": 1.0,
+        "n": 44
+      },
+      {
+        "injury_status": "Doubtful",
+        "rotation": true,
+        "p_miss": 1.0,
+        "n": 109
+      },
+      {
+        "injury_status": "Out",
+        "rotation": false,
+        "p_miss": 0.9947619047619047,
+        "n": 4200
+      },
+      {
+        "injury_status": "Out",
+        "rotation": true,
+        "p_miss": 0.9992345962495216,
+        "n": 2613
+      },
+      {
+        "injury_status": "Probable",
+        "rotation": false,
+        "p_miss": 0.25925925925925924,
+        "n": 135
+      },
+      {
+        "injury_status": "Probable",
+        "rotation": true,
+        "p_miss": 0.04904632152588556,
+        "n": 367
+      },
+      {
+        "injury_status": "Questionable",
+        "rotation": false,
+        "p_miss": 0.6324324324324324,
+        "n": 185
+      },
+      {
+        "injury_status": "Questionable",
+        "rotation": true,
+        "p_miss": 0.4594059405940594,
+        "n": 505
+      }
+    ],
+    "miss_table_lookahead": false
+  },
+  "2020-21": {
+    "tau_days": 10.0,
+    "c_d_theta_full": 1.3399355837191251,
+    "c_d_momentum": -0.17873639642649347,
+    "c_d_h_start": 0.5477516459420289,
+    "c_d_h_inplay": 0.3667205088672871,
+    "c_home_flag": 4.580193883397558,
+    "se_d_theta_full": 0.11258869356212489,
+    "se_d_momentum": 0.21736607297892016,
+    "se_d_h_start": 0.2681658444527551,
+    "se_d_h_inplay": 0.26038354277526654,
+    "se_home_flag": 0.4475007675255923,
+    "sigma": 14.136869681790547,
+    "n_train_games": 1085,
+    "rs_coefs": {
+      "hca_2007-08": 3.3067246454315598,
+      "hca_2008-09": 3.2145970199372567,
+      "hca_2009-10": 2.5541237058781348,
+      "hca_2010-11": 2.948709256717883,
+      "hca_2011-12": 2.7521393833880334,
+      "hca_2012-13": 2.9931842616364412,
+      "hca_2013-14": 2.3340686501069765,
+      "hca_2014-15": 2.03062207980176,
+      "hca_2015-16": 2.3540161636367496,
+      "hca_2016-17": 2.7362203143924217,
+      "hca_2017-18": 1.8178307452244227,
+      "hca_2018-19": 2.4598027643079807,
+      "hca_2019-20": 2.038259800684429,
+      "hca_2020-21": 0.8837891360462011,
+      "b_b2b": -1.5253536523890279,
+      "b_min": -0.687614731952522,
+      "b_val": -0.6971376682395881
+    },
+    "miss_table": [
+      {
+        "injury_status": "Available",
+        "rotation": false,
+        "p_miss": 0.3662551440329218,
+        "n": 486
+      },
+      {
+        "injury_status": "Available",
+        "rotation": true,
+        "p_miss": 0.03333333333333333,
+        "n": 660
+      },
+      {
+        "injury_status": "Doubtful",
+        "rotation": false,
+        "p_miss": 1.0,
+        "n": 98
+      },
+      {
+        "injury_status": "Doubtful",
+        "rotation": true,
+        "p_miss": 0.9724770642201835,
+        "n": 218
+      },
+      {
+        "injury_status": "Out",
+        "rotation": false,
+        "p_miss": 0.9963594000291248,
+        "n": 6867
+      },
+      {
+        "injury_status": "Out",
+        "rotation": true,
+        "p_miss": 0.9996693121693122,
+        "n": 6048
+      },
+      {
+        "injury_status": "Probable",
+        "rotation": false,
+        "p_miss": 0.2427536231884058,
+        "n": 276
+      },
+      {
+        "injury_status": "Probable",
+        "rotation": true,
+        "p_miss": 0.04885496183206107,
+        "n": 655
+      },
+      {
+        "injury_status": "Questionable",
+        "rotation": false,
+        "p_miss": 0.6047619047619047,
+        "n": 420
+      },
+      {
+        "injury_status": "Questionable",
+        "rotation": true,
+        "p_miss": 0.44922547332185886,
+        "n": 1162
+      }
+    ],
+    "miss_table_lookahead": false
+  },
+  "2021-22": {
+    "tau_days": 10.0,
+    "c_d_theta_full": 1.3564540225380675,
+    "c_d_momentum": -0.23722229839341413,
+    "c_d_h_start": 0.6655310632185685,
+    "c_d_h_inplay": 0.34016721330577354,
+    "c_home_flag": 4.452283131291588,
+    "se_d_theta_full": 0.10947368376568493,
+    "se_d_momentum": 0.21377070473504375,
+    "se_d_h_start": 0.25199122565185844,
+    "se_d_h_inplay": 0.24241106822996117,
+    "se_home_flag": 0.42924947452415674,
+    "sigma": 14.123481406111324,
+    "n_train_games": 1170,
+    "rs_coefs": {
+      "hca_2007-08": 3.2990076915309072,
+      "hca_2008-09": 3.2113375817700662,
+      "hca_2009-10": 2.5510290817871772,
+      "hca_2010-11": 2.9383600445295066,
+      "hca_2011-12": 2.746613626758561,
+      "hca_2012-13": 2.980746075834112,
+      "hca_2013-14": 2.3262075448410737,
+      "hca_2014-15": 2.01642969209629,
+      "hca_2015-16": 2.3417483599744693,
+      "hca_2016-17": 2.7204323557166927,
+      "hca_2017-18": 1.8057585246966859,
+      "hca_2018-19": 2.4534721176796808,
+      "hca_2019-20": 2.0336668973530063,
+      "hca_2020-21": 0.8817024182763373,
+      "hca_2021-22": 1.4164624369483307,
+      "b_b2b": -1.5525357034281035,
+      "b_min": -0.7981870310115193,
+      "b_val": -0.7145825413865857
+    },
+    "miss_table": [
+      {
+        "injury_status": "Available",
+        "rotation": false,
+        "p_miss": 0.35522664199814985,
+        "n": 1081
+      },
+      {
+        "injury_status": "Available",
+        "rotation": true,
+        "p_miss": 0.0391276459268762,
+        "n": 1559
+      },
+      {
+        "injury_status": "Doubtful",
+        "rotation": false,
+        "p_miss": 1.0,
+        "n": 114
+      },
+      {
+        "injury_status": "Doubtful",
+        "rotation": true,
+        "p_miss": 0.9715447154471545,
+        "n": 246
+      },
+      {
+        "injury_status": "Out",
+        "rotation": false,
+        "p_miss": 0.9976525821596244,
+        "n": 11502
+      },
+      {
+        "injury_status": "Out",
+        "rotation": true,
+        "p_miss": 0.9998122946973252,
+        "n": 10655
+      },
+      {
+        "injury_status": "Probable",
+        "rotation": false,
+        "p_miss": 0.22772277227722773,
+        "n": 303
+      },
+      {
+        "injury_status": "Probable",
+        "rotation": true,
+        "p_miss": 0.04551539491298527,
+        "n": 747
+      },
+      {
+        "injury_status": "Questionable",
+        "rotation": false,
+        "p_miss": 0.603448275862069,
+        "n": 522
+      },
+      {
+        "injury_status": "Questionable",
+        "rotation": true,
+        "p_miss": 0.42536790469516467,
+        "n": 1427
+      }
+    ],
+    "miss_table_lookahead": false
+  },
+  "2022-23": {
+    "tau_days": 10.0,
+    "c_d_theta_full": 1.3530965993046578,
+    "c_d_momentum": -0.11246418733164597,
+    "c_d_h_start": 0.6613913836949736,
+    "c_d_h_inplay": 0.33040592427007215,
+    "c_home_flag": 4.395906443205003,
+    "se_d_theta_full": 0.10733137898494832,
+    "se_d_momentum": 0.2047308212195276,
+    "se_d_h_start": 0.2513149623509041,
+    "se_d_h_inplay": 0.23827036920254843,
+    "se_home_flag": 0.4168352324523996,
+    "sigma": 14.250848367130995,
+    "n_train_games": 1257,
+    "rs_coefs": {
+      "hca_2007-08": 3.2999006488062705,
+      "hca_2008-09": 3.2120713648052335,
+      "hca_2009-10": 2.55159855039569,
+      "hca_2010-11": 2.9410585450791102,
+      "hca_2011-12": 2.749154165270031,
+      "hca_2012-13": 2.984231487755204,
+      "hca_2013-14": 2.3309191040969632,
+      "hca_2014-15": 2.0196594715514675,
+      "hca_2015-16": 2.3448216602705614,
+      "hca_2016-17": 2.72585507452913,
+      "hca_2017-18": 1.8083246429066753,
+      "hca_2018-19": 2.4555326465616303,
+      "hca_2019-20": 2.0371714987383767,
+      "hca_2020-21": 0.882772311957335,
+      "hca_2021-22": 1.4215985589046678,
+      "hca_2022-23": 2.149545794217463,
+      "b_b2b": -1.5541213167303751,
+      "b_min": -0.8317055395105067,
+      "b_val": -0.6892483200078556
+    },
+    "miss_table": [
+      {
+        "injury_status": "Available",
+        "rotation": false,
+        "p_miss": 0.3744517543859649,
+        "n": 1824
+      },
+      {
+        "injury_status": "Available",
+        "rotation": true,
+        "p_miss": 0.028646814926498305,
+        "n": 2653
+      },
+      {
+        "injury_status": "Doubtful",
+        "rotation": false,
+        "p_miss": 1.0,
+        "n": 127
+      },
+      {
+        "injury_status": "Doubtful",
+        "rotation": true,
+        "p_miss": 0.9736842105263158,
+        "n": 266
+      },
+      {
+        "injury_status": "Out",
+        "rotation": false,
+        "p_miss": 0.9981135519990264,
+        "n": 16433
+      },
+      {
+        "injury_status": "Out",
+        "rotation": true,
+        "p_miss": 0.9998601007274762,
+        "n": 14296
+      },
+      {
+        "injury_status": "Probable",
+        "rotation": false,
+        "p_miss": 0.23100303951367782,
+        "n": 329
+      },
+      {
+        "injury_status": "Probable",
+        "rotation": true,
+        "p_miss": 0.040380047505938245,
+        "n": 842
+      },
+      {
+        "injury_status": "Questionable",
+        "rotation": false,
+        "p_miss": 0.606312292358804,
+        "n": 602
+      },
+      {
+        "injury_status": "Questionable",
+        "rotation": true,
+        "p_miss": 0.4163568773234201,
+        "n": 1614
+      }
+    ],
+    "miss_table_lookahead": false
+  },
+  "2023-24": {
+    "tau_days": 40.0,
+    "c_d_theta_full": 1.317670133364111,
+    "c_d_momentum": 0.05471479772686201,
+    "c_d_h_start": 0.684518247574698,
+    "c_d_h_inplay": 0.20035970450243348,
+    "c_home_flag": 4.366993849276413,
+    "se_d_theta_full": 0.1045125885341523,
+    "se_d_momentum": 0.2279254927782018,
+    "se_d_h_start": 0.24929946880095993,
+    "se_d_h_inplay": 0.22443244598852966,
+    "se_home_flag": 0.40247788444314236,
+    "sigma": 14.242874584867954,
+    "n_train_games": 1341,
+    "rs_coefs": {
+      "hca_2007-08": 3.293355097950295,
+      "hca_2008-09": 3.206151229668913,
+      "hca_2009-10": 2.545489853379204,
+      "hca_2010-11": 2.933160098330635,
+      "hca_2011-12": 2.7440937047362475,
+      "hca_2012-13": 2.975461809328711,
+      "hca_2013-14": 2.323025675594292,
+      "hca_2014-15": 2.010873828253562,
+      "hca_2015-16": 2.337207307892309,
+      "hca_2016-17": 2.7178195768165065,
+      "hca_2017-18": 1.8024526286767768,
+      "hca_2018-19": 2.4516624643618203,
+      "hca_2019-20": 2.03318318493012,
+      "hca_2020-21": 0.8815726474823178,
+      "hca_2021-22": 1.4163721206316346,
+      "hca_2022-23": 2.144145402826942,
+      "hca_2023-24": 2.0390211800725595,
+      "b_b2b": -1.5869987832578176,
+      "b_min": -0.8301558802547631,
+      "b_val": -0.7014392317159379
+    },
+    "miss_table": [
+      {
+        "injury_status": "Available",
+        "rotation": false,
+        "p_miss": 0.38626126126126126,
+        "n": 2664
+      },
+      {
+        "injury_status": "Available",
+        "rotation": true,
+        "p_miss": 0.023880597014925373,
+        "n": 4020
+      },
+      {
+        "injury_status": "Doubtful",
+        "rotation": false,
+        "p_miss": 1.0,
+        "n": 137
+      },
+      {
+        "injury_status": "Doubtful",
+        "rotation": true,
+        "p_miss": 0.974910394265233,
+        "n": 279
+      },
+      {
+        "injury_status": "Out",
+        "rotation": false,
+        "p_miss": 0.9984534206695779,
+        "n": 21984
+      },
+      {
+        "injury_status": "Out",
+        "rotation": true,
+        "p_miss": 0.9998898435778806,
+        "n": 18156
+      },
+      {
+        "injury_status": "Probable",
+        "rotation": false,
+        "p_miss": 0.23054755043227665,
+        "n": 347
+      },
+      {
+        "injury_status": "Probable",
+        "rotation": true,
+        "p_miss": 0.04352557127312296,
+        "n": 919
+      },
+      {
+        "injury_status": "Questionable",
+        "rotation": false,
+        "p_miss": 0.6248196248196248,
+        "n": 693
+      },
+      {
+        "injury_status": "Questionable",
+        "rotation": true,
+        "p_miss": 0.3981430912069907,
+        "n": 1831
+      }
+    ],
+    "miss_table_lookahead": false
+  },
+  "2024-25": {
+    "tau_days": 40.0,
+    "c_d_theta_full": 1.3088763448873517,
+    "c_d_momentum": 0.039584140487524865,
+    "c_d_h_start": 0.7042661400246434,
+    "c_d_h_inplay": 0.2193639836285808,
+    "c_home_flag": 4.341928575498285,
+    "se_d_theta_full": 0.10231684796305782,
+    "se_d_momentum": 0.2273343087164052,
+    "se_d_h_start": 0.232089201700534,
+    "se_d_h_inplay": 0.2175069356220552,
+    "se_home_flag": 0.39421268994835623,
+    "sigma": 14.395740332472899,
+    "n_train_games": 1423,
+    "rs_coefs": {
+      "hca_2007-08": 3.283371181964325,
+      "hca_2008-09": 3.1984734163965203,
+      "hca_2009-10": 2.5376358800364303,
+      "hca_2010-11": 2.9209923377610756,
+      "hca_2011-12": 2.736833241996062,
+      "hca_2012-13": 2.96168300922253,
+      "hca_2013-14": 2.3120987041475285,
+      "hca_2014-15": 1.996393041579526,
+      "hca_2015-16": 2.3247129595981932,
+      "hca_2016-17": 2.703941905457507,
+      "hca_2017-18": 1.7918911900135903,
+      "hca_2018-19": 2.4453569460648445,
+      "hca_2019-20": 2.027614757917805,
+      "hca_2020-21": 0.8796416553772731,
+      "hca_2021-22": 1.4067410356384853,
+      "hca_2022-23": 2.1346728419196395,
+      "hca_2023-24": 2.0385062763805455,
+      "hca_2024-25": 1.6080983430800044,
+      "b_b2b": -1.6338750490527225,
+      "b_min": -0.8743464798894849,
+      "b_val": -0.7173632112202517
+    },
+    "miss_table": [
+      {
+        "injury_status": "Available",
+        "rotation": false,
+        "p_miss": 0.38196055684454755,
+        "n": 3448
+      },
+      {
+        "injury_status": "Available",
+        "rotation": true,
+        "p_miss": 0.02516958229203856,
+        "n": 5602
+      },
+      {
+        "injury_status": "Doubtful",
+        "rotation": false,
+        "p_miss": 1.0,
+        "n": 152
+      },
+      {
+        "injury_status": "Doubtful",
+        "rotation": true,
+        "p_miss": 0.9730639730639731,
+        "n": 297
+      },
+      {
+        "injury_status": "Out",
+        "rotation": false,
+        "p_miss": 0.9987000324991875,
+        "n": 27693
+      },
+      {
+        "injury_status": "Out",
+        "rotation": true,
+        "p_miss": 0.9999133824166305,
+        "n": 23090
+      },
+      {
+        "injury_status": "Probable",
+        "rotation": false,
+        "p_miss": 0.2391304347826087,
+        "n": 368
+      },
+      {
+        "injury_status": "Probable",
+        "rotation": true,
+        "p_miss": 0.04261645193260654,
+        "n": 1009
+      },
+      {
+        "injury_status": "Questionable",
+        "rotation": false,
+        "p_miss": 0.6263020833333334,
+        "n": 768
+      },
+      {
+        "injury_status": "Questionable",
+        "rotation": true,
+        "p_miss": 0.39578101456554493,
+        "n": 1991
+      }
+    ],
+    "miss_table_lookahead": false
+  },
+  "2025-26": {
+    "tau_days": 40.0,
+    "c_d_theta_full": 1.3137259291744259,
+    "c_d_momentum": 0.07023993275008893,
+    "c_d_h_start": 0.7235103503641309,
+    "c_d_h_inplay": 0.22314281396446287,
+    "c_home_flag": 4.391466872866363,
+    "se_d_theta_full": 0.09857172998667481,
+    "se_d_momentum": 0.2258327827285046,
+    "se_d_h_start": 0.2335697487892201,
+    "se_d_h_inplay": 0.21537157033640425,
+    "se_home_flag": 0.3855907044817566,
+    "sigma": 14.51645170688852,
+    "n_train_games": 1507,
+    "rs_coefs": {
+      "hca_2007-08": 3.285713616137196,
+      "hca_2008-09": 3.2049774142687477,
+      "hca_2009-10": 2.5446800747687104,
+      "hca_2010-11": 2.9224525060644755,
+      "hca_2011-12": 2.738996358982794,
+      "hca_2012-13": 2.9621451773937397,
+      "hca_2013-14": 2.316297859368508,
+      "hca_2014-15": 1.9948414833158004,
+      "hca_2015-16": 2.3233818607243983,
+      "hca_2016-17": 2.698996805872958,
+      "hca_2017-18": 1.787773181021752,
+      "hca_2018-19": 2.4445235321769356,
+      "hca_2019-20": 2.028904695569008,
+      "hca_2020-21": 0.8791982149642178,
+      "hca_2021-22": 1.4006100327593904,
+      "hca_2022-23": 2.12974519474424,
+      "hca_2023-24": 2.03862570874747,
+      "hca_2024-25": 1.6031338400179103,
+      "hca_2025-26": 1.5682147627642837,
+      "b_b2b": -1.6079351094744727,
+      "b_min": -1.004207291411598,
+      "b_val": -0.7187421611357825
+    },
+    "miss_table": [
+      {
+        "injury_status": "Available",
+        "rotation": false,
+        "p_miss": 0.36404799637763186,
+        "n": 4417
+      },
+      {
+        "injury_status": "Available",
+        "rotation": true,
+        "p_miss": 0.024471635150166853,
+        "n": 7192
+      },
+      {
+        "injury_status": "Doubtful",
+        "rotation": false,
+        "p_miss": 1.0,
+        "n": 155
+      },
+      {
+        "injury_status": "Doubtful",
+        "rotation": true,
+        "p_miss": 0.9732441471571907,
+        "n": 299
+      },
+      {
+        "injury_status": "Out",
+        "rotation": false,
+        "p_miss": 0.9989045097681213,
+        "n": 32862
+      },
+      {
+        "injury_status": "Out",
+        "rotation": true,
+        "p_miss": 0.9999296344509728,
+        "n": 28423
+      },
+      {
+        "injury_status": "Probable",
+        "rotation": false,
+        "p_miss": 0.239247311827957,
+        "n": 372
+      },
+      {
+        "injury_status": "Probable",
+        "rotation": true,
+        "p_miss": 0.04174757281553398,
+        "n": 1030
+      },
+      {
+        "injury_status": "Questionable",
+        "rotation": false,
+        "p_miss": 0.6273764258555133,
+        "n": 789
+      },
+      {
+        "injury_status": "Questionable",
+        "rotation": true,
+        "p_miss": 0.39278656126482214,
+        "n": 2024
+      }
+    ],
+    "miss_table_lookahead": false
+  }
+}

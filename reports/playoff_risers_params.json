@@ -1,0 +1,13 @@
+{
+  "tau2": 0.24740223996911953,
+  "tau2_se": 0.11940177771826135,
+  "sigma2": 2042.2226991940918,
+  "k_minutes": 8254.665355693625,
+  "pairs": 4047,
+  "split_half_corr": 0.18769894660152656,
+  "split_half_players": 239,
+  "opponent_slope": -0.10964577055286134,
+  "player_seasons": 1859,
+  "min_season_minutes": 150.0,
+  "min_career_minutes": 800.0
+}
