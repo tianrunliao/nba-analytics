@@ -1,89 +1,241 @@
-# NBA 动态赛程难度与数据分析（D-SOS）
+# NBA dynamic strength of schedule (D-SOS)
 
-从 2007-08 起 19 个赛季的官方数据出发，按"只用开赛前可获得的信息"的原则，构建球队动态实力、单场预测、伤病与阵容、剩余赛季模拟和赛程难度（D-SOS），并在此基础上做季后赛纯实力、球员价值等分析。
+[![CI](https://github.com/tianrunliao/nba-analytics/actions/workflows/ci.yml/badge.svg)](https://github.com/tianrunliao/nba-analytics/actions/workflows/ci.yml)
 
-| 阶段 | 内容 | 主要代码 |
+A pipeline built on official NBA data for the 2007-08 to 2025-26 regular seasons (2006-07 is
+used only for the first pre-season rating). It estimates team strength game by game, predicts
+single games, models player availability, simulates the rest of a season and measures
+remaining schedule difficulty (D-SOS). It also includes playoff and player-value analyses.
+Every forecast uses only information available before tip-off, or before the cutoff date.
+
+| Part | What it does | Main code |
 |---|---|---|
-| Phase 1 | 数据管道、数据验证、赛前特征（回合、效率、赛程密度、旅行、背靠背情境、伤病报告）、静态 SOS、季前基线 | `ingestion/`、`preprocessing/`、`validation/`、`features/`、`sos/static.py` |
-| Phase 2 | Elo、EWMA、动态对手调整实力、CatBoost 单场模型，滚动回测与消融 | `ratings/elo.py`、`ratings/dynamic.py`、`models/game_model.py` |
-| Phase 3 | 出场概率、阵容缺失价值、重复计量检验、复出时间表 | `models/availability.py` |
-| Phase 4 | 平均球队反事实 SOS 与 Shapley 拆解、全联盟蒙特卡洛（实力不确定性、阵容先验、未来伤病、官方平手规则、NBA 杯）、历史日期回放 | `sos/projection.py`、`sos/availability.py`、`sos/roster_prior.py`、`sos/standings.py`、`sos/cup.py`、`models/season_simulation.py` |
-| 分析 | 球员价值（技术统计先验 + 五人阵容 RAPM）、季后赛纯实力与改进、季后赛升降球员、球星与深度 | `ratings/` |
+| Data | ingestion with a raw-file manifest, validation, pre-game features (possessions, efficiency, schedule density, travel, back-to-back context, injury reports), static SOS, pre-season baseline | `ingestion/`, `preprocessing/`, `validation/`, `features/`, `sos/static.py` |
+| Strength and game model | Elo, EWMA, dynamic opponent-adjusted strength, Kalman-filter strength, CatBoost single-game model; rolling backtest and feature-group ablation | `ratings/elo.py`, `ratings/dynamic.py`, `ratings/kalman.py`, `models/game_model.py` |
+| Availability | probability of playing, missing lineup value, double-counting check, return-time tables | `models/availability.py` |
+| Season simulation | average-team counterfactual SOS with a Shapley split, joint league Monte Carlo (strength uncertainty, roster prior, future injuries, official tie-breakers, NBA Cup), historical date replays | `sos/projection.py`, `sos/availability.py`, `sos/roster_prior.py`, `sos/standings.py`, `sos/cup.py`, `models/season_simulation.py` |
+| Analysis | player values (box-score prior plus five-man lineup RAPM), playoff strength and its improvements, players who rise in the playoffs, stars vs depth | `ratings/` |
+| Live | on-demand snapshot, latest official injury report and projection; Streamlit page | `live.py`, `app/streamlit_app.py` |
 
-所有模型选择只在测试赛季之前的赛季里进行（按赛季分组的 k-fold），测试赛季只做按时间顺序的回放。`reports/` 是这些步骤的输出结果。
+## Method
 
-## 运行
+**Pre-game information only.** Result-based features use games on earlier ET dates. Injury
+features use the last official report published (HTTP `Last-Modified`) before tip-off.
+Strengths at a cutoff use games before the cutoff. Tests check this for every rating
+(`tests/test_strength_models.py`, `tests/test_kalman.py`, `tests/test_season_simulation.py`).
+
+**Model selection by whole seasons.** Elo, dynamic-strength and Kalman hyper-parameters are
+tuned on 2013-14 to 2015-16, which are never test seasons. CatBoost early-stops on the last
+training season. Season-simulation choices (load features, roster prior, availability terms)
+use season-grouped k-fold error inside the training seasons. Each test season is only replayed
+in time order.
+
+**Kalman strength.** `ratings/kalman.py` treats every team's strength per 100 possessions as
+a state: a random walk within a season, regression toward the mean between seasons, and one
+joint update per game date. Games identify only strength differences, so the noise is projected
+onto sum-to-zero strengths. The grid search over q, p0 and carry uses the dynamic model's
+squared-error criterion. The observation sd is then set so that the predictive variance matches
+the squared innovations on the tuning seasons. The tuned values are in
+`reports/game_model_params.json` (`tuned.kalman`).
+
+## Data
+
+| Source | Content | Location |
+|---|---|---|
+| stats.nba.com (nba_api 1.12.0) | game logs, team advanced stats (possessions), player game logs, schedules, standings | `data/raw/nba_stats/` |
+| official NBA injury report PDFs | pre-game snapshots; HTTP `Last-Modified` is the publication time | `data/raw/injury_reports/` |
+| Wikidata P625 | arena coordinates (QIDs checked by hand) | `configs/venue_aliases.csv`, `configs/venues.csv` |
+
+`data/raw/manifest.jsonl` records the URL, fetch time and sha256 of every raw file. The data
+come from stats.nba.com and NBA.com, so the NBA terms of use apply, and the data are for
+personal research only. Neither raw nor processed data are in this repository (`data/` is about
+660 MB, and the NBA terms restrict redistribution). Rebuild them locally with `fetch` and
+`build`. The test fixtures that hold real NBA files are not published either. Tests that need
+them are skipped; `tests/fixtures/README.md` explains how to recreate them. `reports/` holds
+derived results only.
+
+## Results
+
+All numbers below are read from the named file in `reports/`, rounded to the shown precision.
+
+### Single-game prediction
+
+`game-model`, test seasons 2016-17 to 2025-26 (11,979 games), pooled
+(`reports/game_model_summary_all.csv`; 2022-23 onward in `game_model_summary_2022_26.csv`).
+The target is the home margin per 100 possessions, and win probability is Phi(margin / sigma).
+
+| Model | Log loss | Brier | MAE per 100 | ECE |
+|---|---|---|---|---|
+| pre-season rating | 0.6558 | 0.2319 | 11.25 | 0.0313 |
+| Elo | 0.6250 | 0.2177 | | 0.0428 |
+| EWMA (14 days) | 0.6412 | 0.2247 | 10.99 | 0.0306 |
+| dynamic strength (linear) | 0.6230 | 0.2169 | 10.68 | 0.0289 |
+| Kalman strength (linear) | 0.6217 | 0.2163 | 10.65 | 0.0328 |
+| CatBoost: strength | 0.6241 | 0.2172 | 10.68 | 0.0322 |
+| CatBoost: strength + Kalman | 0.6236 | 0.2171 | 10.67 | 0.0307 |
+| CatBoost: + rest | 0.6224 | 0.2166 | 10.65 | 0.0345 |
+| CatBoost: + rest + travel | 0.6225 | 0.2166 | 10.64 | 0.0351 |
+| CatBoost: + injury (full) | 0.6177 | 0.2145 | 10.56 | 0.0337 |
+| CatBoost full, Platt-calibrated | 0.6176 | 0.2145 | 10.56 | 0.0338 |
+
+Rest and travel features add little: log loss goes from 0.6241 to 0.6224 with rest and to
+0.6225 with rest and travel. The injury features, available from 2019-20 on, account for most
+of the CatBoost gain (0.6177). CatBoost is less well calibrated than the linear dynamic model
+(ECE 0.0322 to 0.0351 against 0.0289). Platt calibration fitted on the held-out last training
+season leaves ECE at 0.0338. The Kalman strength has a lower log loss and MAE than the dynamic
+strength, but it is less well calibrated (ECE 0.0328 against 0.0289).
+
+### Remaining-season simulation
+
+`replay`: each test season from 2016-17 to 2025-26 is replayed from opening night and from the
+dates by which the median team has played 20, 40 and 60 games, giving 300 team-seasons per
+cutoff (`reports/season_sim_backtest.csv`). The table shows the mean absolute error of final
+wins and the share of teams whose final wins fall inside the 90% interval.
+
+| Games played at cutoff | full: MAE | full: 90% cover | Kalman: MAE | Kalman: 90% cover | first version (v1): MAE | current win% (pace): MAE |
+|---|---|---|---|---|---|---|
+| 0 | 7.53 | 0.907 | 7.83 | 0.920 | 7.81 | 9.72 |
+| 20 | 4.99 | 0.910 | 4.98 | 0.923 | 5.13 | 6.14 |
+| 40 | 3.65 | 0.857 | 3.61 | 0.890 | 3.73 | 3.97 |
+| 60 | 2.13 | 0.893 | 2.13 | 0.917 | 2.14 | 2.31 |
+
+`full` uses the dynamic strength with a roster prior; `kalman` swaps in the Kalman strengths
+and sds without a roster prior, which is why it trails on opening night. Without strength
+uncertainty (`fixed_strength`), the 90% interval covers only 0.543 of teams on opening night.
+Does the remaining schedule matter beyond a team's own strength? After at least 20 games,
+regressing remaining wins on expected wins and on minus D-SOS gives a coefficient of 0.82 (se
+0.25) on minus D-SOS (n = 900). Adding D-SOS lowers the MAE of remaining wins from 3.65 to
+3.59 (`reports/season_sim_params.json`, `sos_check`).
+
+These results are not yet compared with pre-season betting lines.
+
+### Playoffs
+
+`playoff-rank`, postseasons 2011-12 to 2025-26 (1,258 games, 225 series,
+`reports/playoff_backtest.csv`). The models are pooled by games for log loss and by series
+for the series metrics.
+
+| Model | Log loss | Series accuracy | Series Brier |
+|---|---|---|---|
+| full (regular-season strength, momentum, playoff-start health) | 0.6343 | 0.720 | 0.1887 |
+| regular-season strength only (`theta_only`) | 0.6339 | 0.711 | 0.1868 |
+| raw net rating | 0.6361 | 0.693 | 0.1905 |
+| win percentage | 0.6346 | 0.711 | 0.1817 |
+| `full_injury_adjusted` (after-the-fact reference) | 0.6350 | | |
+
+The full model does not beat strength alone on log loss. `full_injury_adjusted` uses each
+game's actual absences, so it is an after-the-fact reference, not a forecast.
+
+Seasons before 2018-19 have no pre-playoff injury report. For these seasons, playoff-start
+health comes from a pre-playoff proxy. A rotation player (at least 20 regular-season minutes
+per game) who missed the last k consecutive regular-season games counts as out. k = 5
+(F1 0.579) is chosen against the Out/Doubtful statuses of teams with a report
+(`reports/playoff_model_params.json`, `rs_end_streak_rule`).
+
+`playoff-improve` adds candidate feature groups chosen by nested, time-ordered validation. In
+every prediction, the in-playoff absences are set to zero. Playoff form going into a game
+lowers pooled log loss from 0.6339 to 0.6306 (`reports/playoff_improve_backtest.csv`). At the
+series level, it lowers Brier from 0.1869 to 0.1850 (`reports/playoff_improve_series.csv`).
+The player-value variants in `reports/model_variants.csv` do not help: on/off values give
+0.6343, lineup RAPM values 0.6370, and adding star/depth terms 0.6378.
+
+### Availability
+
+`availability`, 2021-22 to 2025-26 (6,150 games, `reports/availability_injury_evaluation.csv`,
+pooled log loss). Starting from 0.6204 for dynamic strength alone, the official-report counts
+bring log loss to 0.6088, and the change in missing lineup value brings it to 0.6071. The
+player availability model beats a status-frequency table in every season. In 2025-26, for
+example, its log loss is 0.236 against 0.327 (`reports/availability_model.csv`).
+
+### Current season
+
+`project`, 2026-27 from snapshot `20261123T080609Z` (cutoff 2026-11-23, 248 games played, 952
+remaining, 10,000 simulated seasons; `reports/season_sim_projection_2026-27.csv` and `.json`).
+San Antonio has the highest expected total, 58.9 wins (90% interval 48 to 68).
+
+## Live projection and Streamlit
+
+```bash
+uv run python -m nba_sos.pipeline live
+uv run streamlit run app/streamlit_app.py
+```
+
+`live` takes a fresh current-season snapshot and fetches the latest official injury report
+(at least 30 minutes old, walking back up to one day). It then runs the `project` simulation
+and writes `projection.csv`, `injury_report.csv` and `meta.json` to
+`reports/live/<snapshot UTC stamp>/` (not tracked by git). The Streamlit page runs the same
+flow once when it is opened or refreshed, and again on "Fetch again". It shows the 30-team
+table and a per-team view with that team's report rows. Nothing runs on a schedule. The
+official report is shown for reference only: the projection's availability terms come from
+game participation before the cutoff (`injury_report_used_in_projection: false`).
+
+## Reproduce
 
 ```bash
 uv sync
-.venv/bin/python -m nba_sos.pipeline fetch            # 联网：nba_api 原始数据 + 当前赛季赛程快照
-.venv/bin/python -m nba_sos.pipeline fetch-injuries   # 联网：官方伤病报告 PDF（约 2–3 小时）
-.venv/bin/python -m nba_sos.pipeline build            # 离线：原始数据 → 清洗表、特征、SOS、基线、审计报告
-.venv/bin/python -m nba_sos.pipeline snapshot         # 联网：当前赛季赛程与已完成比赛的带时间戳快照
-.venv/bin/python -m nba_sos.pipeline window-sos --n 15 # 当前赛季每队前 n 场的赛程难度（需先 build + snapshot）
-.venv/bin/python -m nba_sos.pipeline playoff-rank      # 季后赛纯实力榜单 + 滚动回测（需先 build）
-.venv/bin/python -m nba_sos.pipeline analysis          # 球员价值、模型变体对比、球星 vs 深度、常规赛前五球员
-.venv/bin/python -m nba_sos.pipeline game-model        # Phase 2：Elo / EWMA / 动态实力 / CatBoost 滚动回测与消融
-.venv/bin/python -m nba_sos.pipeline availability      # Phase 3：出场概率、阵容贡献、重复计量检验、伤病模块评估、复出时间表
-.venv/bin/python -m nba_sos.pipeline playoff-improve   # 用历届季后赛嵌套选择改进季后赛模型（含季后赛内状态更新）
-.venv/bin/python -m nba_sos.pipeline replay            # Phase 4：历史日期回放，检验剩余赛季模拟（胜场误差、区间覆盖率）
-.venv/bin/python -m nba_sos.pipeline project           # Phase 4：本赛季剩余赛程 D-SOS、预期胜场、种子与附加赛概率（先运行 snapshot）
-.venv/bin/python -m nba_sos.pipeline playoff-risers    # 季后赛相对常规赛变强/变弱的球员（同口径官方数据，含对手与样本量收缩）
-.venv/bin/python -m pytest
+uv run python -m nba_sos.pipeline fetch            # network: nba_api payloads + current schedule snapshot
+uv run python -m nba_sos.pipeline fetch-injuries   # network: official injury report PDFs (about 2-3 hours)
+uv run python -m nba_sos.pipeline build            # offline: raw -> processed tables, features, SOS, baseline, audit
+uv run python -m nba_sos.pipeline snapshot         # network: timestamped current-season schedule and results
+uv run python -m nba_sos.pipeline window-sos --n 15
+uv run python -m nba_sos.pipeline playoff-rank
+uv run python -m nba_sos.pipeline analysis
+uv run python -m nba_sos.pipeline game-model
+uv run python -m nba_sos.pipeline availability
+uv run python -m nba_sos.pipeline playoff-improve
+uv run python -m nba_sos.pipeline replay
+uv run python -m nba_sos.pipeline project
+uv run python -m nba_sos.pipeline playoff-risers
 ```
 
-`build` 只读 `data/raw/`，可以重复执行；验证出现错误级问题时，会先写出审计报告，然后以非零状态退出。
+`build` reads only `data/raw/` and can be rerun. If an error-level validation check fails, it
+writes the audit report and exits with a non-zero status. `analysis` must run before
+`playoff-improve` (player values), and `game-model` before `availability`, `replay` and
+`project` (features and tuned parameters).
 
-## 数据来源
-
-| 来源 | 内容 | 位置 |
-|---|---|---|
-| stats.nba.com（nba_api 1.12.0） | 比赛日志、球队 Advanced（POSS 等）、球员比赛日志、赛程、排名 | `data/raw/nba_stats/` |
-| NBA 官方伤病报告 PDF | 赛前快照，HTTP `Last-Modified` 作为发布时间 | `data/raw/injury_reports/` |
-| Wikidata P625 | 场馆坐标（人工复核 QID） | `configs/venue_aliases.csv`、`configs/venues.csv` |
-
-每个原始文件都在 `data/raw/manifest.jsonl` 里记录了 URL、抓取时间和 sha256。数据来自 stats.nba.com 和 NBA 官网，使用时须遵守 NBA 的使用条款，仅用于个人研究。
-
-本仓库不包含原始数据和清洗后的数据（`data/` 约 660 MB，且 NBA 条款限制再分发），需要用上面的 `fetch` 和 `build` 命令在本地重建；解析真实 NBA 文件的测试夹具同样不上传，缺失时对应测试会自动跳过，重建方法见 `tests/fixtures/README.md`。
-
-## 输出
-
-| 文件 | 内容 |
+| Command | Files written to `reports/` |
 |---|---|
-| `data/processed/games.parquet` | 每场一行：比分、回合数、攻防效率、中立场地、场馆 |
-| `data/processed/schedule.parquet` | 每队每场一行：对手、主客、联盟/分区、场馆坐标、当地开赛时间 |
-| `data/processed/team_game_features.parquet` | 每队每场的赛前特征（效率、赛程密度、旅行、伤病）及 `as_of_timestamp` |
-| `data/processed/player_availability.parquet` | 每场开赛前最后一份伤病报告中的球员状态 |
-| `data/processed/matchup_counts.parquet` | 实际对阵次数 N_ij |
-| `reports/data_audit.md` | 数据审计报告 |
-| `reports/static_sos.csv`、`reports/baseline_backtest.csv`、`reports/validation_results.csv` | 静态 SOS、基线回测、全部验证结果 |
+| `build` | `data_audit.md`, `static_sos.csv`, `baseline_backtest.csv`, `validation_results.csv` |
+| `window-sos --n 15` | `window_sos_<season>_first15.csv`, `window_sos_<season>_first15.params.json` |
+| `playoff-rank` | `playoff_backtest.csv`, `playoff_model_params.json`, `playoff_strength_<season>.csv` |
+| `analysis` | `player_values_meta.json`, `model_variants.csv`, `star_vs_depth.json`, `top_players_2019_2026.csv`, `team_season_rankings_2013_2026.csv` |
+| `game-model` | `game_model_backtest.csv`, `game_model_summary_all.csv`, `game_model_summary_2022_26.csv`, `game_model_params.json` |
+| `availability` | `availability_model.csv`, `availability_injury_evaluation.csv`, `availability_return_time.csv`, `availability_status_by_reason.csv`, `availability_params.json` |
+| `playoff-improve` | `playoff_improve_backtest.csv`, `playoff_improve_params.json`, `playoff_improve_series.csv` |
+| `playoff-risers` | `playoff_risers_career.csv`, `playoff_risers_seasons.csv`, `playoff_risers_params.json` |
+| `replay` | `season_sim_replays.csv`, `season_sim_backtest.csv`, `season_sim_params.json` |
+| `project` | `season_sim_projection_<season>.csv`, `season_sim_projection_<season>.json` |
+| `live` | `live/<stamp>/projection.csv`, `live/<stamp>/injury_report.csv`, `live/<stamp>/meta.json` (git-ignored) |
 
-`reports/` 里的每个文件都由下面的命令生成：
+The column labels `cb_phase2`, `cb_phase3` and `dyn+phase2_injury` in the availability reports
+mean the game-model CatBoost feature set, that set plus lineup features, and dynamic strength
+plus the report counts.
 
-| 命令 | 写出的 `reports/` 文件 |
+## Development
+
+```bash
+make install     # uv sync --frozen
+make lint        # ruff check + ruff format --check (src, tests, app)
+make format
+make typecheck   # mypy on src/nba_sos
+make test        # pytest (the end-to-end build test needs local data and is skipped without it)
+make check       # lint + typecheck + test
+uvx pre-commit install
+```
+
+CI runs lint, type check and tests on Python 3.11 and 3.12 (`.github/workflows/ci.yml`).
+
+## Definitions
+
+| Item | Definition |
 |---|---|
-| `build` | `data_audit.md`、`static_sos.csv`、`baseline_backtest.csv`、`validation_results.csv` |
-| `window-sos --n 15` | `window_sos_<赛季>_first15.csv`、`window_sos_<赛季>_first15.params.json` |
-| `playoff-rank` | `playoff_backtest.csv`、`playoff_model_params.json`、`playoff_strength_<赛季>.csv` |
-| `analysis` | `player_values_meta.json`、`model_variants.csv`、`star_vs_depth.json`、`top_players_2019_2026.csv`、`team_season_rankings_2013_2026.csv` |
-| `game-model` | `game_model_backtest.csv`、`game_model_summary_all.csv`、`game_model_summary_2022_26.csv`、`game_model_params.json` |
-| `availability` | `availability_model.csv`、`availability_injury_evaluation.csv`、`availability_return_time.csv`、`availability_status_by_reason.csv`、`availability_params.json` |
-| `playoff-improve` | `playoff_improve_backtest.csv`、`playoff_improve_params.json`、`playoff_improve_series.csv` |
-| `playoff-risers` | `playoff_risers_career.csv`、`playoff_risers_seasons.csv`、`playoff_risers_params.json` |
-| `replay` | `season_sim_replays.csv`、`season_sim_backtest.csv`、`season_sim_params.json` |
-| `project` | `season_sim_projection_<赛季>.csv`、`season_sim_projection_<赛季>.json` |
-
-## Phase 1 的关键口径
-
-| 项目 | 口径 |
-|---|---|
-| 赛季范围 | 只取常规赛（ID 前缀 002），含 NBA Cup 小组赛和计入战绩的淘汰赛；Cup 决赛（006）、附加赛、季后赛排除 |
-| 回合数 | 两队 POSS 的平均值；效率 = 得分 / 回合数 × 100 |
-| 主客场 | 以赛程的主队 ID 为准（中立场地比赛的 MATCHUP 两队都写 "@"） |
-| 中立场地 | 源数据 `isNeutral` 或场馆标为中立（国际赛、拉斯维加斯）；基线模型中主场优势记 0 |
-| 信息截止 | 结果类特征只用 ET 日期严格早于当天的比赛；伤病只用发布时间早于开赛的最后一份报告 |
-| 赛季首场旅行 | 从本队主场场馆出发 |
-| 背靠背情境 | `b2b_type`（前一场+本场的主客，如 AA = 连续两场客场；中立场地算客场）、`turnaround_hours`（两场开赛间隔）、`prev_overtime_periods`、两场的场馆当地开赛时间、本队主场时区下的开赛时间（生物钟），与 `travel_distance_km`、`timezone_change_hours`（正 = 向东）组合使用 |
-| 缺失 | 每季首场的累计值、无可用伤病快照的伤病特征保持为空，不填补 |
-| 赛季前评级 | 上季每百回合净效率；与本季净胜分的系数在训练赛季上用 OLS 估计 |
-| 静态 SOS | `retro_*` 用对手全季最终战绩（仅描述）；`causal_*` 用对手赛前战绩 |
+| Season scope | regular season only (game ID prefix 002), including NBA Cup group games and the knockout games that count in the standings; the Cup final (006), play-in and playoffs are excluded |
+| Possessions | mean of the two teams' POSS; efficiency = points / possessions x 100 |
+| Home and away | the schedule's home team ID (at neutral sites both MATCHUP strings use "@") |
+| Neutral site | the source `isNeutral` flag or a venue marked neutral (international games, Las Vegas); home-court advantage is 0 there |
+| Information cutoff | result features use games on ET dates strictly before the game day; injuries use the last report published before tip-off |
+| First-game travel | from the team's home arena |
+| Back-to-back context | `b2b_type` (home/away of the previous and current game, e.g. AA = two road games; neutral counts as road), `turnaround_hours`, `prev_overtime_periods`, local tip-off times and the tip-off time in the team's home time zone (body clock), together with `travel_distance_km` and `timezone_change_hours` (positive = eastward) |
+| Missing values | season-to-date values before a team's first game and injury features without a usable snapshot stay empty, not imputed |
+| Pre-season rating | last season's net rating per 100 possessions; its coefficient on this season's margin is fitted by OLS on the training seasons |
+| Static SOS | `retro_*` uses opponents' final records (descriptive only); `causal_*` uses opponents' records before each game |
