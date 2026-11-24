@@ -67,7 +67,7 @@ c1.metric("Expected wins", f"{row.exp_wins:.1f}", help=f"90% interval {row.p05:.
 c2.metric("P(playoffs)", f"{row.p_playoffs:.1%}")
 c3.metric("Remaining D-SOS", f"{row.d_sos:+.2f}", help=f"rank {int(row.d_sos_rank)} of {len(table)} (1 = hardest)")
 c4.metric("Strength (per 100)", f"{row.S:+.1f}", help=f"sd {row.sd:.1f}")
-st.dataframe(row.to_frame("value"), width="stretch")
+st.dataframe(row.astype(str).to_frame("value"), width="stretch")  # mixed types: show as text
 if res["injury_report"] is not None:
     r = res["injury_report"]
     st.markdown("**Official injury report**")
