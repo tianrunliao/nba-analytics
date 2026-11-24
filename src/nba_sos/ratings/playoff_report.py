@@ -5,6 +5,10 @@
 For every target season Y (from the 5th historical season on), parameters are chosen and
 fit on earlier postseasons only; Y's own playoff results are used solely for evaluation
 and for the post-hoc "injury-adjusted playoff performance" column.
+
+``full`` is the forecast (pre-playoff inputs only). ``full_injury_adjusted`` adds d_h_inplay,
+built from the players who actually logged no minutes in each playoff game: a post-hoc
+reference, not a forecast.
 """
 from __future__ import annotations
 
@@ -47,6 +51,28 @@ def _miss_seasons(season: str, rs_report_seasons: list[str]) -> tuple[list[str],
     return (s, False) if s else (rs_report_seasons[:1], True)
 
 
+def _streak_rule(rg: pd.DataFrame, values: pd.DataFrame, streaks: dict, d: dict, hist: list[str],
+                 missing_statuses: list[str]) -> dict:
+    """Threshold of the no-report proxy (:func:`playoff_model.choose_streak_threshold`),
+    scored on rotation players of teams with a usable pre-playoff report: 'out' = listed
+    with a missing status. Uses pre-playoff information only (no playoff result)."""
+    ts, st = d["playoff_start_team_status"], d["playoff_start_availability"]
+    parts = []
+    for s in hist:
+        usable = set(ts[(ts.season == s) & ts.snapshot_usable].team_id.astype(int))
+        if not usable:
+            continue
+        r = PM.season_end_roster(rg, values, s)
+        r = r[(r.mpg >= PM.ROTATION_MPG) & r.team_id.astype(int).isin(usable)][["player_id", "team_id"]]
+        r = r.assign(team_id=r.team_id.astype(int)).merge(streaks[s], on=["player_id", "team_id"])
+        out = st[(st.season == s) & st.injury_status.isin(missing_statuses) & st.player_id.notna()]
+        keys = set(zip(out.player_id.astype(int), out.team_id.astype(int)))
+        parts.append(r.assign(out=[(p, t) in keys for p, t in zip(r.player_id.astype(int), r.team_id)], season=s))
+    rule = PM.choose_streak_threshold(pd.concat(parts, ignore_index=True))
+    rule["seasons"] = sorted({p.season.iloc[0] for p in parts if len(p)})
+    return rule
+
+
 def standings(paths: Paths, season: str) -> pd.DataFrame:
     s = nba_stats.load(RawStore(paths.raw), "standings", season)
     return pd.DataFrame({"team_id": s.TeamID.astype(int), "conference": s.Conference,
@@ -72,6 +98,8 @@ def season_blocks(paths: Paths, cfg: dict, d: dict, pv: pd.DataFrame | None = No
     hi = P.health_index(rg, values)
     gf = T.game_frame(games, d["team_game_features"], hi)
     names = pg.drop_duplicates("player_id").set_index("player_id").player_name
+    streaks = {s: PM.rs_end_absence_streak(rg, s) for s in hist}
+    streak_rule = _streak_rule(rg, values, streaks, d, hist, cfg["features"]["injury"]["missing_statuses"])
     out = {}
     for s in hist:
         fit = T.fit_pooled(gf[gf.season.map(season_start_year) <= season_start_year(s)],
@@ -81,17 +109,8 @@ def season_blocks(paths: Paths, cfg: dict, d: dict, pv: pd.DataFrame | None = No
         roster = PM.season_end_roster(rg, values, s)
         pgames = d["playoff_games"][d["playoff_games"].season == s]
         ppg = d["playoff_player_games"][d["playoff_player_games"].season == s]
-        # first playoff game participation per team (proxy where no usable report)
-        tg = pd.concat([pgames[["game_id", "tipoff_utc", "home_team_id"]].rename(columns={"home_team_id": "team_id"}),
-                        pgames[["game_id", "tipoff_utc", "away_team_id"]].rename(columns={"away_team_id": "team_id"})])
-        first = tg.sort_values("tipoff_utc").drop_duplicates("team_id")
-        first_game = first.assign(team_id=first.team_id.astype(int)).set_index("team_id").game_id
+        play_teams = set(pd.concat([pgames.home_team_id, pgames.away_team_id]).astype(int))
         roster = roster.assign(team_id=roster.team_id.astype(int))
-        fgp = roster[["player_id", "team_id"]].assign(game_id=lambda x: x.team_id.map(first_game)).dropna(subset=["game_id"])
-        fgp = fgp.merge(ppg[ppg.minutes > 0][["game_id", "player_id"]].assign(played=True),
-                        on=["game_id", "player_id"], how="left")
-        fgp["played"] = fgp.played.astype("boolean").fillna(False)
-        fgp = fgp[["player_id", "team_id", "played"]]
         ts = d["playoff_start_team_status"]
         usable = set(ts[(ts.season == s) & ts.snapshot_usable].team_id.astype(int))
         miss_seasons, lookahead = _miss_seasons(s, rs_report_seasons)
@@ -99,14 +118,13 @@ def season_blocks(paths: Paths, cfg: dict, d: dict, pv: pd.DataFrame | None = No
         st = d["playoff_start_availability"]
         st = st[(st.season == s) & st.player_id.notna() & st.team_id.notna()].assign(
             team_id=lambda x: x.team_id.astype(int))
-        play_teams = set(first.team_id.astype(int))
         r_rep, r_prx = roster[roster.team_id.isin(usable & play_teams)], roster[roster.team_id.isin(play_teams - usable)]
         parts, details = [], []
         if len(r_rep):
-            h, det = PM.health_start(r_rep, st, fgp, mt, fit["coefs"])
+            h, det = PM.health_start(r_rep, st, None, mt, fit["coefs"])
             parts.append(h), details.append(det)
         if len(r_prx):
-            h, det = PM.health_start(r_prx, None, fgp, None, fit["coefs"])
+            h, det = PM.health_start(r_prx, None, streaks[s], None, fit["coefs"], streak_k=streak_rule["k"])
             parts.append(h), details.append(det)
         hs = pd.concat(parts, ignore_index=True)
         detail = pd.concat(details, ignore_index=True)
@@ -131,6 +149,7 @@ def season_blocks(paths: Paths, cfg: dict, d: dict, pv: pd.DataFrame | None = No
                   "season_sigma": fit["season_sigma"][s], "detail": detail, "ip_detail": ip_detail,
                   "inplay_table": inplay,
                   "pgames": pgames, "raw_net": raw_net, "miss_table": mt, "miss_lookahead": lookahead,
+                  "streak_rule": streak_rule, "n_proxy_teams": len(play_teams - usable),
                   "names": names, "standings": standings(paths, s)}
         log.info("%s: theta fit on %d games, %d playoff games", s, len(gf[gf.season.map(season_start_year) <= season_start_year(s)]), len(pgames))
     return out
@@ -227,7 +246,8 @@ def evaluate_and_rank(blocks: dict, hist: list[str], feats: list[str] | None = N
         params[Y] = {"tau_days": tau, **{f"c_{k}": v for k, v in pm["coef"].items()},
                      **{f"se_{k}": v for k, v in pm["se"].items()}, "sigma": pm["sigma"],
                      "n_train_games": pm["n_games"], "rs_coefs": b["fit"]["coefs"],
-                     "miss_table": b["miss_table"].to_dict("records"), "miss_table_lookahead": b["miss_lookahead"]}
+                     "miss_table": b["miss_table"].to_dict("records"), "miss_table_lookahead": b["miss_lookahead"],
+                     "n_proxy_teams": b["n_proxy_teams"], "rs_end_streak_rule": b["streak_rule"]}
         rankings[Y] = ranking_table(b, teams, pm, sr, tau)
     return pd.DataFrame(metrics), rankings, params
 

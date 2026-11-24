@@ -6,7 +6,8 @@ For every test postseason Y:
   2. forward selection over candidate groups, scored by leave-one-postseason-out CV log loss
      within the training postseasons only (a group must cut CV log loss by MIN_GAIN);
   3. fit on all training postseasons, predict Y.
-Y's results are never used for any choice. Fixed variants (base + each single group) are
+Y's results are never used for any choice. d_h_inplay (players who actually sat out a
+playoff game) is fitted as a control and set to 0 in every prediction (CV and test). Fixed variants (base + each single group) are
 also reported to show each group's marginal out-of-sample value.
 
     python -m nba_sos.pipeline playoff-improve
@@ -30,6 +31,7 @@ log = logging.getLogger(__name__)
 TAU = 40.0
 MIN_GAIN = 0.0005
 BASE = ["d_theta_full", "d_momentum", "d_h_start", "d_h_inplay", "home_flag"]
+FORECAST_ZERO = {"d_h_inplay"}
 GROUPS = {
     "elo_end": ["d_elo_end"],
     "playoff_shift": ["d_playoff_shift"],
@@ -50,7 +52,10 @@ def _fit(rows: pd.DataFrame, cols: list[str], ridge: float = 0.0) -> tuple[np.nd
 
 
 def _logloss(rows, cols, b, sg) -> float:
-    pred = rows[cols].fillna(0.0).to_numpy(float) @ b
+    """Forecast log loss: d_h_inplay (actual absences in that playoff game) is a training
+    control only and is zeroed when predicting, as in playoff_report's ``full``."""
+    X = rows[cols].fillna(0.0).assign(**{c: 0.0 for c in cols if c in FORECAST_ZERO})
+    pred = X.to_numpy(float) @ b
     return M.log_loss(rows.home_win.astype(float).to_numpy(), norm.cdf(pred / sg))
 
 

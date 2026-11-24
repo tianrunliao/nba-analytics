@@ -101,10 +101,39 @@ def test_health_start_uses_status_and_rotation():
     exp_min = 36 / 48 + 0.02 * 30 / 48 + 0.36 * 8 / 48
     exp_val = 36 / 48 * 5 + 0 + 0.36 * 8 / 48 * -1
     assert team.h_start.iloc[0] == pytest.approx(-1.0 * exp_min - 0.5 * exp_val)
-    # proxy: rotation players absent from the first playoff game
-    fg = pd.DataFrame({"player_id": [1, 2, 3], "team_id": [9, 9, 9], "played": [False, True, False]})
-    team2, det2 = PM.health_start(roster, None, fg, None, coefs)
-    assert det2.set_index("player_id").p_miss.tolist() == [1.0, 0.0, 0.0]   # bench DNP ignored
+    # proxy (no report): rotation players who missed the last k regular-season games in a row
+    sk = pd.DataFrame({"player_id": [1, 2, 3], "team_id": [9, 9, 9], "streak": [6, 2, 9]})
+    team2, det2 = PM.health_start(roster, None, sk, None, coefs, streak_k=5)
+    assert det2.set_index("player_id").p_miss.tolist() == [1.0, 0.0, 0.0]   # short rest / bench ignored
+    assert (det2.source == "rs_end_absence").all()
+
+
+def test_rs_end_absence_streak_counts_trailing_missed_games_only():
+    d = pd.date_range("2020-04-01", periods=6)
+    rg = pd.DataFrame({"season": "2019-20", "player_id": [1] * 6 + [2] * 6 + [3] * 3, "team_id": 9,
+                       "game_date": list(d) * 2 + list(d[3:]),
+                       "played": [True, False, True, False, False, False] + [True] * 6 + [False] * 3,
+                       "stint_to_season_end": [True] * 12 + [False] * 3})
+    s = PM.rs_end_absence_streak(rg, "2019-20").set_index("player_id").streak
+    assert s[1] == 3 and s[2] == 0 and 3 not in s.index        # traded-away stint excluded
+    rg.loc[rg.player_id == 2, "played"] = False
+    assert PM.rs_end_absence_streak(rg, "2019-20").set_index("player_id").streak[2] == 6
+
+
+def test_choose_streak_threshold_maximises_agreement_with_report():
+    x = pd.DataFrame({"streak": [0, 1, 1, 2, 4, 6, 8, 0], "out": [False, False, False, False, True, True, True, True]})
+    rule = PM.choose_streak_threshold(x)
+    assert rule["k"] in (3, 4) and rule["f1"][rule["k"]] == pytest.approx(2 * 1 * 0.75 / 1.75)
+    assert rule["f1"][1] < rule["f1"][rule["k"]]
+
+
+def test_playoff_improve_predictions_ignore_inplay_absences():
+    from nba_sos.ratings import playoff_improve as PI
+    rows = pd.DataFrame({"d_theta_full": [2.0, -2.0], "d_h_inplay": [-50.0, 50.0], "home_flag": [1.0, 1.0],
+                         "home_win": [1, 0]})
+    cols = ["d_theta_full", "d_h_inplay", "home_flag"]
+    b = np.array([1.0, 1.0, 0.0])
+    assert PI._logloss(rows, cols, b, 10.0) == pytest.approx(PI._logloss(rows.assign(d_h_inplay=0.0), cols, b, 10.0))
 
 
 def test_fit_playoff_recovers_coefficients():

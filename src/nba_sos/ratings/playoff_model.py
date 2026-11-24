@@ -8,8 +8,11 @@ For a target season Y, every input is known before Y's first playoff game:
   h_start  health effect at playoff start, per 100 possessions: the regular-season
            coefficients applied to the players expected to miss games — from the official
            report before the team's first playoff game (P(miss | status) estimated on
-           earlier regular seasons), or, in seasons before the report archive, from
-           rotation players (RS mpg >= 20) absent in that first game.
+           earlier regular seasons), or, where no usable report exists (seasons before the
+           archive), from rotation players (RS mpg >= 20) who missed at least the team's last
+           ``k`` regular-season games in a row. ``k`` is chosen by :func:`choose_streak_threshold`
+           against the official pre-playoff Out/Doubtful status of report seasons; it uses
+           no playoff result.
 
 Playoff game model, fit on postseasons < Y:
 
@@ -28,7 +31,6 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 from scipy.stats import norm
-
 
 ROTATION_MPG = 20.0
 TAU_GRID = (10.0, 20.0, 40.0)
@@ -61,11 +63,41 @@ def season_end_roster(rg: pd.DataFrame, values: pd.DataFrame, season: str) -> pd
     return r.merge(values, on=["season", "player_id", "team_id"])
 
 
-def health_start(roster: pd.DataFrame, statuses: pd.DataFrame | None, first_game_played: pd.DataFrame,
-                 miss_table: pd.DataFrame | None, coefs: dict) -> pd.DataFrame:
+def rs_end_absence_streak(rg: pd.DataFrame, season: str) -> pd.DataFrame:
+    """player_id, team_id, streak: consecutive roster games the player missed at the end of
+    ``season``'s regular season (season-end stint only). Known before the playoffs."""
+    r = rg[(rg.season == season) & rg.stint_to_season_end].sort_values(["player_id", "team_id", "game_date"])
+    rows = []
+    for (pid, tid), g in r.groupby(["player_id", "team_id"], sort=False):
+        played = g.played.to_numpy(bool)[::-1]
+        rows.append((pid, tid, int(np.argmax(played)) if played.any() else len(played)))
+    return pd.DataFrame(rows, columns=["player_id", "team_id", "streak"])
+
+
+STREAK_GRID = range(1, 11)
+
+
+def choose_streak_threshold(x: pd.DataFrame) -> dict:
+    """``x``: rotation players of teams with a usable pre-playoff report, with ``streak`` and
+    ``out`` (listed Out or Doubtful). Returns the k in STREAK_GRID whose rule streak >= k
+    agrees best (F1) with the report, plus the scores of every k."""
+    scores = {}
+    for k in STREAK_GRID:
+        flag = x.streak >= k
+        tp = int((flag & x.out).sum())
+        prec, rec = tp / max(int(flag.sum()), 1), tp / max(int(x.out.sum()), 1)
+        scores[k] = 2 * prec * rec / (prec + rec) if prec + rec else 0.0
+    best = max(scores, key=scores.get)
+    return {"k": best, "f1": scores, "n_players": int(len(x)), "n_out": int(x.out.sum())}
+
+
+def health_start(roster: pd.DataFrame, statuses: pd.DataFrame | None, rs_end_streak: pd.DataFrame | None,
+                 miss_table: pd.DataFrame | None, coefs: dict, streak_k: int | None = None) -> pd.DataFrame:
     """Per team: expected missing f and f*value at playoff start, and the per-100 effect.
     ``statuses``: player_id, team_id, injury_status from the pre-playoff report (or None).
-    ``first_game_played``: player_id, team_id, played (first playoff game)."""
+    Without statuses: ``rs_end_streak`` (player_id, team_id, streak from
+    :func:`rs_end_absence_streak`) and ``streak_k`` — a rotation player whose streak >= k
+    is expected to miss."""
     r = roster.copy()
     r["f"] = r.mpg / 48
     if statuses is not None and len(statuses):
@@ -75,10 +107,10 @@ def health_start(roster: pd.DataFrame, statuses: pd.DataFrame | None, first_game
         r["p_miss"] = r.p_miss.fillna(0.0)  # not on the report -> available
         r["source"] = "injury_report"
     else:
-        r = r.merge(first_game_played, on=["player_id", "team_id"], how="left")
-        r["p_miss"] = ((r.played.astype("boolean").fillna(False) == False) & (r.mpg >= ROTATION_MPG)).astype(float)  # noqa: E712
-        r["injury_status"] = np.where(r.p_miss > 0, "absent_game1", None)
-        r["source"] = "first_game_participation"
+        r = r.merge(rs_end_streak, on=["player_id", "team_id"], how="left")
+        r["p_miss"] = ((r.streak.fillna(0) >= streak_k) & (r.mpg >= ROTATION_MPG)).astype(float)
+        r["injury_status"] = np.where(r.p_miss > 0, "absent_rs_end", None)
+        r["source"] = "rs_end_absence"
     r["exp_f"] = r.p_miss * r.f
     r["exp_fv"] = r.p_miss * r.f * r.value
     team = r.groupby("team_id").agg(h_minutes=("exp_f", "sum"), h_value=("exp_fv", "sum"),
