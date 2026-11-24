@@ -44,7 +44,7 @@ uv sync
 
 每个原始文件都在 `data/raw/manifest.jsonl` 里记录了 URL、抓取时间和 sha256。数据来自 stats.nba.com 和 NBA 官网，使用时须遵守 NBA 的使用条款，仅用于个人研究。
 
-本仓库不包含原始数据和清洗后的数据（`data/` 约 660 MB，且 NBA 条款限制再分发），需要用上面的 `fetch` 和 `build` 命令在本地重建；解析真实 NBA 文件的测试夹具同样不上传，缺失时对应测试会自动跳过，重建方法见 `tests/fixtures/README.md`。`reports/raptor_comparison.csv` 是与 FiveThirtyEight RAPTOR（CC BY 4.0，https://github.com/fivethirtyeight/data/tree/master/nba-raptor）的相关性对比，只保留了相关系数。
+本仓库不包含原始数据和清洗后的数据（`data/` 约 660 MB，且 NBA 条款限制再分发），需要用上面的 `fetch` 和 `build` 命令在本地重建；解析真实 NBA 文件的测试夹具同样不上传，缺失时对应测试会自动跳过，重建方法见 `tests/fixtures/README.md`。
 
 ## 输出
 
@@ -57,6 +57,21 @@ uv sync
 | `data/processed/matchup_counts.parquet` | 实际对阵次数 N_ij |
 | `reports/data_audit.md` | 数据审计报告 |
 | `reports/static_sos.csv`、`reports/baseline_backtest.csv`、`reports/validation_results.csv` | 静态 SOS、基线回测、全部验证结果 |
+
+`reports/` 里的每个文件都由下面的命令生成：
+
+| 命令 | 写出的 `reports/` 文件 |
+|---|---|
+| `build` | `data_audit.md`、`static_sos.csv`、`baseline_backtest.csv`、`validation_results.csv` |
+| `window-sos --n 15` | `window_sos_<赛季>_first15.csv`、`window_sos_<赛季>_first15.params.json` |
+| `playoff-rank` | `playoff_backtest.csv`、`playoff_model_params.json`、`playoff_strength_<赛季>.csv` |
+| `analysis` | `player_values_meta.json`、`model_variants.csv`、`star_vs_depth.json`、`top_players_2019_2026.csv`、`team_season_rankings_2013_2026.csv` |
+| `game-model` | `game_model_backtest.csv`、`game_model_summary_all.csv`、`game_model_summary_2022_26.csv`、`game_model_params.json` |
+| `availability` | `availability_model.csv`、`availability_injury_evaluation.csv`、`availability_return_time.csv`、`availability_status_by_reason.csv`、`availability_params.json` |
+| `playoff-improve` | `playoff_improve_backtest.csv`、`playoff_improve_params.json`、`playoff_improve_series.csv` |
+| `playoff-risers` | `playoff_risers_career.csv`、`playoff_risers_seasons.csv`、`playoff_risers_params.json` |
+| `replay` | `season_sim_replays.csv`、`season_sim_backtest.csv`、`season_sim_params.json` |
+| `project` | `season_sim_projection_<赛季>.csv`、`season_sim_projection_<赛季>.json` |
 
 ## Phase 1 的关键口径
 

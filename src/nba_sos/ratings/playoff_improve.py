@@ -40,6 +40,8 @@ GROUPS = {
     "experience_age": ["d_experience", "d_age"],
     "star_depth": ["d_star", "d_depth"],
 }
+# variants of the series-level check (reports/playoff_improve_series.csv)
+SERIES_VARIANTS = {"base": BASE, "base+po_form": BASE + GROUPS["po_form"]}
 
 
 def _fit(rows: pd.DataFrame, cols: list[str], ridge: float = 0.0) -> tuple[np.ndarray, float]:

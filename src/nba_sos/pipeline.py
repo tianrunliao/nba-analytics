@@ -110,7 +110,9 @@ def main(argv: list[str] | None = None) -> None:
         out["metrics"].to_csv(paths.reports / "playoff_improve_backtest.csv", index=False)
         (paths.reports / "playoff_improve_params.json").write_text(json.dumps(
             {"selected_per_year": out["selected"], "final": out["final"]}, indent=2, default=float))
-        names = ["base"] + [f"base+{g}" for g in PI.GROUPS] + ["selected"]
+        series = PI.series_eval(out["blocks"], cfg["data_sources"]["seasons"]["historical"], PI.SERIES_VARIANTS)
+        series.to_csv(paths.reports / "playoff_improve_series.csv", index=False)
+        names =["base"] + [f"base+{g}" for g in PI.GROUPS] + ["selected"]
         print(PI.pooled(out["metrics"], names).round(4).to_string())
         print(PI.pooled(out["metrics"], names, later=True).round(4).to_string())
         print(json.dumps(out["selected"], indent=1))

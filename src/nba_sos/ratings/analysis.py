@@ -1,4 +1,4 @@
-"""Model-variant comparison, star-vs-depth analysis and top-player tables.
+"""Model-variant comparison, star-vs-depth analysis, top-player and team-season ranking tables.
 
     python -m nba_sos.pipeline analysis
 """
@@ -18,6 +18,7 @@ from .player_report import compute_player_values, top_players
 
 log = logging.getLogger(__name__)
 TOP_SEASONS = ["2019-20", "2020-21", "2021-22", "2022-23", "2023-24", "2024-25", "2025-26"]
+RANKING_FIRST_SEASON = "2013-14"
 
 
 def pooled(metrics: pd.DataFrame, models=("full", "theta_only", "raw_net", "winpct")) -> dict:
@@ -95,12 +96,15 @@ def run(paths: Paths, cfg: dict) -> dict:
 
     tops = top_players(pv, d["games"], TOP_SEASONS)
     tops.to_csv(paths.reports / "top_players_2019_2026.csv", index=False)
-    return {"variants": comp, "star_depth": star_depth, "top": tops, "results": results}
+
+    ranks = team_season_rankings(paths, RANKING_FIRST_SEASON)
+    ranks.to_csv(paths.reports / "team_season_rankings_2013_2026.csv", index=False)
+    return {"variants": comp, "star_depth": star_depth, "top": tops, "rankings": ranks, "results": results}
 
 
-def team_season_rankings(paths: Paths) -> pd.DataFrame:
-    """Every team-season's regular-season strength, per 100 possessions vs an average team
-    on a neutral court:
+def team_season_rankings(paths: Paths, first_season: str = RANKING_FIRST_SEASON) -> pd.DataFrame:
+    """Every team-season's regular-season strength from ``first_season`` on (the pooled fit
+    uses those seasons only), per 100 possessions vs an average team on a neutral court:
       adj_net      schedule-, venue- and back-to-back-adjusted (actual rosters)
       healthy_net  additionally adjusted for missing players (full-roster strength)
       neutral_win  P(beat an average team on a neutral court) using that season's game
@@ -113,6 +117,8 @@ def team_season_rankings(paths: Paths) -> pd.DataFrame:
     from . import team_strength as T
 
     d = R._load(paths)
+    for k in ("games", "team_game_features", "player_games", "playoff_games"):
+        d[k] = d[k][d[k].season >= first_season]
     g, pg = d["games"], d["player_games"]
     rg = P.roster_games(pg, g)
     gf = T.game_frame(g, d["team_game_features"], P.health_index(rg, P.player_values(rg)))
