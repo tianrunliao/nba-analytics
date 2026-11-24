@@ -107,7 +107,13 @@ regressing remaining wins on expected wins and on minus D-SOS gives a coefficien
 0.25) on minus D-SOS (n = 900). Adding D-SOS lowers the MAE of remaining wins from 3.65 to
 3.59 (`reports/season_sim_params.json`, `sos_check`).
 
-These results are not yet compared with pre-season betting lines.
+Pre-season betting lines: `line-check` compares opening-night projections with pre-season win
+lines on the same team-seasons, once `configs/preseason_win_totals.csv` has rows. The file is
+transcribed by hand from the Basketball-Reference "Preseason Odds" pages (data courtesy of
+sportsoddshistory.com), one row per team and season (`season`, `team` as the NBA tricode, e.g.
+BKN/CHA/PHX, `line`, `source_url`). 2019-20 is left out (suspended mid-season; lines were set
+for 82 games, teams played 64 to 75), and 2020-21 is compared as played (72 games). The file
+currently has no rows, so these results are not yet compared with pre-season betting lines.
 
 ### Playoffs
 
@@ -147,6 +153,19 @@ bring log loss to 0.6088, and the change in missing lineup value brings it to 0.
 player availability model beats a status-frequency table in every season. In 2025-26, for
 example, its log loss is 0.236 against 0.327 (`reports/availability_model.csv`).
 
+### Official injury report
+
+`report-check`, 2020-21 to 2025-26 (`reports/injury_report_check.csv`). At weekly cutoffs, moved
+to the next game day, the full model is scored with participation-based availability and again
+with the official pre-game report of that day. The report sets each covered rotation player's
+probability of missing the next game from the status frequencies of earlier report seasons
+(`reports/injury_report_status_miss.json`; for 2025-26: Out 1.000, Doubtful 0.976,
+Questionable 0.400, Probable 0.049, not listed 0.033, Available 0.013). The report does not
+improve the forecasts overall: on the cutoff day's 912 games, log loss is 0.5962 without it and
+0.5965 with it (difference 0.0004, se 0.0027), and on each team's next 10 games (21,907) 0.6199
+against 0.6198. On the 150 cutoff-day games whose home-win probability the report moved by more
+than 5 points, log loss falls from 0.6380 to 0.6163 (se of the difference 0.0138).
+
 ### Current season
 
 `project`, 2026-27 from snapshot `20261123T080609Z` (cutoff 2026-11-23, 248 games played, 952
@@ -166,8 +185,9 @@ and writes `projection.csv`, `injury_report.csv` and `meta.json` to
 `reports/live/<snapshot UTC stamp>/` (not tracked by git). The Streamlit page runs the same
 flow once when it is opened or refreshed, and again on "Fetch again". It shows the 30-team
 table and a per-team view with that team's report rows. Nothing runs on a schedule. The
-official report is shown for reference only: the projection's availability terms come from
-game participation before the cutoff (`injury_report_used_in_projection: false`).
+projection's availability terms come from game participation before the cutoff; for every
+team whose next game the official report covers, that game also uses the report statuses (see
+"Official injury report" above; `meta.json` records `injury_report_in_projection`).
 
 ## Reproduce
 
@@ -186,12 +206,14 @@ uv run python -m nba_sos.pipeline playoff-improve
 uv run python -m nba_sos.pipeline replay
 uv run python -m nba_sos.pipeline project
 uv run python -m nba_sos.pipeline playoff-risers
+uv run python -m nba_sos.pipeline report-check
+uv run python -m nba_sos.pipeline line-check       # needs rows in configs/preseason_win_totals.csv
 ```
 
 `build` reads only `data/raw/` and can be rerun. If an error-level validation check fails, it
 writes the audit report and exits with a non-zero status. `analysis` must run before
-`playoff-improve` (player values), and `game-model` before `availability`, `replay` and
-`project` (features and tuned parameters).
+`playoff-improve` (player values), `game-model` before `availability`, `replay`, `project`
+and `report-check` (features and tuned parameters), and `replay` before `line-check`.
 
 | Command | Files written to `reports/` |
 |---|---|
@@ -205,6 +227,8 @@ writes the audit report and exits with a non-zero status. `analysis` must run be
 | `playoff-risers` | `playoff_risers_career.csv`, `playoff_risers_seasons.csv`, `playoff_risers_params.json` |
 | `replay` | `season_sim_replays.csv`, `season_sim_backtest.csv`, `season_sim_params.json` |
 | `project` | `season_sim_projection_<season>.csv`, `season_sim_projection_<season>.json` |
+| `report-check` | `injury_report_check.csv`, `injury_report_status_miss.json` |
+| `line-check` | `season_sim_preseason_lines.csv` (only once the lines file has rows) |
 | `live` | `live/<stamp>/projection.csv`, `live/<stamp>/injury_report.csv`, `live/<stamp>/meta.json` (git-ignored) |
 
 The column labels `cb_phase2`, `cb_phase3` and `dyn+phase2_injury` in the availability reports
