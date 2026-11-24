@@ -1,4 +1,4 @@
-"""Strength models: Elo, EWMA, dynamic strength — hand checks and causality."""
+"""Strength models: Elo, EWMA, dynamic and Kalman strength — hand checks and causality."""
 
 import numpy as np
 import pandas as pd
@@ -8,6 +8,7 @@ from conftest import make_games
 from nba_sos.models.game_model import _platt
 from nba_sos.ratings import dynamic as DY
 from nba_sos.ratings import elo as E
+from nba_sos.ratings import kalman as KF
 
 
 def test_elo_first_update_hand_computed(mini_season):
@@ -34,6 +35,7 @@ def test_elo_season_carryover():
         lambda g: E.run_elo(g, 20, 75, 0.65).rename(columns={"home_elo": "a", "away_elo": "b"})[["game_id", "a", "b"]],
         lambda g: DY.ewma_pregame(g, 14).rename(columns={"ewma_net": "a"}),
         lambda g: DY.dynamic_pregame(g, 30, 5, 0.7).rename(columns={"dyn_strength": "a"}),
+        lambda g: KF.kalman_pregame(g, 0.05, 10.0, 0.7, 12.0).rename(columns={"kal_strength": "a"}),
     ],
 )
 def test_pregame_ratings_ignore_future_results(mini_season, fn):

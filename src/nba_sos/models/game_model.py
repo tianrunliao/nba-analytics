@@ -9,6 +9,8 @@ fit for early stopping), so no test-season information is used.
 Every feature is known before tip-off:
   strength  Elo (pre-game), EWMA net rating (7/14/21 days), dynamic opponent-adjusted
             strength and its sd, previous-season-based pre-season rating, games played
+  kalman    Kalman-filter strength difference and both sds (ratings/kalman.py); compared as
+            a linear baseline ("kalman") and added to the strength group ("cb_strength+kalman")
   rest      rest days, back-to-back, games in last 4/7 days, hours since last tip-off,
             overtime in previous game
   travel    distance, time-zone shift, consecutive road games, b2b type, local and
@@ -16,8 +18,8 @@ Every feature is known before tip-off:
   injury    official pre-game report (2019-20 on): players out/doubtful, their prior
             minutes, and their previous-season player value (LPM); NaN before reports exist
 
-Tuning seasons (``TUNE_SEASONS``) choose Elo and dynamic-strength hyper-parameters and
-are never test seasons.
+Tuning seasons (``TUNE_SEASONS``) choose Elo, dynamic-strength and Kalman hyper-parameters
+and are never test seasons.
 """
 
 from __future__ import annotations
@@ -33,6 +35,7 @@ from ..config import Paths, season_start_year
 from ..evaluation import metrics as M
 from ..ratings import dynamic as DY
 from ..ratings import elo as E
+from ..ratings import kalman as KF
 from . import preseason
 
 log = logging.getLogger(__name__)
@@ -91,6 +94,7 @@ GROUPS = {
         "inj_ok_away",
     ],
 }
+KALMAN = ["kal_diff", "kal_sd_home", "kal_sd_away"]
 CATEGORICAL = ["b2bt_home", "b2bt_away"]
 
 
@@ -159,7 +163,9 @@ def build_features(paths: Paths) -> tuple[pd.DataFrame, dict]:
     dyn_par = _tune_dynamic(all_games)
     dyn = DY.dynamic_pregame(all_games, dyn_par["tau"], dyn_par["alpha"], dyn_par["rho"])
     ew = {t: DY.ewma_pregame(all_games, t).rename(columns={"ewma_net": f"ewma{t}"}) for t in (7, 14, 21)}
-    log.info("elo %s dyn %s", elo_par, dyn_par)
+    kal_par = KF.tune(all_games, TUNE_SEASONS)
+    kal = KF.kalman_pregame(all_games, *(kal_par[p] for p in KF.PARAMS))
+    log.info("elo %s dyn %s kalman %s", elo_par, dyn_par, kal_par)
 
     base = games[
         [
@@ -178,6 +184,7 @@ def build_features(paths: Paths) -> tuple[pd.DataFrame, dict]:
     base["home_team_id"], base["away_team_id"] = base.home_team_id.astype(int), base.away_team_id.astype(int)
     x = base.merge(elo, on="game_id", how="left")
     x = _side_merge(x, dyn, ["dyn_strength", "dyn_sd"])
+    x = _side_merge(x, kal, ["kal_strength", "kal_sd"])
     for t, e in ew.items():
         x = _side_merge(x, e, [f"ewma{t}"])
     tf = feats.assign(team_id=feats.team_id.astype(int))
@@ -217,6 +224,7 @@ def build_features(paths: Paths) -> tuple[pd.DataFrame, dict]:
     x["elo_diff"] = x.home_elo - x.away_elo
     x["dyn_diff"] = x.dyn_strength_home - x.dyn_strength_away
     x["dyn_sd_home"], x["dyn_sd_away"] = x.dyn_sd_home, x.dyn_sd_away
+    x["kal_diff"] = x.kal_strength_home - x.kal_strength_away
     for t in (7, 14, 21):
         x[f"ewma{t}_diff"] = x[f"ewma{t}_home"] - x[f"ewma{t}_away"]
     x["prior_diff"] = x.prior_h - x.prior_a
@@ -227,7 +235,8 @@ def build_features(paths: Paths) -> tuple[pd.DataFrame, dict]:
         x[f"inj_ok_{side}"] = x[f"inj_ok_{side}"].astype("boolean").astype(float)
         x[f"b2bt_{side}"] = x[f"b2bt_{side}"].fillna("none").astype(str)
     x["y"] = x.net_rating_margin.astype(float)
-    return x.sort_values(["tipoff_utc", "game_id"]).reset_index(drop=True), {"elo": elo_par, "dynamic": dyn_par}
+    tuned = {"elo": elo_par, "dynamic": dyn_par, "kalman": kal_par}
+    return x.sort_values(["tipoff_utc", "game_id"]).reset_index(drop=True), tuned
 
 
 # ------------------------------------------------------------------ models
@@ -294,6 +303,7 @@ def backtest(x: pd.DataFrame, test_seasons: list[str]) -> tuple[pd.DataFrame, pd
     first = hist.index(TUNE_SEASONS[0])
     specs = {
         "cb_strength": GROUPS["strength"] + ["home_flag"],
+        "cb_strength+kalman": GROUPS["strength"] + KALMAN + ["home_flag"],
         "cb_+rest": GROUPS["strength"] + GROUPS["rest"] + ["home_flag"],
         "cb_+rest+travel": GROUPS["strength"] + GROUPS["rest"] + GROUPS["travel"] + ["home_flag"],
         "cb_full": GROUPS["strength"] + GROUPS["rest"] + GROUPS["travel"] + GROUPS["injury"] + ["home_flag"],
@@ -323,6 +333,7 @@ def backtest(x: pd.DataFrame, test_seasons: list[str]) -> tuple[pd.DataFrame, pd
             "preseason": ["prior_diff", "home_flag"],
             "ewma14": ["ewma14_diff", "home_flag"],
             "dynamic": ["dyn_diff", "home_flag"],
+            "kalman": ["kal_diff", "home_flag"],
         }.items():
             b, sg = _linear(tr_all, cols)
             pred = np.column_stack([te[c].fillna(0).to_numpy(float) for c in cols]) @ b
@@ -353,10 +364,11 @@ def backtest(x: pd.DataFrame, test_seasons: list[str]) -> tuple[pd.DataFrame, pd
                 importances[test] = dict(zip(cols, m.get_feature_importance()))
         rows.append(res)
         log.info(
-            "game-model %s: elo %.4f dyn %.4f cb_full %.4f",
+            "game-model %s: elo %.4f dyn %.4f kalman %.4f cb_full %.4f",
             test,
             res["elo_log_loss"],
             res["dynamic_log_loss"],
+            res["kalman_log_loss"],
             res["cb_full_log_loss"],
         )
     return pd.DataFrame(rows), pd.concat(preds, ignore_index=True), importances
