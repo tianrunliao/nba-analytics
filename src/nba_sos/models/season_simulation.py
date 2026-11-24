@@ -17,7 +17,9 @@ simulates them instead.
 
 Variants: ``full`` (all of the above), ``v1`` (the first season-simulation version: rho * last season
 prior, no availability terms, load = b2b / g4 / km / |tz|), ``fixed_strength`` (full model
-without strength uncertainty), ``pace`` (current win% carried forward).
+without strength uncertainty), ``kalman`` (the full model with Kalman-filter strengths and sds,
+ratings/kalman.py, in place of the dynamic ridge strengths and the roster prior; load features
+and the pre-game fit use the Kalman strength difference), ``pace`` (current win% carried forward).
 """
 
 from __future__ import annotations
@@ -32,6 +34,7 @@ from ..config import Paths, season_start_year
 from ..ingestion import nba_stats
 from ..ingestion.raw_store import RawStore
 from ..ratings import dynamic as DY
+from ..ratings import kalman as KF
 from ..sos import availability as AV
 from ..sos import cup as CUP
 from ..sos import projection as PJ
@@ -60,11 +63,15 @@ def _dyn_params(paths: Paths) -> dict:
     return json.loads((paths.reports / "game_model_params.json").read_text())["tuned"]["dynamic"]
 
 
+def _kalman_params(paths: Paths) -> dict:
+    return json.loads((paths.reports / "game_model_params.json").read_text())["tuned"]["kalman"]
+
+
 def load_history(paths: Paths) -> dict:
     r = lambda n: pd.read_parquet(paths.processed / f"{n}.parquet")  # noqa: E731
     games, prior = r("games"), r("prior_season_games")
     rows = PJ.game_rows(games, PJ.schedule_load(r("team_game_features")))
-    x = r("game_model_features")[["game_id", "dyn_diff", "y"]].merge(rows, on="game_id")
+    x = r("game_model_features")[["game_id", "dyn_diff", "kal_diff", "y"]].merge(rows, on="game_id")
     all_games = pd.concat([prior, games], ignore_index=True)
     return {
         "games": games,
@@ -75,6 +82,7 @@ def load_history(paths: Paths) -> dict:
         "final": DY.season_final_strength(all_games),
         "y": games.set_index("game_id").net_rating_margin.astype(float),
         "dyn": _dyn_params(paths),
+        "kal": KF.filter_states(all_games, _kalman_params(paths)),
         "_states": {},
     }
 
@@ -126,7 +134,10 @@ def injury_fn(h: dict, season: str, tabs: tuple | None):
     return f
 
 
-def strengths(h: dict, season: str, cutoffs, coef, all_games=None) -> pd.DataFrame:
+def strengths(h: dict, season: str, cutoffs, coef, all_games=None, source: str = "dynamic") -> pd.DataFrame:
+    if source == "kalman":
+        # the filter is causal: the state at a cutoff uses games before it only
+        return KF.strengths_asof(h["kal"], season, cutoffs)
     p = h["dyn"]
     return DY.strengths_asof(
         h["all_games"] if all_games is None else all_games,
@@ -139,11 +150,11 @@ def strengths(h: dict, season: str, cutoffs, coef, all_games=None) -> pd.DataFra
     )
 
 
-def horizon_table(h: dict, seasons: list[str], coef, tabs) -> pd.DataFrame:
+def horizon_table(h: dict, seasons: list[str], coef, tabs, source: str = "dynamic") -> pd.DataFrame:
     out = []
     for s in seasons:
         rs = h["rows"][h["rows"].season == s]
-        st = strengths(h, s, weekly_cutoffs(rs.date), coef)
+        st = strengths(h, s, weekly_cutoffs(rs.date), coef, source=source)
         out.append(PJ.horizon_rows(rs, st, h["y"], injury=injury_fn(h, s, tabs)).assign(season=s))
     return pd.concat(out, ignore_index=True)
 
@@ -153,20 +164,28 @@ def fit_models(h: dict, before: str, variant: str = "full") -> dict:
     """Everything the projection of season ``before`` needs, from earlier seasons only."""
     train = train_seasons(h, before)
     xt = h["x"][h["x"].season.isin(train)]
+    source = "kalman" if variant == "kalman" else "dynamic"
+    if source == "kalman":
+        xt = xt.assign(dyn_diff=xt.kal_diff)
     if variant == "v1":
         feats, sel, coef, tabs = V1_LOAD, None, None, None
     else:
         sel = PJ.select_load(xt, K_FOLDS)
         feats = sel["features"]
-        coef = RP.fit_prior(RP.training_table(h["pgf"], h["final"], train[1:]), h["dyn"]["rho"], K_FOLDS)
+        coef = (
+            None
+            if source == "kalman"
+            else RP.fit_prior(RP.training_table(h["pgf"], h["final"], train[1:]), h["dyn"]["rho"], K_FOLDS)
+        )
         pt = h["pgf"][h["pgf"].season.isin(train)]
         tabs = (AV.hazards(pt), AV.new_injury_curve(pt))
     pre = PJ.fit_pregame(xt, feats)
-    hrows = horizon_table(h, train, coef, tabs)
+    hrows = horizon_table(h, train, coef, tabs, source)
     cv = PJ.horizon_cv(hrows, pre, K_FOLDS) if tabs is not None else None
     hz = PJ.fit_horizon(hrows, pre, PJ.INJ_SPECS[cv["chosen"]] if cv else [])
     return {
         "variant": variant,
+        "strength_source": source,
         "train": [train[0], train[-1]],
         "pre": pre,
         "hz": hz,
@@ -244,7 +263,7 @@ def replay(
         w_now, g_now = _wins_to_date(games, cut)
         rows_c, plan = cup_split(rows, cut, season, pw, cup_cfg)
         for name, fit in fits.items():
-            st = strengths(h, season, [cut], fit["roster_prior"])
+            st = strengths(h, season, [cut], fit["roster_prior"], source=fit["strength_source"])
             fi = injury_fn(h, season, fit["injury_tables"])
             rem = PJ.future_index(rows_c, cut)
             PJ.add_injury(rem, fi(cut) if fi is not None else None)
@@ -355,7 +374,7 @@ def run_backtest(paths: Paths, cfg: dict, n_paths: int = 2000) -> dict:
     cup_cfg = cfg["data_sources"].get("nba_cup", {})
     out, params = [], {}
     for T in TEST_SEASONS:
-        fits = {"full": fit_models(h, T, "full"), "v1": fit_models(h, T, "v1")}
+        fits = {v: fit_models(h, T, v) for v in ("full", "v1", "kalman")}
         params[T] = {k: _fit_summary(v) for k, v in fits.items()}
         log.info(
             "%s load %s prior %s hz %s cv %s",
