@@ -9,8 +9,10 @@ __pycache__/
 # not redistributed (NBA terms of use)
 /data/
 /models/
-/app/
 /notebooks/
+
+# outputs of the `live` command: point-in-time network data, regenerated on demand
+/reports/live/
 
 # real NBA payloads used as test fixtures (not redistributed; tests skip without them)
 tests/fixtures/raw_subset/

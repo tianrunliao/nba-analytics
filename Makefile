@@ -1,4 +1,4 @@
-SRC := src tests
+SRC := src tests app
 
 .PHONY: install lint format typecheck test check
 

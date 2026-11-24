@@ -8,6 +8,7 @@ python -m nba_sos.pipeline window-sos --n 15   # current season, first-n-games d
 python -m nba_sos.pipeline playoff-rank        # rolling playoff evaluation + pre-playoff rankings
 python -m nba_sos.pipeline replay              # remaining-season simulation: historical replays (acceptance test)
 python -m nba_sos.pipeline project             # current season: expected wins, seeds, remaining D-SOS
+python -m nba_sos.pipeline live                # network: fresh snapshot + latest injury report + projection
 python -m nba_sos.pipeline playoff-risers      # players who play better in the playoffs than in the regular season
 python -m nba_sos.pipeline analysis            # player values, model variants, star vs depth, top players
 python -m nba_sos.pipeline game-model          # Elo / EWMA / dynamic strength / CatBoost rolling backtest
@@ -20,6 +21,19 @@ import argparse
 import logging
 
 from .config import PROJECT_ROOT, Paths, load_configs
+
+PROJECTION_COLS = [
+    "team",
+    "conference",
+    "wins_now",
+    "games_now",
+    "exp_wins",
+    "p05",
+    "p95",
+    "p_playoffs",
+    "d_sos",
+    "d_sos_rank",
+]
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -40,6 +54,7 @@ def main(argv: list[str] | None = None) -> None:
             "playoff-risers",
             "replay",
             "project",
+            "live",
         ],
     )
     ap.add_argument("--refresh", action="store_true", help="re-download cached payloads")
@@ -199,19 +214,13 @@ def main(argv: list[str] | None = None) -> None:
         (paths.reports / f"season_sim_projection_{season}.json").write_text(
             json.dumps(out["meta"], indent=2, default=str)
         )
-        cols = [
-            "team",
-            "conference",
-            "wins_now",
-            "games_now",
-            "exp_wins",
-            "p05",
-            "p95",
-            "p_playoffs",
-            "d_sos",
-            "d_sos_rank",
-        ]
-        print(out["table"][cols].round(2).to_string())
+        print(out["table"][PROJECTION_COLS].round(2).to_string())
+    elif args.command == "live":
+        from .live import run_live
+
+        out = run_live(paths, cfg)
+        print(out["dir"])
+        print(out["table"][PROJECTION_COLS].round(2).to_string())
 
 
 if __name__ == "__main__":
