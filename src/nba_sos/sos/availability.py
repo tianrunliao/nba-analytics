@@ -1,7 +1,7 @@
 """Future player availability for the remaining-season projection (plan 7.1 / 10.3).
 
 State at a cutoff, from actual participation only (box scores, all seasons; the same
-player-game frame as Phase 3): every rotation player on a team's roster (his most recent
+player-game frame as models/availability.py): every rotation player on a team's roster (his most recent
 roster game before the cutoff was for that team; >= 20 mpg, >= 3 games played) with
   V  previous-season player value (LPM, minutes-shrunk; 0 without one)
   f  expected minutes / 48 (last-10 average, else season to date, else last season)
@@ -9,7 +9,7 @@ roster game before the cutoff was for that team; >= 20 mpg, >= 3 games played) w
 
 Missing value of a team-game: M_v = sum f V and M_f = sum f over players who do not play
 (V is relative to an average player; the f term is the drop to replacement level, as in
-Phase 3). The cutoff strength already reflects what was missing in recent games, so the
+models/availability.py). The cutoff strength already reflects what was missing in recent games, so the
 forecast uses the change
 
     inj_v(k) = rec_v - E[M_v at the team's k-th next game],   same for f
@@ -29,19 +29,19 @@ import numpy as np
 import pandas as pd
 
 from ..config import Paths
-from ..models import phase3 as P3
+from ..models import availability as AM
 
 K_MAX = 90
 N_MAX = 200
 
 
 def player_frame(paths: Paths) -> pd.DataFrame:
-    """Phase 3 player-game frame (cached in data/interim)."""
+    """Player-game frame of models/availability.py (cached in data/interim)."""
     cache = paths.interim / "player_game_frame.parquet"
     if cache.exists():
         return pd.read_parquet(cache)
     r = lambda n: pd.read_parquet(paths.processed / f"{n}.parquet")  # noqa: E731
-    pgf = P3.player_game_frame(r("games"), r("player_games"), r("player_values"))
+    pgf = AM.player_game_frame(r("games"), r("player_games"), r("player_values"))
     pgf = pgf[["season", "game_id", "game_date", "player_id", "team_id", "played", "minutes", "gp_before",
                "streak_before", "V", "exp_mp", "rotation", "y_played", "mpg_prev", "v_prev"]].copy()
     pgf["game_date"] = pd.to_datetime(pgf.game_date)
@@ -52,7 +52,7 @@ def player_frame(paths: Paths) -> pd.DataFrame:
 
 def hazards(pgf_train: pd.DataFrame) -> np.ndarray:
     """h[n], n = 0..N_MAX: P(plays the next game | missed n in a row) (h[0] unused)."""
-    t = P3.return_table(pgf_train, max_streak=60).set_index("streak_before").p_return_next
+    t = AM.return_table(pgf_train, max_streak=60).set_index("streak_before").p_return_next
     h = np.empty(N_MAX + K_MAX + 2)
     h[0] = 1.0
     for n in range(1, len(h)):
@@ -90,7 +90,7 @@ def state_at(pgf_season: pd.DataFrame, cutoff: pd.Timestamp, tau_days: float) ->
     """(players, teams) at the cutoff. players: team_id, player_id, V, f, n.
     teams: team_id, rec_v, rec_f."""
     b = pgf_season[pgf_season.game_date < cutoff]
-    # rotation players only (Phase 3 definition, >= 20 mpg this season or last, >= 3 games
+    # rotation players only (availability-model definition, >= 20 mpg this season or last, >= 3 games
     # played for the team): long "absences" of end-of-bench players are mostly DNPs,
     # G League assignments or departures, not injuries
     b = b[b.rotation & (b.gp_before >= 3)]

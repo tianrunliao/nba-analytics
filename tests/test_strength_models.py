@@ -1,4 +1,4 @@
-"""Phase 2 ratings: Elo, EWMA, dynamic strength — hand checks and causality."""
+"""Strength models: Elo, EWMA, dynamic strength — hand checks and causality."""
 import numpy as np
 import pandas as pd
 import pytest

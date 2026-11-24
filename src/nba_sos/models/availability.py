@@ -1,7 +1,7 @@
-"""Phase 3: player availability, expected minutes, lineup contribution, double-counting
+"""Player availability model: P(plays), expected minutes, lineup contribution, double-counting
 check, injury-module evaluation and return-time (survival) tables.
 
-    python -m nba_sos.pipeline phase3
+    python -m nba_sos.pipeline availability
 
 Pre-game quantities for player p on team i before game g (all causal):
   q_p     P(plays) from the availability model: report status x rotation role x reason
@@ -161,7 +161,7 @@ def predict_availability(model: dict, x: pd.DataFrame) -> np.ndarray:
 
 
 def status_table_baseline(train: pd.DataFrame, test: pd.DataFrame) -> np.ndarray:
-    """Phase 2-style baseline: P(played | status, rotation) from training frequencies."""
+    """Game-model-style baseline: P(played | status, rotation) from training frequencies."""
     key_tr = train.status + "|" + train.rotation.astype(str)
     tab = train.y_played.groupby(key_tr).mean()
     key_te = test.status + "|" + test.rotation.astype(str)
@@ -252,7 +252,7 @@ def evaluate(gx: pd.DataFrame, test_seasons: list[str]) -> tuple[pd.DataFrame, d
             res[f"{name}_log_loss"] = M.log_loss(te.home_win.astype(float), norm.cdf(pred / sg))
             res[f"{name}_mae"] = M.mae(te.y, pred)
             coefs.setdefault(name, {})[test] = {c: (float(v), float(s_)) for c, v, s_ in zip(cols, b, se)}
-        # CatBoost: Phase 2 full feature set vs + Phase 3 lineup features (all training seasons)
+        # CatBoost: game-model full feature set (cb_phase2) vs + lineup features (cb_phase3) (all training seasons)
         tr_all = gx[gx.season.map(season_start_year) < season_start_year(test)]
         tr_all = tr_all[tr_all.season.map(season_start_year) >= 2013]
         valid = tr_all[tr_all.season == tr_all.season.max()]
@@ -263,7 +263,7 @@ def evaluate(gx: pd.DataFrame, test_seasons: list[str]) -> tuple[pd.DataFrame, d
             res[f"{name}_log_loss"] = M.log_loss(te.home_win.astype(float), norm.cdf(pred / sg))
             res[f"{name}_mae"] = M.mae(te.y, pred)
         rows.append(res)
-        log.info("phase3 %s: dyn %.4f p2inj %.4f dM %.4f cb2 %.4f cb3 %.4f", test, res["dyn_log_loss"],
+        log.info("availability %s: dyn %.4f p2inj %.4f dM %.4f cb2 %.4f cb3 %.4f", test, res["dyn_log_loss"],
                  res["dyn+phase2_injury_log_loss"], res["dyn+dM_log_loss"], res["cb_phase2_log_loss"],
                  res["cb_phase3_log_loss"])
     return pd.DataFrame(rows), coefs
@@ -278,7 +278,7 @@ def run(paths: Paths, cfg: dict) -> dict:
     ts = pd.read_parquet(Pd / "injury_team_status.parquet")
     gx = pd.read_parquet(Pd / "game_model_features.parquet")
     import json
-    tau = json.loads((paths.reports / "phase2_params.json").read_text())["tuned"]["dynamic"]["tau"]
+    tau = json.loads((paths.reports / "game_model_params.json").read_text())["tuned"]["dynamic"]["tau"]
     # seasons whose pre-game snapshots actually exist in the build (>50% of team-games usable);
     # configured seasons still being downloaded are excluded until the next build
     share = ts.groupby("season").snapshot_usable.mean()

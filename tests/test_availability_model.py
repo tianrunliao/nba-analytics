@@ -1,11 +1,11 @@
-"""Phase 3: reason categories, causal player-game features, availability model, lineup
+"""Availability model: reason categories, causal player-game features, availability model, lineup
 contribution and return-time tables."""
 import numpy as np
 import pandas as pd
 import pytest
 from conftest import make_games
 
-from nba_sos.models import phase3 as P3
+from nba_sos.models import availability as AM
 
 
 @pytest.mark.parametrize("reason,cat", [
@@ -20,7 +20,7 @@ from nba_sos.models import phase3 as P3
     ("", "unknown"),
 ])
 def test_reason_category(reason, cat):
-    assert P3.reason_category(reason) == cat
+    assert AM.reason_category(reason) == cat
 
 
 def _season(n_games=8):
@@ -50,7 +50,7 @@ PV = pd.DataFrame({"season": ["2021-22"], "player_id": [10], "lpm": [4.0], "min_
 def test_player_game_frame_causal_minutes_and_streak():
     g = _season(8)
     pg = _pg(g, [30, 20, 0, 0, 40, 10, 0, 25])
-    f = P3.player_game_frame(g, pg, PV)
+    f = AM.player_game_frame(g, pg, PV)
     p = f[f.player_id == 10].sort_values("game_date").reset_index(drop=True)
     assert p.streak_before.tolist() == [0, 0, 0, 1, 2, 0, 0, 1]
     assert np.isnan(p.mpg_last10[0])
@@ -59,7 +59,7 @@ def test_player_game_frame_causal_minutes_and_streak():
     assert p.exp_mp[0] == pytest.approx(2000 / 70)                                        # falls back to last season
     assert p.V[0] == pytest.approx(4.0 * 2000 / 2500)
     # perturbing a future game's minutes leaves earlier features unchanged
-    f2 = P3.player_game_frame(g, _pg(g, [30, 20, 0, 0, 40, 10, 0, 5]), PV)
+    f2 = AM.player_game_frame(g, _pg(g, [30, 20, 0, 0, 40, 10, 0, 5]), PV)
     p2 = f2[f2.player_id == 10].sort_values("game_date").reset_index(drop=True)
     pd.testing.assert_series_equal(p.mpg_last10[:7], p2.mpg_last10[:7])
 
@@ -69,11 +69,11 @@ def test_availability_model_learns_status_effects():
     n = 6000
     x = pd.DataFrame({"status": rng.choice(["Out", "Questionable", "not_listed"], n),
                       "rotation": rng.random(n) < 0.5, "reason_cat": "injury",
-                      "streak_bin": rng.choice(P3.STREAK_LABELS, n), "gp_before": 10})
+                      "streak_bin": rng.choice(AM.STREAK_LABELS, n), "gp_before": 10})
     p_true = np.where(x.status == "Out", 0.01, np.where(x.status == "Questionable", np.where(x.rotation, 0.7, 0.35), 0.97))
     x["y_played"] = (rng.random(n) < p_true).astype(float)
-    m = P3.fit_availability(x)
-    q = P3.predict_availability(m, x)
+    m = AM.fit_availability(x)
+    q = AM.predict_availability(m, x)
     for st, rot, target in [("Out", True, 0.01), ("Questionable", True, 0.7), ("Questionable", False, 0.35),
                             ("not_listed", False, 0.97)]:
         sel = (x.status == st) & (x.rotation == rot)
@@ -83,9 +83,9 @@ def test_availability_model_learns_status_effects():
 def test_lineup_recent_uses_only_earlier_games():
     g = _season(5)
     pg = _pg(g, [30, 0, 0, 30, 30])
-    x = P3.player_game_frame(g, pg, PV)
+    x = AM.player_game_frame(g, pg, PV)
     q = np.ones(len(x))
-    lf = P3.lineup_features(x, q, g, tau_days=1e9).sort_values("date").reset_index(drop=True)
+    lf = AM.lineup_features(x, q, g, tau_days=1e9).sort_values("date").reset_index(drop=True)
     aaa = lf[lf.team_id == 1].reset_index(drop=True)
     assert np.isnan(aaa.Mv_recent[0])
     assert aaa.Mv_recent[1] == pytest.approx(0.0)                      # nothing missing in game 1
@@ -98,6 +98,6 @@ def test_lineup_recent_uses_only_earlier_games():
 def test_return_table_hazard_and_cumulative():
     f = pd.DataFrame({"rotation": True, "gp_before": 10, "streak_before": [1] * 10 + [2] * 10,
                       "y_played": [1] * 5 + [0] * 5 + [1] * 2 + [0] * 8})
-    t = P3.return_table(f).set_index("streak_before")
+    t = AM.return_table(f).set_index("streak_before")
     assert t.loc[1, "p_return_next"] == 0.5 and t.loc[2, "p_return_next"] == 0.2
     assert 0.5 <= t.loc[1, "p_back_within_5"] <= 1.0

@@ -1,4 +1,4 @@
-"""Phase 4: schedule difficulty, joint league simulation, horizon calibration, tie-breaks,
+"""Season simulation: schedule difficulty, joint league simulation, horizon calibration, tie-breaks,
 NBA Cup, availability scenarios, roster prior, k-fold selection, no look-ahead."""
 import numpy as np
 import pandas as pd

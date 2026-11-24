@@ -91,7 +91,7 @@ def run(paths: Paths, cfg: dict) -> dict:
     store = RawStore(paths.raw)
     pv = pd.read_parquet(paths.processed / "player_values.parquet")
     all_games = pd.concat([pd.read_parquet(paths.processed / "prior_season_games.parquet"), d["games"]], ignore_index=True)
-    elo_params = json.loads((paths.reports / "phase2_params.json").read_text())["tuned"]["elo"]
+    elo_params = json.loads((paths.reports / "game_model_params.json").read_text())["tuned"]["elo"]
     from ..preprocessing.players import build_player_games
     prior_po = []
     for s in ["2004-05", "2005-06", "2006-07"]:

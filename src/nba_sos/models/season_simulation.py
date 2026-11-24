@@ -1,6 +1,6 @@
-"""Phase 4: historical replays (acceptance test) and the current-season projection.
+"""Remaining-season simulation: historical replays (acceptance test) and the current-season projection.
 
-    python -m nba_sos.pipeline phase4     # replays 2016-17 .. 2025-26
+    python -m nba_sos.pipeline replay     # replays 2016-17 .. 2025-26
     python -m nba_sos.pipeline project    # current season from the latest snapshot
 
 Model selection and fitting for test season T use seasons FIRST_TRAIN .. T-1 only; inside
@@ -15,7 +15,7 @@ before that date. Remaining games are the games actually played after the cutoff
 Cup seasons, a cutoff before the quarterfinals drops the knockout and extra games and
 simulates them instead.
 
-Variants: ``full`` (all of the above), ``v1`` (the first Phase 4 version: rho * last season
+Variants: ``full`` (all of the above), ``v1`` (the first season-simulation version: rho * last season
 prior, no availability terms, load = b2b / g4 / km / |tz|), ``fixed_strength`` (full model
 without strength uncertainty), ``pace`` (current win% carried forward).
 """
@@ -46,7 +46,7 @@ K_FOLDS = 5
 
 
 def _dyn_params(paths: Paths) -> dict:
-    return json.loads((paths.reports / "phase2_params.json").read_text())["tuned"]["dynamic"]
+    return json.loads((paths.reports / "game_model_params.json").read_text())["tuned"]["dynamic"]
 
 
 def load_history(paths: Paths) -> dict:
@@ -296,7 +296,7 @@ def run_backtest(paths: Paths, cfg: dict, n_paths: int = 2000) -> dict:
 def run_current(paths: Paths, cfg: dict, n_paths: int = 10000, seed: int = 0) -> dict:
     from ..features.pregame import back_to_back_context, schedule_density, team_game_long, travel
     from ..ingestion.venues import load_venue_config
-    from ..models import phase3 as P3
+    from ..models import availability as AM
     from ..preprocessing.games import build_schedule_games
     from ..preprocessing.players import build_player_games
     from ..sos.window_report import latest_snapshot, season_games_frame, tricodes
@@ -323,7 +323,7 @@ def run_current(paths: Paths, cfg: dict, n_paths: int = 10000, seed: int = 0) ->
     # current-season player frame (participation so far) for rosters and injuries
     pg = build_player_games(cur_store, season)
     pv = pd.read_parquet(paths.processed / "player_values.parquet")
-    pgf_cur = P3.player_game_frame(done.assign(overtime_periods=done.overtime_periods.astype(float).fillna(0)), pg, pv)
+    pgf_cur = AM.player_game_frame(done.assign(overtime_periods=done.overtime_periods.astype(float).fillna(0)), pg, pv)
     pgf_cur["game_date"] = pd.to_datetime(pgf_cur.game_date)
     h["pgf"] = pd.concat([h["pgf"], pgf_cur[h["pgf"].columns]], ignore_index=True)
 

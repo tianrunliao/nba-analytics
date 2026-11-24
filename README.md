@@ -6,8 +6,8 @@
 |---|---|---|
 | Phase 1 | 数据管道、数据验证、赛前特征（回合、效率、赛程密度、旅行、背靠背情境、伤病报告）、静态 SOS、季前基线 | `ingestion/`、`preprocessing/`、`validation/`、`features/`、`sos/static.py` |
 | Phase 2 | Elo、EWMA、动态对手调整实力、CatBoost 单场模型，滚动回测与消融 | `ratings/elo.py`、`ratings/dynamic.py`、`models/game_model.py` |
-| Phase 3 | 出场概率、阵容缺失价值、重复计量检验、复出时间表 | `models/phase3.py` |
-| Phase 4 | 平均球队反事实 SOS 与 Shapley 拆解、全联盟蒙特卡洛（实力不确定性、阵容先验、未来伤病、官方平手规则、NBA 杯）、历史日期回放 | `sos/projection.py`、`sos/availability.py`、`sos/roster_prior.py`、`sos/standings.py`、`sos/cup.py`、`models/phase4.py` |
+| Phase 3 | 出场概率、阵容缺失价值、重复计量检验、复出时间表 | `models/availability.py` |
+| Phase 4 | 平均球队反事实 SOS 与 Shapley 拆解、全联盟蒙特卡洛（实力不确定性、阵容先验、未来伤病、官方平手规则、NBA 杯）、历史日期回放 | `sos/projection.py`、`sos/availability.py`、`sos/roster_prior.py`、`sos/standings.py`、`sos/cup.py`、`models/season_simulation.py` |
 | 分析 | 球员价值（技术统计先验 + 五人阵容 RAPM）、季后赛纯实力与改进、季后赛升降球员、球星与深度 | `ratings/` |
 
 所有模型选择只在测试赛季之前的赛季里进行（按赛季分组的 k-fold），测试赛季只做按时间顺序的回放。`reports/` 是这些步骤的输出结果。
@@ -23,10 +23,10 @@ uv sync
 .venv/bin/python -m nba_sos.pipeline window-sos --n 15 # 当前赛季每队前 n 场的赛程难度（需先 build + snapshot）
 .venv/bin/python -m nba_sos.pipeline playoff-rank      # 季后赛纯实力榜单 + 滚动回测（需先 build）
 .venv/bin/python -m nba_sos.pipeline analysis          # 球员价值、模型变体对比、球星 vs 深度、常规赛前五球员
-.venv/bin/python -m nba_sos.pipeline phase2            # Phase 2：Elo / EWMA / 动态实力 / CatBoost 滚动回测与消融
-.venv/bin/python -m nba_sos.pipeline phase3            # Phase 3：出场概率、阵容贡献、重复计量检验、伤病模块评估、复出时间表
+.venv/bin/python -m nba_sos.pipeline game-model        # Phase 2：Elo / EWMA / 动态实力 / CatBoost 滚动回测与消融
+.venv/bin/python -m nba_sos.pipeline availability      # Phase 3：出场概率、阵容贡献、重复计量检验、伤病模块评估、复出时间表
 .venv/bin/python -m nba_sos.pipeline playoff-improve   # 用历届季后赛嵌套选择改进季后赛模型（含季后赛内状态更新）
-.venv/bin/python -m nba_sos.pipeline phase4            # Phase 4：历史日期回放，检验剩余赛季模拟（胜场误差、区间覆盖率）
+.venv/bin/python -m nba_sos.pipeline replay            # Phase 4：历史日期回放，检验剩余赛季模拟（胜场误差、区间覆盖率）
 .venv/bin/python -m nba_sos.pipeline project           # Phase 4：本赛季剩余赛程 D-SOS、预期胜场、种子与附加赛概率（先运行 snapshot）
 .venv/bin/python -m nba_sos.pipeline playoff-risers    # 季后赛相对常规赛变强/变弱的球员（同口径官方数据，含对手与样本量收缩）
 .venv/bin/python -m pytest

@@ -1,6 +1,6 @@
-"""Phase 2: pre-game single-game prediction, rolling backtest and feature-group ablation.
+"""Game model: pre-game single-game prediction, rolling backtest and feature-group ablation.
 
-    python -m nba_sos.pipeline phase2
+    python -m nba_sos.pipeline game-model
 
 Target: home margin per 100 possessions (pace-free across eras). Win probability =
 Phi(pred / sigma), sigma = residual sd on the last training season (held out from the
@@ -232,7 +232,7 @@ def backtest(x: pd.DataFrame, test_seasons: list[str]) -> tuple[pd.DataFrame, pd
                     pred_margin100=pred, p_home=norm.cdf(pred / sg), p_home_cal=p_cal))
                 importances[test] = dict(zip(cols, m.get_feature_importance()))
         rows.append(res)
-        log.info("phase2 %s: elo %.4f dyn %.4f cb_full %.4f", test, res["elo_log_loss"], res["dynamic_log_loss"],
+        log.info("game-model %s: elo %.4f dyn %.4f cb_full %.4f", test, res["elo_log_loss"], res["dynamic_log_loss"],
                  res["cb_full_log_loss"])
     return pd.DataFrame(rows), pd.concat(preds, ignore_index=True), importances
 

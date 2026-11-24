@@ -1,4 +1,4 @@
-"""Phase 4: remaining-schedule difficulty (plan section 9) and joint league Monte Carlo
+"""Remaining-schedule difficulty (plan section 9) and joint league Monte Carlo
 (plan section 10), from the information available at a cutoff date.
 
 Game model (home margin per 100 possessions), fit on earlier seasons only:
