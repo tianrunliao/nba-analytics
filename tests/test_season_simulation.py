@@ -266,6 +266,79 @@ def test_survival_and_sampled_returns_agree():
     assert (sp["R"] >= 3).mean() == pytest.approx(0.7**3, abs=0.01)
 
 
+def test_report_overlay_next_game_probability_and_mixture():
+    h = np.full(AV.N_MAX + AV.K_MAX + 2, 0.3)
+    pi = np.linspace(0, 0.2, AV.K_MAX + 1)
+    players = pd.DataFrame(
+        {
+            "team_id": [1, 1, 1, 2],
+            "player_id": [10, 11, 12, 20],
+            "V": [4.0, 2.0, 1.0, 3.0],
+            "f": [0.7, 0.6, 0.5, 0.6],
+            "n": [2, 0, 0, 3],
+        }
+    )
+    teams = pd.DataFrame({"team_id": [1, 2], "rec_v": [0.0, 0.0], "rec_f": [0.0, 0.0]})
+    avail = pd.DataFrame({"player_id": [11], "injury_status": ["Out"]})
+    ts = pd.DataFrame({"team_id": [1], "snapshot_usable": [True]})
+    table = pd.Series({"Out": 1.0, "not_listed": 0.03})
+    over = AV.report_overlay(players, avail, ts, table).set_index("player_id")
+    assert over.report_status[10] == "not_listed" and over.report_status[11] == "Out"
+    assert np.isnan(over.p1[20])  # team 2 not covered
+    base = AV.expected_change(players, teams, h, pi, [1, 2])
+    ex = AV.expected_change(over.reset_index(), teams, h, pi, [1, 2])
+    # 10: out 2 games, not listed -> back with prob 0.97; later games continue from n + 1 = 3
+    # 11: healthy, listed Out -> misses game 1, then the hazards from one game missed
+    # 12: healthy, not listed -> misses game 1 with p1 = 0.03 (then the hazards) and keeps
+    #     new injuries from game 2 on, weighted by 1 - p1
+    assert ex[1]["ret_v"][1] == pytest.approx(0.03 * 0.7 * 4.0 + 1.0 * 0.6 * 2.0 + 0.03 * 0.5 * 1.0)
+    assert ex[1]["ret_v"][3] == pytest.approx(0.7**2 * (0.03 * 0.7 * 4.0 + 0.6 * 2.0 + 0.03 * 0.5 * 1.0))
+    assert ex[1]["new_f"][1] == 0.0 and ex[1]["new_f"][5] == pytest.approx(0.97 * pi[5] * 0.5)
+    for c in ("ret_v", "ret_f", "new_v", "new_f"):
+        np.testing.assert_allclose(ex[2][c], base[2][c])  # uncovered team unchanged
+    sp = AV.sample_paths(over.reset_index(), teams, h, pi, [1], 5000, np.random.default_rng(1))[1]
+    assert (sp["R"][:, 1] >= 1).all()  # listed Out: misses game 1
+
+
+def test_live_report_is_used_only_for_games_tipping_off_after_publication():
+    from nba_sos.models import season_simulation as SIM
+
+    tip = pd.to_datetime(["2026-11-24 23:00", "2026-11-24 18:00"], utc=True)
+    games = pd.DataFrame(
+        {
+            "season": "2026-27",
+            "game_id": ["g1", "g2"],
+            "game_date": [pd.Timestamp("2026-11-24")] * 2,
+            "tipoff_utc": tip,
+            "home_team_id": [1, 3],
+            "away_team_id": [2, 4],
+            "home_team": ["AAA", "CCC"],
+            "away_team": ["BBB", "DDD"],
+        }
+    )
+    report = pd.DataFrame(
+        {
+            "game_date": ["2026-11-24"] * 2,
+            "matchup": ["BBB@AAA", "DDD@CCC"],
+            "team_tricode": ["AAA", "CCC"],
+            "player": ["One,A", "Two,B"],
+            "player_key": ["aone", "btwo"],
+            "status": ["Out", "Out"],
+            "reason": ["x", "x"],
+            "not_submitted": [False, False],
+            "status_valid": [True, True],
+            "away_tricode": ["BBB", "DDD"],
+            "home_tricode": ["AAA", "CCC"],
+        }
+    )
+    pg = pd.DataFrame({"season": "2026-27", "team_id": [1, 3], "player_key": ["aone", "btwo"], "player_id": [7, 8]})
+    rec = {"path": "injury_reports/x.pdf", "published_at_utc": "2026-11-24T20:00:00+00:00"}
+    pa, ts = SIM.report_inputs_for_day(report, rec, games, pg)
+    usable = ts.set_index(["game_id", "team_id"]).snapshot_usable
+    assert usable[("g1", 1)] and not usable[("g2", 3)]  # g2 tipped before publication
+    assert list(pa.player_id.dropna().astype(int)) == [7]
+
+
 def test_state_at_uses_only_rotation_players_before_cutoff():
     d = pd.to_datetime(["2023-11-01", "2023-11-03", "2023-11-05"])
     pgf = pd.DataFrame(
@@ -372,3 +445,66 @@ def test_tiebreaks_reproduce_official_standings_since_2015_16():
                 if int(sd.PlayoffRank.loc[teams[i]]) != r:
                     wrong.append((s, teams[i]))
     assert {s for s, _ in wrong} <= {"2020-21"} and len(wrong) <= 2
+
+
+def _line_fixture(tmp_path, seasons=("2018-19", "2019-20")):
+    from nba_sos.config import Paths
+
+    p = Paths(tmp_path)
+    for d in (p.configs, p.processed, p.reports):
+        d.mkdir(parents=True)
+    codes = [f"T{i:02d}" for i in range(30)]
+    pd.DataFrame(
+        [{"season": s, "home_team": c, "home_team_id": 100 + i} for s in seasons for i, c in enumerate(codes)]
+    ).to_parquet(p.processed / "games.parquet")
+    rows = []
+    for s in seasons:
+        for i in range(30):
+            for v, e in (("full", 40.0), ("v1", 45.0)):
+                rows.append(
+                    {
+                        "season": s,
+                        "team_id": 100 + i,
+                        "variant": v,
+                        "cutoff_games": 0,
+                        "exp_wins": e,
+                        "final_wins": 40 + (i % 5),
+                    }
+                )
+    pd.DataFrame(rows).to_csv(p.reports / "season_sim_replays.csv", index=False)
+    return p, codes
+
+
+def test_line_check_compares_lines_with_replays_on_the_same_team_seasons(tmp_path):
+    from nba_sos.models import season_simulation as SIM
+
+    p, codes = _line_fixture(tmp_path)
+    lines = [
+        {"season": s, "team": c, "line": 40 + (i % 5) + 1.5, "source_url": "u"}
+        for s in ("2018-19", "2019-20")
+        for i, c in enumerate(codes)
+    ]
+    pd.DataFrame(lines).to_csv(p.configs / SIM.LINES_FILE, index=False)
+    out = SIM.line_check(p).set_index(["scope", "variant"])
+    assert out.loc[("pooled", "preseason_line"), "mae"] == pytest.approx(1.5)
+    assert out.loc[("pooled", "full"), "mae"] == pytest.approx(2.0)  # |40 - (40 + i % 5)|
+    assert out.loc[("pooled", "preseason_line"), "team_seasons"] == 30  # 2019-20 excluded
+    assert "2019-20" not in out.index.get_level_values("scope")
+
+
+def test_line_file_validation(tmp_path):
+    from nba_sos.models import season_simulation as SIM
+
+    p, codes = _line_fixture(tmp_path)
+    pd.DataFrame(columns=SIM.LINE_COLUMNS).to_csv(p.configs / SIM.LINES_FILE, index=False)
+    assert SIM.line_check(p) is None  # template only
+    bad = [
+        {"season": "2018-19", "team": "BRK" if i == 0 else c, "line": 41, "source_url": "u"}
+        for i, c in enumerate(codes)
+    ]
+    pd.DataFrame(bad).to_csv(p.configs / SIM.LINES_FILE, index=False)
+    with pytest.raises(ValueError, match="not NBA tricodes"):
+        SIM.line_check(p)
+    pd.DataFrame(bad[1:5]).to_csv(p.configs / SIM.LINES_FILE, index=False)
+    with pytest.raises(ValueError, match="30 teams"):
+        SIM.line_check(p)

@@ -389,8 +389,230 @@ def run_backtest(paths: Paths, cfg: dict, n_paths: int = 2000) -> dict:
     return {"replays": res, "metrics": evaluate(res), "params": params, "sos_check": sos_check(res)}
 
 
+# ------------------------------------------------------------------ preseason win lines
+LINES_FILE = "preseason_win_totals.csv"  # in configs/, transcribed by hand (see README)
+LINE_COLUMNS = ["season", "team", "line", "source_url"]
+# seasons left out of the line comparison (decided 2026-11-24)
+EXCLUDED_LINE_SEASONS = {
+    "2019-20": "suspended mid-season: lines were set for 82 games, teams played 64-75",
+}
+
+
+def read_lines(paths: Paths, games: pd.DataFrame) -> pd.DataFrame:
+    """configs/preseason_win_totals.csv with team_id; validated: NBA tricodes of that season,
+    30 teams per season, numeric lines, seasons among the replayed test seasons."""
+    lines = pd.read_csv(paths.configs / LINES_FILE, dtype={"season": str, "team": str})
+    missing = [c for c in LINE_COLUMNS if c not in lines.columns]
+    if missing:
+        raise ValueError(f"{LINES_FILE}: missing columns {missing}")
+    if lines.empty:
+        return lines.assign(team_id=pd.Series(dtype=int))
+    bad_season = sorted(set(lines.season) - set(TEST_SEASONS))
+    if bad_season:
+        raise ValueError(f"{LINES_FILE}: seasons not replayed: {bad_season}")
+    lines["line"] = pd.to_numeric(lines.line, errors="raise")
+    out = []
+    for s, x in lines.groupby("season"):
+        g = games[games.season == s]
+        code = dict(zip(g.home_team, g.home_team_id.astype(int)))
+        unknown = sorted(set(x.team) - set(code))
+        if unknown:
+            raise ValueError(f"{LINES_FILE} {s}: not NBA tricodes of that season: {unknown} (expected {sorted(code)})")
+        if x.team.nunique() != 30 or len(x) != 30:
+            raise ValueError(f"{LINES_FILE} {s}: need exactly one line for each of the 30 teams, got {len(x)}")
+        out.append(x.assign(team_id=x.team.map(code)))
+    return pd.concat(out, ignore_index=True)
+
+
+def line_check(paths: Paths) -> pd.DataFrame | None:
+    """Season-start win MAE / RMSE of the preseason lines vs every replay variant on the same
+    team-seasons (cutoff 0 of reports/season_sim_replays.csv), pooled and per season; None
+    while the lines file has no rows."""
+    games = pd.read_parquet(paths.processed / "games.parquet")
+    lines = read_lines(paths, games)
+    lines = lines[~lines.season.isin(EXCLUDED_LINE_SEASONS)]
+    if lines.empty:
+        return None
+    res = pd.read_csv(paths.reports / "season_sim_replays.csv", dtype={"season": str})
+    r0 = res[(res.cutoff_games == 0) & res.season.isin(set(lines.season))]
+    final = r0[r0.variant == "full"].set_index(["season", "team_id"]).final_wins
+    preds = r0[["season", "team_id", "variant", "exp_wins"]]
+    preds = pd.concat(
+        [preds, lines[["season", "team_id"]].assign(variant="preseason_line", exp_wins=lines.line.to_numpy())],
+        ignore_index=True,
+    )
+    preds["final_wins"] = [final[(s, t)] for s, t in zip(preds.season, preds.team_id)]
+    rows = []
+    for scope, x in pd.concat([preds.assign(scope="pooled"), preds.assign(scope=preds.season)]).groupby("scope"):
+        for v, y in x.groupby("variant"):
+            e = y.exp_wins - y.final_wins
+            rows.append(
+                {
+                    "scope": scope,
+                    "variant": v,
+                    "team_seasons": len(y),
+                    "mae": float(e.abs().mean()),
+                    "rmse": float(np.sqrt((e**2).mean())),
+                }
+            )
+    return pd.DataFrame(rows)
+
+
+# ------------------------------------------------------------------ official injury report
+REPORT_FIRST_SEASON = "2019-20"  # first regular season with parsed pre-game reports
+REPORT_CHECK_GAMES = 10  # each team's next games scored in the report check
+
+
+def load_reports(paths: Paths) -> tuple[pd.DataFrame, pd.DataFrame]:
+    r = lambda n: pd.read_parquet(paths.processed / f"{n}.parquet")  # noqa: E731
+    return r("player_availability"), r("injury_team_status")
+
+
+def report_table(h: dict, avail: pd.DataFrame, ts: pd.DataFrame, before: str) -> pd.Series:
+    """status -> P(miss) from the report seasons strictly before ``before``."""
+    yr = season_start_year(before)
+    seasons = [s for s in avail.season.unique() if season_start_year(s) < yr]
+    if not seasons:
+        raise ValueError(f"no report season before {before}")
+    return AV.report_miss_table(h["pgf"][h["pgf"].season.isin(seasons)], avail, ts)
+
+
+def _game_probs(rows: pd.DataFrame, pre: dict, hz: dict) -> np.ndarray:
+    from scipy.stats import norm
+
+    var = hz["sigma_game"] ** 2 + hz["kappa"] * rows.sd2.to_numpy(float) + 2 * hz["q_per_day"] * rows.h.to_numpy(float)
+    return norm.cdf(PJ.mean_margin(rows, pre, hz) / np.sqrt(var))
+
+
+def report_check(paths: Paths) -> dict:
+    """Does the official pre-game report improve game forecasts made at a cutoff? For each
+    test season with earlier report seasons, at weekly cutoffs (moved to the next game day):
+    the full model with participation-based availability vs the same model with the report
+    overlay (report_overlay) for teams playing on the cutoff day. Scored on the cutoff day's
+    games and on every game within each team's next REPORT_CHECK_GAMES; mapping, hazards and
+    coefficients from earlier seasons only."""
+    h = load_history(paths)
+    avail, ts = load_reports(paths)
+    first = season_start_year(REPORT_FIRST_SEASON)
+    tests = [s for s in TEST_SEASONS if season_start_year(s) > first]
+    games_out, tables = [], {}
+    for T in tests:
+        fit = fit_models(h, T, "full")
+        table = report_table(h, avail, ts, T)
+        tables[T] = table.to_dict()
+        haz, pi = fit["injury_tables"]
+        rs = h["rows"][h["rows"].season == T]
+        days = pd.DatetimeIndex(np.sort(rs.date.unique()))
+        # weekly cutoffs moved to the next game day, so the report covers that day's games
+        cuts = sorted({days[days.searchsorted(c)] for c in weekly_cutoffs(rs.date)})
+        ids = sorted(set(rs.home_team_id))
+        for cut in cuts:
+            st = strengths(h, T, [cut], fit["roster_prior"])
+            players, teams = _state(h, T, cut)
+            on_day = set(rs[rs.date == cut].game_id)
+            over = AV.report_overlay(players, avail[avail.game_id.isin(on_day)], ts[ts.game_id.isin(on_day)], table)
+            for name, pl in (("participation", players), ("with_report", over)):
+                curves = AV.expected_change(pl, teams, haz, pi, ids)
+                r = PJ.horizon_rows(rs, st, h["y"], injury=lambda c, cv=curves: cv)
+                r = r[np.minimum(r.k_home, r.k_away) <= REPORT_CHECK_GAMES]
+                games_out.append(
+                    pd.DataFrame(
+                        {
+                            "season": T,
+                            "cutoff": cut,
+                            "variant": name,
+                            "game_id": r.game_id.to_numpy(),
+                            "cutoff_day": (r.h == 0).to_numpy(),
+                            "p_home": _game_probs(r, fit["pre"], fit["hz"]),
+                            "home_win": (r.y > 0).astype(float).to_numpy(),
+                            "players_with_report": int(over.p1.notna().sum()) if name == "with_report" else 0,
+                        }
+                    )
+                )
+        log.info("report check %s done", T)
+    g = pd.concat(games_out, ignore_index=True)
+    return {"metrics": report_check_summary(g), "games": g, "status_tables": tables}
+
+
+REPORT_MOVE = 0.05  # subset: games whose home-win probability the report moved by more than this
+
+
+def report_check_summary(g: pd.DataFrame) -> pd.DataFrame:
+    """Paired comparison per season and pooled: log loss / Brier without and with the report,
+    the mean per-game log-loss difference and its standard error, on the cutoff day's games
+    and on each team's next REPORT_CHECK_GAMES, all games and those the report moved by more
+    than REPORT_MOVE."""
+    w = g.pivot_table(
+        index=["season", "cutoff", "game_id", "cutoff_day", "home_win"], columns="variant", values="p_home"
+    ).reset_index()
+
+    def ll(p, y):
+        p = np.clip(p.to_numpy(float), 1e-15, 1 - 1e-15)
+        return -(y * np.log(p) + (1 - y) * np.log(1 - p))
+
+    y = w.home_win.to_numpy(float)
+    w["ll_part"], w["ll_rep"] = ll(w.participation, y), ll(w.with_report, y)
+    w["moved"] = (w.with_report - w.participation).abs() > REPORT_MOVE
+    rows = []
+    for season, x in pd.concat([w.assign(season="pooled"), w]).groupby("season"):
+        subsets = {
+            "cutoff_day": x[x.cutoff_day],
+            "cutoff_day_moved": x[x.cutoff_day & x.moved],
+            f"next_{REPORT_CHECK_GAMES}": x,
+            f"next_{REPORT_CHECK_GAMES}_moved": x[x.moved],
+        }
+        for name, s in subsets.items():
+            d = s.ll_rep - s.ll_part
+            rows.append(
+                {
+                    "season": season,
+                    "games": name,
+                    "n": int(len(s)),
+                    "log_loss_participation": float(s.ll_part.mean()) if len(s) else np.nan,
+                    "log_loss_with_report": float(s.ll_rep.mean()) if len(s) else np.nan,
+                    "diff": float(d.mean()) if len(s) else np.nan,
+                    "se_diff": float(d.std(ddof=1) / np.sqrt(len(s))) if len(s) > 1 else np.nan,
+                    "brier_participation": float(((s.participation - s.home_win) ** 2).mean()) if len(s) else np.nan,
+                    "brier_with_report": float(((s.with_report - s.home_win) ** 2).mean()) if len(s) else np.nan,
+                }
+            )
+    return pd.DataFrame(rows)
+
+
+def report_inputs_for_day(
+    report: pd.DataFrame, rec: dict, games_today: pd.DataFrame, player_games: pd.DataFrame
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """(player_availability, team_status) rows for today's games from a parsed live report,
+    in the historical build_availability format. The report is used for a game only when it
+    was published before that game's tip-off."""
+    from ..preprocessing.availability import build_availability
+
+    pub = pd.Timestamp(rec["published_at_utc"])
+    sel = pd.DataFrame(
+        {
+            "game_id": games_today.game_id.to_numpy(),
+            "report_path": np.where(games_today.tipoff_utc > pub, rec["path"], None),
+            "report_published_at_utc": pd.to_datetime(np.where(games_today.tipoff_utc > pub, pub, pd.NaT), utc=True),
+        }
+    )
+    parsed = report.assign(report_path=rec["path"])
+    parsed["game_date"] = pd.to_datetime(parsed.game_date).dt.date
+    gt = games_today.assign(game_date=pd.to_datetime(games_today.game_date).dt.date)
+    return build_availability(gt, sel, parsed, player_games)
+
+
 # ------------------------------------------------------------------ current season
-def run_current(paths: Paths, cfg: dict, n_paths: int = 10000, seed: int = 0) -> dict:
+def run_current(
+    paths: Paths,
+    cfg: dict,
+    n_paths: int = 10000,
+    seed: int = 0,
+    report: pd.DataFrame | None = None,
+    report_rec: dict | None = None,
+) -> dict:
+    """Current-season projection. ``report`` / ``report_rec``: a parsed official injury report
+    and its manifest record (``live``); when given, the next game of every team it covers
+    uses the report statuses (sos.availability.report_overlay)."""
     from ..features.pregame import back_to_back_context, schedule_density, team_game_long, travel
     from ..ingestion.venues import load_venue_config
     from ..models import availability as AM
@@ -446,6 +668,17 @@ def run_current(paths: Paths, cfg: dict, n_paths: int = 10000, seed: int = 0) ->
         plan = None
     rem = PJ.future_index(rows[rows.game_id.isin(g[~g.completed].game_id)], cut)
     players, teams_state = AV.state_at(h["pgf"][h["pgf"].season == season], cut, h["dyn"]["tau"])
+    report_used = None
+    if report is not None and report_rec is not None:
+        today = g[(pd.to_datetime(g.game_date) == cut) & ~g.completed]
+        pa, tsd = report_inputs_for_day(report, report_rec, today, pg.assign(season=season))
+        avail, ts_hist = load_reports(paths)
+        players = AV.report_overlay(players, pa, tsd, report_table(h, avail, ts_hist, season))
+        report_used = {
+            "path": report_rec["path"],
+            "teams_covered": int(tsd.snapshot_usable.sum()),
+            "players_with_report": int(players.p1.notna().sum()),
+        }
     ids = sorted(st.team_id)
     h_tab, pi_tab = fit["injury_tables"]
     PJ.add_injury(rem, AV.expected_change(players, teams_state, h_tab, pi_tab, ids))
@@ -486,6 +719,7 @@ def run_current(paths: Paths, cfg: dict, n_paths: int = 10000, seed: int = 0) ->
         "completed_games": int(len(done)),
         "remaining_scheduled_games": int(len(rem)),
         "cup_simulated": plan is not None,
+        "injury_report_in_projection": report_used,
         "n_paths": n_paths,
         **_fit_summary(fit),
     }

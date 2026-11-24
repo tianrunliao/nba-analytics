@@ -7,10 +7,10 @@ Each call fetches once; nothing is scheduled or refreshed automatically. The out
 ``reports/live/<snapshot UTC stamp>/``: ``projection.csv`` (one row per team),
 ``injury_report.csv`` (the parsed official report, when one was found) and ``meta.json``.
 
-The official report is shown alongside the projection only. The projection's availability
-terms come from game participation before the cutoff (``sos.availability.state_at``), as in
-``project``; turning report statuses into absence probabilities for the forecast is not
-implemented.
+The projection's availability terms come from game participation before the cutoff
+(``sos.availability.state_at``), as in ``project``; in addition, for every team whose next
+game the official report covers, that game uses P(miss | report status) from earlier
+seasons' reports (``sos.availability.report_overlay``; checked by ``report-check``).
 """
 
 from __future__ import annotations
@@ -72,7 +72,7 @@ def run_live(paths: Paths, cfg: dict, n_paths: int = 10000) -> dict:
     snap = snapshot_current_season(paths, cfg)
     rec = latest_injury_report(paths, cfg)
     report = parse_report(paths, rec) if rec else None
-    proj = SIM.run_current(paths, cfg, n_paths=n_paths)
+    proj = SIM.run_current(paths, cfg, n_paths=n_paths, report=report, report_rec=rec)
     if proj["meta"]["snapshot"] != snap.name:
         raise RuntimeError(f"projection used snapshot {proj['meta']['snapshot']}, expected {snap.name}")
     dest = paths.reports / "live" / snap.name
@@ -86,7 +86,7 @@ def run_live(paths: Paths, cfg: dict, n_paths: int = 10000) -> dict:
         "injury_report": None
         if rec is None
         else {k: rec.get(k) for k in ("path", "url", "published_at_utc", "sha256")},
-        "injury_report_used_in_projection": False,
+        "injury_report_used_in_projection": proj["meta"]["injury_report_in_projection"] is not None,
     }
     (dest / "meta.json").write_text(json.dumps(meta, indent=2, default=str))
     log.info("live outputs in %s", dest)

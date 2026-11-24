@@ -73,6 +73,7 @@ def _fake_projection(snapshot: str) -> dict:
         "cutoff": "2026-11-24",
         "completed_games": 230,
         "remaining_scheduled_games": 1000,
+        "injury_report_in_projection": None,
         "n_paths": 100,
     }
     return {"table": table, "meta": meta}
@@ -85,7 +86,13 @@ def test_run_live_writes_outputs(tmp_paths, monkeypatch):
     stamp = "20261124T080000Z"
     monkeypatch.setattr(fetch_all, "snapshot_current_season", lambda p, c: p.raw / "current" / stamp)
     monkeypatch.setattr(live, "latest_injury_report", lambda p, c: None)
-    monkeypatch.setattr(SIM, "run_current", lambda p, c, n_paths: _fake_projection(stamp))
+    seen = {}
+
+    def fake_run_current(p, c, n_paths, report, report_rec):
+        seen.update(report=report, report_rec=report_rec)
+        return _fake_projection(stamp)
+
+    monkeypatch.setattr(SIM, "run_current", fake_run_current)
     out = live.run_live(tmp_paths, {}, n_paths=100)
     d = tmp_paths.reports / "live" / stamp
     assert out["dir"] == d
@@ -94,6 +101,7 @@ def test_run_live_writes_outputs(tmp_paths, monkeypatch):
     meta = json.loads((d / "meta.json").read_text())
     assert meta["injury_report"] is None and meta["injury_report_used_in_projection"] is False
     assert meta["snapshot"] == stamp
+    assert seen == {"report": None, "report_rec": None}  # no report found: none passed on
 
 
 def test_streamlit_page_fetches_once_per_session(monkeypatch):

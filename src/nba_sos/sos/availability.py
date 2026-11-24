@@ -22,6 +22,18 @@ team's games before the cutoff. Expectations:
 The Monte Carlo samples each injured player's return game from the same hazards; new
 injuries enter through their expectation pi(k) (their randomness is part of the strength
 random walk).
+
+Official pre-game injury report (optional, :func:`report_overlay`): for teams whose next
+game is covered by a usable report, each rotation player gets p1 = P(misses the next game |
+report status) — "not listed" included, which tells that a player who has been out is back —
+from the regular-season reports of earlier seasons (:func:`report_miss_table`). A player who
+misses the next game continues on the hazards from one more game missed (ret_* term):
+
+    P(out at game k via this absence) = p1 * prod_{i<k-1} (1 - h(n + 1 + i))      (k >= 1)
+
+A player healthy at the cutoff who plays the next game (prob 1 - p1) keeps the new-injury
+expectation from game 2 on, weighted by 1 - p1 (new_* term); players already out keep no
+new_* term, as without a report. Without a report (p1 missing) everything is unchanged.
 """
 
 from __future__ import annotations
@@ -105,6 +117,65 @@ def survival(h: np.ndarray, n: int, k_max: int = K_MAX) -> np.ndarray:
     return s
 
 
+def out_curve(h: np.ndarray, n: int, p1: float | None = None, k_max: int = K_MAX) -> np.ndarray:
+    """P(out at the k-th next game), k = 0..k_max (index 0 = 1). Without p1: survival from n
+    games missed; with p1 (report): p1 for the next game, then survival from n + 1."""
+    if p1 is None or np.isnan(p1):
+        return survival(h, n, k_max)
+    c = np.ones(k_max + 1)
+    c[1:] = p1 * survival(h, n + 1, k_max)[:-1]
+    return c
+
+
+def _is_out_class(pl: pd.DataFrame) -> pd.Series:
+    """Players with an absence curve (ret_*): out at the cutoff, or covered by a report."""
+    p1 = pl.p1 if "p1" in pl else pd.Series(np.nan, index=pl.index)
+    return (pl.n > 0) | p1.notna()
+
+
+def _new_weight(p, pi: np.ndarray) -> np.ndarray:
+    """New-injury expectation of a player healthy at the cutoff: pi(k) without a report;
+    (1 - p1) pi(k) from game 2 on with one (the next game is p1's)."""
+    p1 = _p1(p)
+    if p1 is None:
+        return pi
+    w = (1 - p1) * pi
+    w[: min(2, len(w))] = 0.0
+    return w
+
+
+def _p1(p) -> float | None:
+    v = getattr(p, "p1", None)
+    return None if v is None or pd.isna(v) else float(v)
+
+
+def report_miss_table(pgf: pd.DataFrame, availability: pd.DataFrame, team_status: pd.DataFrame) -> pd.Series:
+    """status -> P(misses the game) for rotation players (state_at's definition), from the
+    pre-game reports attached to ``pgf``'s games; 'not_listed' = usable report, player not on
+    it. Pass only seasons before the one being forecast."""
+    x = AM.attach_reports(pgf[pgf.rotation & (pgf.gp_before >= 3)], availability, team_status)
+    x = x[x.status != "no_report"]
+    return (1 - x.groupby("status").y_played.mean()).rename("p_miss")
+
+
+def report_overlay(
+    players: pd.DataFrame, availability: pd.DataFrame, team_status: pd.DataFrame, table: pd.Series
+) -> pd.DataFrame:
+    """``players`` with p1 for the teams whose next game has a usable report.
+    ``availability`` / ``team_status``: rows of those next games (build_availability format)."""
+    usable = team_status[team_status.snapshot_usable.astype(bool)]
+    covered = set(usable.team_id.astype(int))
+    st = availability[availability.player_id.notna()].drop_duplicates("player_id")
+    status = dict(zip(st.player_id.astype(int), st.injury_status))
+    out = players.copy()
+    on = out.team_id.astype(int).isin(covered)
+    s = out.player_id.astype(int).map(status).where(on)
+    s = s.where(s.notna() | ~on, "not_listed")
+    out["report_status"] = s
+    out["p1"] = s.map(table).astype(float)
+    return out
+
+
 def state_at(pgf_season: pd.DataFrame, cutoff: pd.Timestamp, tau_days: float) -> tuple[pd.DataFrame, pd.DataFrame]:
     """(players, teams) at the cutoff. players: team_id, player_id, V, f, n.
     teams: team_id, rec_v, rec_f."""
@@ -164,18 +235,23 @@ def expected_change(
     for t in team_ids:
         pl = players[players.team_id == t]
         ret_v, ret_f = np.zeros(K_MAX + 1), np.zeros(K_MAX + 1)
-        for p in pl[pl.n > 0].itertuples(index=False):
-            s = survival(h, int(p.n))
+        hurt = _is_out_class(pl)
+        for p in pl[hurt].itertuples(index=False):
+            s = out_curve(h, int(p.n), _p1(p))
             ret_v += s * p.f * p.V
             ret_f += s * p.f
-        ok = pl[pl.n == 0]
+        new_v, new_f = np.zeros(K_MAX + 1), np.zeros(K_MAX + 1)
+        for p in pl[pl.n == 0].itertuples(index=False):
+            w = _new_weight(p, pi)
+            new_v += w * p.f * p.V
+            new_f += w * p.f
         out[t] = {
             "rec_v": float(rec.rec_v.get(t, 0.0)) if rec is not None else 0.0,
             "rec_f": float(rec.rec_f.get(t, 0.0)) if rec is not None else 0.0,
             "ret_v": ret_v,
             "ret_f": ret_f,
-            "new_v": pi * float((ok.f * ok.V).sum()),
-            "new_f": pi * float(ok.f.sum()),
+            "new_v": new_v,
+            "new_f": new_f,
         }
     return out
 
@@ -189,10 +265,11 @@ def sample_paths(
     exp = expected_change(players, teams, h, pi, team_ids)
     out = {}
     for t in team_ids:
-        hurt = players[(players.team_id == t) & (players.n > 0)]
+        pl = players[players.team_id == t]
+        hurt = pl[_is_out_class(pl)]
         R = np.zeros((n_paths, len(hurt)), dtype=int)
         for j, p in enumerate(hurt.itertuples(index=False)):
-            s = survival(h, int(p.n))[1:]  # P(still out at game 1..K)
+            s = out_curve(h, int(p.n), _p1(p))[1:]  # P(still out at game 1..K)
             u = rng.random(n_paths)
             R[:, j] = (u[:, None] < s[None, :]).sum(axis=1)  # games still missed
         out[t] = {**exp[t], "R": R, "fv": (hurt.f * hurt.V).to_numpy(float), "f": hurt.f.to_numpy(float)}

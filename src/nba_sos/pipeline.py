@@ -9,6 +9,8 @@ python -m nba_sos.pipeline playoff-rank        # rolling playoff evaluation + pr
 python -m nba_sos.pipeline replay              # remaining-season simulation: historical replays (acceptance test)
 python -m nba_sos.pipeline project             # current season: expected wins, seeds, remaining D-SOS
 python -m nba_sos.pipeline live                # network: fresh snapshot + latest injury report + projection
+python -m nba_sos.pipeline report-check        # does the official pre-game report improve forecasts made at a cutoff
+python -m nba_sos.pipeline line-check          # season-start projections vs preseason win lines (configs/preseason_win_totals.csv)
 python -m nba_sos.pipeline playoff-risers      # players who play better in the playoffs than in the regular season
 python -m nba_sos.pipeline analysis            # player values, model variants, star vs depth, top players
 python -m nba_sos.pipeline game-model          # Elo / EWMA / dynamic strength / CatBoost rolling backtest
@@ -55,6 +57,8 @@ def main(argv: list[str] | None = None) -> None:
             "replay",
             "project",
             "live",
+            "report-check",
+            "line-check",
         ],
     )
     ap.add_argument("--refresh", action="store_true", help="re-download cached payloads")
@@ -215,6 +219,24 @@ def main(argv: list[str] | None = None) -> None:
             json.dumps(out["meta"], indent=2, default=str)
         )
         print(out["table"][PROJECTION_COLS].round(2).to_string())
+    elif args.command == "report-check":
+        import json
+
+        from .models import season_simulation as SIM
+
+        out = SIM.report_check(paths)
+        out["metrics"].to_csv(paths.reports / "injury_report_check.csv", index=False)
+        (paths.reports / "injury_report_status_miss.json").write_text(json.dumps(out["status_tables"], indent=2))
+        print(out["metrics"].round(4).to_string())
+    elif args.command == "line-check":
+        from .models import season_simulation as SIM
+
+        out = SIM.line_check(paths)
+        if out is None:
+            print(f"configs/{SIM.LINES_FILE} has no lines yet; nothing to compare")
+        else:
+            out.to_csv(paths.reports / "season_sim_preseason_lines.csv", index=False)
+            print(out[out.scope == "pooled"].round(3).to_string())
     elif args.command == "live":
         from .live import run_live
 
