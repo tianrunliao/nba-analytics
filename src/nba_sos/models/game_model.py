@@ -109,6 +109,7 @@ def _tune_dynamic(all_games: pd.DataFrame) -> dict:
         mse = float(np.mean((x.net_rating_margin - diff - hca * (~x.is_neutral)) ** 2))
         if best is None or mse < best[0]:
             best = (mse, {"tau": tau, "alpha": alpha, "rho": rho})
+    assert best is not None
     return {**best[1], "tune_mse": best[0]}
 
 
@@ -365,7 +366,7 @@ def pooled(m: pd.DataFrame, models: list[str]) -> pd.DataFrame:
     w = m.n_games
     rows = []
     for mod in models:
-        r = {"model": mod}
+        r: dict[str, object] = {"model": mod}
         for k in ("log_loss", "brier", "mae_per100", "ece"):
             col = f"{mod}_{k}"
             if col in m:

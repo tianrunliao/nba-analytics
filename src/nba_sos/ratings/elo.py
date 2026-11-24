@@ -56,4 +56,5 @@ def tune(games: pd.DataFrame, train_seasons: list[str], burn_in: list[str]) -> d
         ll = M.log_loss(scored.home_win.astype(float).to_numpy(), e.p_home_elo.to_numpy())
         if best is None or ll < best[0]:
             best = (ll, {"k": k, "hca": hca, "carry": carry})
+    assert best is not None
     return {**best[1], "train_log_loss": best[0]}

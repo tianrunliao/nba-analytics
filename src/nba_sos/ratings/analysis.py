@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import logging
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -24,7 +25,7 @@ RANKING_FIRST_SEASON = "2013-14"
 
 def pooled(metrics: pd.DataFrame, models=("full", "theta_only", "raw_net", "winpct")) -> dict:
     w, s = metrics.n_games, metrics.series
-    out = {"games": int(w.sum()), "series": int(s.sum())}
+    out: dict[str, float] = {"games": int(w.sum()), "series": int(s.sum())}
     for m in models:
         out[f"{m}_log_loss"] = float((metrics[f"{m}_log_loss"] * w).sum() / w.sum())
         out[f"{m}_series_acc"] = float((metrics[f"{m}_series_acc"] * s).sum() / s.sum())
@@ -56,7 +57,7 @@ def run(paths: Paths, cfg: dict) -> dict:
     pv.to_parquet(paths.processed / "player_values.parquet", index=False)
     (paths.reports / "player_values_meta.json").write_text(json.dumps(meta, indent=2, default=float))
 
-    variants = {
+    variants: dict[str, dict[str, Any]] = {
         "V0 on/off, per-100": dict(value_source="onoff", heteroscedastic=False, scale=False, feats=None),
         "V1 + noise-weighted seasons": dict(value_source="onoff", heteroscedastic=True, scale=False, feats=None),
         "V2 + per-season noise scaling": dict(value_source="onoff", heteroscedastic=True, scale=True, feats=None),

@@ -82,7 +82,7 @@ def predict(params: dict, d: pd.DataFrame) -> pd.DataFrame:
 
 def evaluate(pred: pd.DataFrame) -> dict:
     y, m = pred.home_win.to_numpy(float), pred.margin.to_numpy(float)
-    res = {"n_games": int(len(pred))}
+    res: dict[str, float] = {"n_games": int(len(pred))}
     for name, pc, mc in [("preseason", "pred_p_home", "pred_margin"), ("constant", "const_p_home", "const_margin")]:
         res[f"{name}_log_loss"] = M.log_loss(y, pred[pc])
         res[f"{name}_brier"] = M.brier(y, pred[pc])

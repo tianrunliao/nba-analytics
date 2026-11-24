@@ -96,7 +96,7 @@ def group_tables(plan_: CupPlan, home_win: np.ndarray, margin: np.ndarray, rng) 
     for name, teams in plan_.groups.items():
         sel = np.flatnonzero(gg.group.to_numpy() == name)
         w, pdiff = {t: 0 for t in teams}, {t: 0.0 for t in teams}
-        beat = {}
+        beat: dict[tuple[int, int], int] = {}
         for i in sel:
             h, a = int(gg.home_team_id.iat[i]), int(gg.away_team_id.iat[i])
             win, loss = (h, a) if home_win[i] else (a, h)

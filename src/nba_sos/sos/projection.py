@@ -42,6 +42,7 @@ from __future__ import annotations
 
 import itertools
 import math
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -192,8 +193,9 @@ def select_load(x: pd.DataFrame, k: int = 5) -> dict:
             pred[iva] = Xva @ b
         return (y - pred) ** 2
 
-    chosen, cur = [], oof([])
-    path = [{"step": 0, "added": None, "oof_mse": float(cur.mean())}]
+    chosen: list[str] = []
+    cur = oof([])
+    path: list[dict[str, Any]] = [{"step": 0, "added": None, "oof_mse": float(cur.mean())}]
     while True:
         best = None
         for f in [c for c in LOAD if c not in chosen]:
@@ -344,7 +346,7 @@ def fit_horizon(rows: pd.DataFrame, pre: dict, inj_cols: list[str] | None = None
     coef, *_ = np.linalg.lstsq(M, s_e**2 - s_e2, rcond=None)
     kappa, q = (max(float(c), 0.0) for c in coef)
     sigma_game = float(np.sqrt(np.mean(e**2 - kappa * rows.sd2.to_numpy(float) - 2 * q * h)))
-    out = {
+    out: dict[str, Any] = {
         "b0": float(b[0]),
         "r_per_day": r,
         "kappa": kappa,
@@ -386,7 +388,7 @@ def horizon_cv(rows: pd.DataFrame, pre: dict, k: int = 5) -> dict:
             hz = fit_horizon(rows[itr], pre, cols)
             e[iva] = (y[iva] - mean_margin(rows[iva], pre, hz)) ** 2
         err[name] = e
-    out = {"oof_mse": {n: float(e.mean()) for n, e in err.items()}, "chosen": "none"}
+    out: dict[str, Any] = {"oof_mse": {n: float(e.mean()) for n, e in err.items()}, "chosen": "none"}
     best = 0.0
     for n, e in err.items():
         d = err["none"] - e
@@ -588,7 +590,7 @@ def simulate(
 
     c_inj = hz.get("c_inj", {})
     inj_on = injuries is not None and bool(c_inj)
-    inj = [injuries.get(int(t)) for t in teams] if inj_on else None
+    inj = [injuries.get(int(t)) for t in teams] if injuries is not None and inj_on else None
 
     def inj_adj(day) -> np.ndarray:
         """Availability terms per path: rec and new_* at their expectation, ret_* from each
@@ -596,6 +598,7 @@ def simulate(
         out = np.zeros((n_paths, T))
         if not inj_on:
             return out
+        assert inj is not None
         for i in range(T):
             st = inj[i]
             if st is None:
@@ -621,7 +624,7 @@ def simulate(
         hw = lg.record(h[:, None], a[:, None], m[:, None])[:, 0]
         return np.where(hw, h, a), np.where(hw, a, h)
 
-    cs = None
+    cs: dict[str, Any] | None = None
     if cup is not None:
         gid = cup.group_games.game_id.tolist()
         cs = {
@@ -762,9 +765,9 @@ def seed_paths(
     for p in range(n_paths):
         S = Season(lg.wins[p], lg.W[p], lg.pdiff[p], conf, div, rng)
         for c in order:
-            o = S.conference_order(c)
-            order[c][p] = o
-            out[p, o] = np.arange(1, len(o) + 1)
+            co = S.conference_order(c)
+            order[c][p] = co
+            out[p, co] = np.arange(1, len(co) + 1)
     r = np.arange(n_paths)
 
     def game(h, a):

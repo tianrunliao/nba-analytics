@@ -91,7 +91,9 @@ def team_style(store: RawStore, season: str) -> pd.DataFrame:
     return out.reset_index(drop=True)
 
 
-def playoff_share_curve(playoff_pg: pd.DataFrame, rs_pg: pd.DataFrame, seasons: list[str], top: int = 12) -> np.ndarray:
+def playoff_share_curve(
+    playoff_pg: pd.DataFrame, rs_pg: pd.DataFrame, seasons: list[str], top: int = 12
+) -> np.ndarray | None:
     """Mean playoff share of team minutes (x5) by regular-season minutes rank 1..top."""
     shares = []
     for s in seasons:

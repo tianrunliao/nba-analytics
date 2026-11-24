@@ -260,8 +260,9 @@ def replay(
             inj_paths = None
             if fit["injury_tables"] is not None:
                 players, teams = _state(h, season, cut)
+                h_tab, pi_tab = fit["injury_tables"]
                 inj_paths = AV.sample_paths(
-                    players, teams, *fit["injury_tables"], sorted(conf.index), n_paths, np.random.default_rng(seed + 1)
+                    players, teams, h_tab, pi_tab, sorted(conf.index), n_paths, np.random.default_rng(seed + 1)
                 )
             for vname, hzv in hz_runs.items():
                 sim = PJ.simulate(
@@ -427,12 +428,11 @@ def run_current(paths: Paths, cfg: dict, n_paths: int = 10000, seed: int = 0) ->
     rem = PJ.future_index(rows[rows.game_id.isin(g[~g.completed].game_id)], cut)
     players, teams_state = AV.state_at(h["pgf"][h["pgf"].season == season], cut, h["dyn"]["tau"])
     ids = sorted(st.team_id)
-    PJ.add_injury(rem, AV.expected_change(players, teams_state, *fit["injury_tables"], ids))
+    h_tab, pi_tab = fit["injury_tables"]
+    PJ.add_injury(rem, AV.expected_change(players, teams_state, h_tab, pi_tab, ids))
     w_now, g_now = _wins_to_date(done, cut)
     conf, div, _ = standings_meta(RawStore(paths.raw), last_hist)
-    inj_paths = AV.sample_paths(
-        players, teams_state, *fit["injury_tables"], ids, n_paths, np.random.default_rng(seed + 1)
-    )
+    inj_paths = AV.sample_paths(players, teams_state, h_tab, pi_tab, ids, n_paths, np.random.default_rng(seed + 1))
     tg = PJ.team_games(rem)
     sim = PJ.simulate(
         rem,

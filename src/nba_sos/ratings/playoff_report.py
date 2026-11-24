@@ -116,6 +116,7 @@ def season_blocks(
     rg = P.roster_games(pg, games)
     values = P.player_values(rg)
     if value_source == "lpm":
+        assert pv is not None, "value_source='lpm' needs pv"
         values = values.drop(columns="value").merge(
             pv[["season", "player_id", "lpm"]].rename(columns={"lpm": "value"}), on=["season", "player_id"], how="left"
         )
@@ -152,10 +153,12 @@ def season_blocks(
         parts, details = [], []
         if len(r_rep):
             h, det = PM.health_start(r_rep, st, None, mt, fit["coefs"])
-            parts.append(h), details.append(det)
+            parts.append(h)
+            details.append(det)
         if len(r_prx):
             h, det = PM.health_start(r_prx, None, streaks[s], None, fit["coefs"], streak_k=streak_rule["k"])
-            parts.append(h), details.append(det)
+            parts.append(h)
+            details.append(det)
         hs = pd.concat(parts, ignore_index=True)
         detail = pd.concat(details, ignore_index=True)
         inplay, ip_detail = PM.inplay_health(ppg, roster, detail, pgames, fit["coefs"])
@@ -276,6 +279,7 @@ def evaluate_and_rank(blocks: dict, hist: list[str], feats: list[str] | None = N
             pm = PM.fit_playoff(pd.concat([blocks[s]["rows"][tau] for s in train], ignore_index=True), feats)
             if best is None or pm["loglik"] > best[1]["loglik"]:
                 best = (tau, pm)
+        assert best is not None
         tau, pm = best
         b = blocks[Y]
         test = b["rows"][tau]

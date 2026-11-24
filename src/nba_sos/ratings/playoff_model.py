@@ -90,7 +90,7 @@ def choose_streak_threshold(x: pd.DataFrame) -> dict:
         tp = int((flag & x.out).sum())
         prec, rec = tp / max(int(flag.sum()), 1), tp / max(int(x.out.sum()), 1)
         scores[k] = 2 * prec * rec / (prec + rec) if prec + rec else 0.0
-    best = max(scores, key=scores.get)
+    best = max(scores, key=lambda k: scores[k])
     return {"k": best, "f1": scores, "n_players": int(len(x)), "n_out": int(x.out.sum())}
 
 
@@ -110,6 +110,7 @@ def health_start(
     r = roster.copy()
     r["f"] = r.mpg / 48
     if statuses is not None and len(statuses):
+        assert miss_table is not None, "statuses need a miss_table"
         r = r.merge(statuses[["player_id", "team_id", "injury_status"]], on=["player_id", "team_id"], how="left")
         r["rotation"] = r.mpg >= ROTATION_MPG
         r = r.merge(miss_table[["injury_status", "rotation", "p_miss"]], on=["injury_status", "rotation"], how="left")
@@ -245,7 +246,7 @@ def series_win_prob(r_a: float, r_b: float, a_has_home: bool, hca: float, sigma:
     dp = {(0, 0): 1.0}
     win = 0.0
     for gi in range(7):
-        nxt = {}
+        nxt: dict[tuple[int, int], float] = {}
         for (wa, wb), pr in dp.items():
             for res, q in ((1, p[gi]), (0, 1 - p[gi])):
                 na, nb = wa + res, wb + (1 - res)

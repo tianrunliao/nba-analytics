@@ -61,5 +61,5 @@ class RawStore:
         """Latest manifest record per key (path, or url for not-found probes)."""
         out: dict[str, dict[str, Any]] = {}
         for rec in self.read_manifest():
-            out[rec.get("path") or rec.get("url")] = rec
+            out[rec.get("path") or rec["url"]] = rec
         return out

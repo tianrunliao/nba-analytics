@@ -21,6 +21,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 from email.utils import parsedate_to_datetime
 from pathlib import Path
+from typing import Any
 from zoneinfo import ZoneInfo
 
 import pandas as pd
@@ -269,9 +270,11 @@ def parse_report_pdf(path: Path) -> tuple[pd.DataFrame, dict]:
     import pdfplumber
 
     rows: list[dict] = []
-    info = {"report_time_et": None, "orphan_fragments": 0, "pages": 0, "header_found": False}
-    state = {c: None for c in ("game_date", "game_time", "matchup", "team")}
-    starts = layout_cols = header_key = None
+    info: dict[str, Any] = {"report_time_et": None, "orphan_fragments": 0, "pages": 0, "header_found": False}
+    state: dict[str, Any] = {c: None for c in ("game_date", "game_time", "matchup", "team")}
+    starts: list[float] | None = None
+    layout_cols: list[str] = []
+    header_key: str | None = None
     with pdfplumber.open(path) as pdf:
         info["pages"] = len(pdf.pages)
         for page_no, page in enumerate(pdf.pages):
@@ -295,7 +298,7 @@ def parse_report_pdf(path: Path) -> tuple[pd.DataFrame, dict]:
                     continue
                 if text.startswith("page") or text == header_key:
                     continue
-                cells = {c: [] for c in layout_cols}
+                cells: dict[str, Any] = {c: [] for c in layout_cols}
                 for w in line:
                     idx = max(i for i, b in enumerate(bounds) if w["x0"] >= b) if w["x0"] >= bounds[0] else 0
                     cells[layout_cols[idx]].append(w["text"])

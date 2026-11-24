@@ -114,14 +114,16 @@ def opponent_adjust(d: pd.DataFrame) -> tuple[pd.DataFrame, float]:
 
 def noise_model(d: pd.DataFrame) -> dict:
     """tau^2 from cross-season products of the same player; sigma^2 from E[d^2] - tau^2 ~ 1/m."""
-    prods, wts, halves = [], [], []
+    prod_parts: list[np.ndarray] = []
+    wt_parts: list[np.ndarray] = []
+    halves = []
     for _, g in d.sort_values("season").groupby("player_id"):
         if len(g) < 2:
             continue
         v, m = g.delta.to_numpy(float), g.po_min.to_numpy(float)
         i, j = np.triu_indices(len(g), 1)
-        prods.append(v[i] * v[j])
-        wts.append(np.sqrt(m[i] * m[j]))
+        prod_parts.append(v[i] * v[j])
+        wt_parts.append(np.sqrt(m[i] * m[j]))
         a, b = g.iloc[::2], g.iloc[1::2]  # split-half: odd- vs even-numbered postseasons
         halves.append(
             (
@@ -131,7 +133,7 @@ def noise_model(d: pd.DataFrame) -> dict:
                 b.po_min.sum(),
             )
         )
-    prods, wts = np.concatenate(prods), np.concatenate(wts)
+    prods, wts = np.concatenate(prod_parts), np.concatenate(wt_parts)
     tau2 = float(np.average(prods, weights=wts))
     tau2_se = float(np.sqrt(np.average((prods - tau2) ** 2, weights=wts) / len(prods)))
     inv_m = 1.0 / d.po_min.to_numpy(float)

@@ -121,7 +121,7 @@ def fit_weights(design: pd.DataFrame, theta: pd.DataFrame, seed: int = 0) -> dic
             b = _ridge(X[tr], y[tr], a)
             err.append(((y[te] - (b[0] + X[te] @ b[1:])) ** 2).mean())
         cv[a] = float(np.mean(err))
-    alpha = min(cv, key=cv.get)
+    alpha = min(cv, key=lambda a: cv[a])
     b = _ridge(X, y, alpha)
     pred = b[0] + X @ b[1:]
     return {

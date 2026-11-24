@@ -61,7 +61,7 @@ def fit_season(lu: pd.DataFrame, pace: float, prior_by_player: pd.Series, seed: 
                 c, r = _solve(X[tr], y[tr], w[tr], kappa * box, lam)
                 err += float(np.sum(w[te] * (y[te] - c - X[te] @ r) ** 2))
             cv[(kappa, lam)] = err / w.sum()
-    kappa, lam = min(cv, key=cv.get)
+    kappa, lam = min(cv, key=lambda kl: cv[kl])
     prior = kappa * box
     c, r = _solve(X, y, w, prior, lam)
     c0, r0 = _solve(X, y, w, np.zeros_like(prior), lam)  # same penalty, no prior (pure RAPM-style)

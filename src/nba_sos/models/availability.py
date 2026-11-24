@@ -259,7 +259,8 @@ def evaluate(gx: pd.DataFrame, test_seasons: list[str]) -> tuple[pd.DataFrame, d
     }
     base_cb = GROUPS["strength"] + GROUPS["rest"] + GROUPS["travel"] + GROUPS["injury"] + ["home_flag"]
     p3_cols = ["Mv_today_d", "Mf_today_d", "dMv_d", "dMf_d", "Mv_recent_d", "Mf_recent_d"]
-    rows, coefs = [], {}
+    rows: list[dict] = []
+    coefs: dict[str, dict] = {}
     for test in test_seasons:
         tr = gx[(gx.season.map(season_start_year) < season_start_year(test)) & gx.report_season]
         te = gx[gx.season == test]

@@ -2,7 +2,7 @@
 name = "nba-dynamic-sos"
 version = "0.1.0"
 description = "NBA dynamic strength-of-schedule prediction system"
-requires-python = ">=3.12,<3.13"
+requires-python = ">=3.11,<3.13"
 dependencies = [
     "nba_api==1.12.0",
     "pandas>=2.2,<3",
@@ -17,7 +17,11 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["pytest>=8"]
+dev = [
+    "mypy>=2.4.1",
+    "pytest>=8",
+    "ruff==0.16.3",
+]
 
 [build-system]
 requires = ["hatchling"]
@@ -33,7 +37,7 @@ addopts = "-m 'not network'"
 
 [tool.ruff]
 line-length = 120
-target-version = "py312"
+target-version = "py311"
 
 [tool.ruff.lint]
 # pyflakes / pycodestyle errors, import order, bugbear, pyupgrade; long lines are not enforced
@@ -45,3 +49,8 @@ ignore = ["B905"]
 # closures that read loop variables are called within the same iteration (tie-break helpers)
 "src/nba_sos/sos/cup.py" = ["B023"]
 "src/nba_sos/ratings/playoff_model.py" = ["B023"]
+
+[tool.mypy]
+python_version = "3.11"
+files = ["src/nba_sos"]
+ignore_missing_imports = true
