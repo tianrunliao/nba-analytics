@@ -67,8 +67,10 @@ def parse_reports(paths: list[str], store: RawStore, cache_path: Path) -> tuple[
                              "report_time_et": None, "pages": None, "orphan_fragments": None})
     rows = pd.concat([x for x in [cached, *new_rows] if x is not None and len(x)], ignore_index=True) \
         if (new_rows or cached is not None) else pd.DataFrame()
-    info = pd.concat([x for x in [cached_info, pd.DataFrame(new_info)] if x is not None and len(x)],
-                     ignore_index=True) if (new_info or cached_info is not None) else pd.DataFrame()
+    # built from records, not pd.concat: concatenating the all-NA columns of reports that failed
+    # to parse again triggers a pandas FutureWarning and a NumPy generic-unit NaT DeprecationWarning
+    info_records = ([] if cached_info is None else cached_info.to_dict("records")) + new_info
+    info = pd.DataFrame(info_records) if (new_info or cached_info is not None) else pd.DataFrame()
     if new_rows or new_info:
         cache_path.parent.mkdir(parents=True, exist_ok=True)
         rows.to_parquet(cache_path, index=False)
