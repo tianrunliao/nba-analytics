@@ -46,6 +46,7 @@ def main(argv: list[str] | None = None) -> None:
         print(snapshot_current_season(paths, cfg))
     elif args.command == "window-sos":
         import json
+
         from .sos.window_report import run
         out, params = run(paths, cfg, n=args.n)
         season = cfg["data_sources"]["seasons"]["current"]
@@ -55,6 +56,7 @@ def main(argv: list[str] | None = None) -> None:
         print(dest)
     elif args.command == "playoff-rank":
         import json
+
         from .ratings.playoff_report import run as run_po
         metrics, rankings, params = run_po(paths, cfg)
         metrics.to_csv(paths.reports / "playoff_backtest.csv", index=False)
@@ -69,6 +71,7 @@ def main(argv: list[str] | None = None) -> None:
         print(out["top"].to_string())
     elif args.command == "phase2":
         import json
+
         from .models import game_model as GM
         x, tuned = GM.build_features(paths)
         x.to_parquet(paths.processed / "game_model_features.parquet", index=False)
@@ -81,11 +84,13 @@ def main(argv: list[str] | None = None) -> None:
         summary = {"all": GM.pooled(m, models), "2022_26": GM.pooled(m[m.season >= "2022-23"], models)}
         for k, v in summary.items():
             v.to_csv(paths.reports / f"phase2_summary_{k}.csv", index=False)
-            print(k); print(v.round(4).to_string(index=False))
+            print(k)
+            print(v.round(4).to_string(index=False))
         (paths.reports / "phase2_params.json").write_text(json.dumps({"tuned": tuned, "importance": imp},
                                                                      indent=2, default=float))
     elif args.command == "phase3":
         import json
+
         from .models import phase3 as P3
         out = P3.run(paths, cfg)
         out["availability"].to_csv(paths.reports / "phase3_availability_model.csv", index=False)
@@ -95,9 +100,11 @@ def main(argv: list[str] | None = None) -> None:
         out["lineup"].to_parquet(paths.processed / "lineup_contribution.parquet", index=False)
         (paths.reports / "phase3_params.json").write_text(json.dumps({"info": out["info"], "coefs": out["coefs"]},
                                                                      indent=2, default=float))
-        print(out["availability"].round(4).to_string()); print(out["evaluation"].round(4).to_string())
+        print(out["availability"].round(4).to_string())
+        print(out["evaluation"].round(4).to_string())
     elif args.command == "playoff-improve":
         import json
+
         from .ratings import playoff_improve as PI
         out = PI.run(paths, cfg)
         out["metrics"].to_csv(paths.reports / "playoff_improve_backtest.csv", index=False)
@@ -106,10 +113,12 @@ def main(argv: list[str] | None = None) -> None:
         names = ["base"] + [f"base+{g}" for g in PI.GROUPS] + ["selected"]
         print(PI.pooled(out["metrics"], names).round(4).to_string())
         print(PI.pooled(out["metrics"], names, later=True).round(4).to_string())
-        print(json.dumps(out["selected"], indent=1)); print(json.dumps(out["final"], indent=1, default=float))
+        print(json.dumps(out["selected"], indent=1))
+        print(json.dumps(out["final"], indent=1, default=float))
 
     elif args.command == "playoff-risers":
         import json
+
         from .ratings import playoff_risers as PR
         out = PR.run(paths)
         out["career"].to_csv(paths.reports / "playoff_risers_career.csv", index=False)
@@ -121,6 +130,7 @@ def main(argv: list[str] | None = None) -> None:
 
     elif args.command == "phase4":
         import json
+
         from .models import phase4 as P4
         out = P4.run_backtest(paths, cfg)
         out["replays"].to_csv(paths.reports / "phase4_replays.csv", index=False)
@@ -131,6 +141,7 @@ def main(argv: list[str] | None = None) -> None:
         print(json.dumps(out["sos_check"], indent=1))
     elif args.command == "project":
         import json
+
         from .models import phase4 as P4
         out = P4.run_current(paths, cfg)
         season = out["meta"]["season"]

@@ -1,7 +1,7 @@
 """Generate reports/data_audit.md from the build outputs."""
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pandas as pd
 
@@ -35,7 +35,7 @@ def write_audit(paths, cfg, *, store, games, all_games, schedule, checks, exclud
     L: list[str] = []
     w = L.append
     w("# 数据审计报告（Phase 1）\n")
-    w(f"生成时间（UTC）：{datetime.now(timezone.utc).isoformat(timespec='seconds')}\n")
+    w(f"生成时间（UTC）：{datetime.now(UTC).isoformat(timespec='seconds')}\n")
     w("本报告由 `python -m nba_sos.pipeline build` 自动生成，所有数字来自 `data/raw/` 中的原始快照。\n")
 
     # 1 sources

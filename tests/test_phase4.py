@@ -26,7 +26,7 @@ def _league(n_teams=6, rounds=4, seed=0):
         for i in range(1, n_teams + 1):
             for j in range(i + 1, n_teams + 1):
                 h, a = (i, j) if r % 2 == 0 else (j, i)
-                rows.append({"game_id": f"g{len(rows)}", "season": "x", "date": CUT + pd.Timedelta(days=int(day)),
+                rows.append({"game_id": f"g{len(rows)}", "season": "x", "date": CUT + pd.Timedelta(int(day), unit="D"),
                              "home_team_id": h, "away_team_id": a, "venue": 1.0,
                              **{f"{k}_{s}": float(rng.integers(0, 2)) for k in PJ.LOAD for s in ("home", "away")}})
                 day += 1
@@ -167,9 +167,9 @@ def _cup_plan():
                 for j in range(i + 1, 5):
                     rows.append({"game_id": f"c{len(rows)}", "home_team_id": ts[i], "away_team_id": ts[j],
                                  "group": f"{conf} Group {gname}"})
-    return CUP.CupPlan(groups=groups, group_games=pd.DataFrame(rows), qf_date=CUT + pd.Timedelta(days=10),
-                       sf_date=CUT + pd.Timedelta(days=13),
-                       extra_dates=[CUT + pd.Timedelta(days=11), CUT + pd.Timedelta(days=14)],
+    return CUP.CupPlan(groups=groups, group_games=pd.DataFrame(rows), qf_date=CUT + pd.Timedelta(10, unit="D"),
+                       sf_date=CUT + pd.Timedelta(13, unit="D"),
+                       extra_dates=[CUT + pd.Timedelta(11, unit="D"), CUT + pd.Timedelta(14, unit="D")],
                        sf_home_court=True, prev_wins=pd.Series(dtype=float),
                        conference={k: k.split()[0] for k in groups})
 
@@ -191,7 +191,7 @@ def test_group_tables_use_head_to_head_then_point_differential():
 def test_cup_knockout_and_extra_games_give_every_team_two_more_games():
     plan = _cup_plan()
     st = pd.DataFrame({"team_id": range(1, 31), "S": np.linspace(-5, 5, 30), "sd": 2.0})
-    gg = plan.group_games.assign(date=CUT + pd.Timedelta(days=1), venue=1.0,
+    gg = plan.group_games.assign(date=CUT + pd.Timedelta(1, unit="D"), venue=1.0,
                                  **{f"{k}_{s}": 0.0 for k in PRE["c"] for s in ("home", "away")})
     sim = PJ.simulate(gg, st, PRE, HZ, CUT, n_paths=200, seed=3, cup=plan)
     out = sim["cup"]

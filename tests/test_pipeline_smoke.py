@@ -1,4 +1,6 @@
 """End-to-end check on the real local raw store (skipped when it has not been fetched)."""
+import shutil
+
 import pandas as pd
 import pytest
 
@@ -21,6 +23,11 @@ def built(tmp_path_factory):
 
     p = TmpPaths(PROJECT_ROOT)
     p.reports.mkdir(parents=True)
+    # reuse the parsed-PDF cache (keyed by report path; raw files are immutable) so the
+    # build does not re-parse every injury report; copied, so the real cache is untouched
+    p.interim.mkdir(parents=True)
+    for f in PATHS.interim.glob("injury_reports_parsed*.parquet"):
+        shutil.copy2(f, p.interim / f.name)
     return build_all(p, load_configs(PATHS)), p
 
 

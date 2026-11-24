@@ -192,7 +192,7 @@ def replay(h: dict, store: RawStore, season: str, fits: dict, n_paths: int, cup_
     rows = h["rows"][h["rows"].season == season]
     games = h["games"][h["games"].season == season]
     conf, div, prank = standings_meta(store, season)
-    final_w, final_g = _wins_to_date(games, rows.date.max() + pd.Timedelta(days=1))
+    final_w, final_g = _wins_to_date(games, rows.date.max() + pd.Timedelta(1, unit="D"))
     pw = prev_wins(h, season)
     out = []
     for n in CUTOFF_GAMES:
@@ -318,7 +318,7 @@ def run_current(paths: Paths, cfg: dict, n_paths: int = 10000, seed: int = 0) ->
 
     h = load_history(paths)
     fit = fit_models(h, season, "full")
-    cut = pd.to_datetime(done.game_date).max() + pd.Timedelta(days=1) if len(done) else pd.to_datetime(g.game_date).min()
+    cut = pd.to_datetime(done.game_date).max() + pd.Timedelta(1, unit="D") if len(done) else pd.to_datetime(g.game_date).min()
 
     # current-season player frame (participation so far) for rosters and injuries
     pg = build_player_games(cur_store, season)

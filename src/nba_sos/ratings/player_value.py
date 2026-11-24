@@ -66,7 +66,7 @@ def standardise(stats: pd.DataFrame, onoff: pd.DataFrame, team_net: pd.DataFrame
     d = d.merge(team_net, on=["season", "player_id"], how="left")
     d["on_court_rel"] = (d.on_court_net - d.team_net).fillna(0.0)
     out = []
-    for s, g in d.groupby("season"):
+    for _s, g in d.groupby("season"):
         g = g.copy()
         ref = g.min_total >= MIN_FOR_NORMS
         lg_ts = np.average(g.ts[ref], weights=g.min_total[ref])

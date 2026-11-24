@@ -30,3 +30,18 @@ packages = ["src/nba_sos"]
 testpaths = ["tests"]
 markers = ["network: requires internet access (deselected by default)"]
 addopts = "-m 'not network'"
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+# pyflakes / pycodestyle errors, import order, bugbear, pyupgrade; long lines are not enforced
+select = ["E4", "E7", "E9", "F", "I", "B", "UP"]
+# zip(strict=) everywhere would be a broad mechanical change; lengths are checked where it matters
+ignore = ["B905"]
+
+[tool.ruff.lint.per-file-ignores]
+# closures that read loop variables are called within the same iteration (tie-break helpers)
+"src/nba_sos/sos/cup.py" = ["B023"]
+"src/nba_sos/ratings/playoff_model.py" = ["B023"]

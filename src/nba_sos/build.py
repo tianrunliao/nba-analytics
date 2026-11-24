@@ -16,10 +16,9 @@ from .ingestion.raw_store import RawStore
 from .ingestion.venues import load_venue_config
 from .models import preseason
 from .preprocessing import availability as av
-from .preprocessing.games import (PLAYOFF_PREFIX, build_games, build_schedule, excluded_game_counts,
-                                  load_standings)
-from .preprocessing.playoffs import first_playoff_games
+from .preprocessing.games import PLAYOFF_PREFIX, build_games, build_schedule, excluded_game_counts, load_standings
 from .preprocessing.players import build_player_games, team_minutes
+from .preprocessing.playoffs import first_playoff_games
 from .reporting.audit import write_audit
 from .sos.static import static_sos
 from .validation import checks as C

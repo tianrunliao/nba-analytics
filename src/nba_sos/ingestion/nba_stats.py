@@ -6,12 +6,13 @@ response parser so offline rebuilds match what nba_api would have produced.
 from __future__ import annotations
 
 import time
-from typing import Callable
+from collections.abc import Callable
 
 import pandas as pd
 from nba_api.stats.library.http import NBAStatsResponse
 
 from .raw_store import RawStore
+
 
 # name -> (nba_api endpoint name, builder(season, season_type, timeout) -> endpoint object)
 def _league_game_log(season, season_type, timeout, get_request=True):

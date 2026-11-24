@@ -18,8 +18,8 @@ from scipy.stats import norm
 
 from ..config import previous_season
 from ..evaluation import metrics as M
-from ..sos.static import season_team_totals
 from ..features.pregame import team_game_long
+from ..sos.static import season_team_totals
 
 
 def prior_ratings(all_games: pd.DataFrame) -> pd.DataFrame:

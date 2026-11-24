@@ -16,10 +16,10 @@ import logging
 import re
 import time
 import unicodedata
+from collections.abc import Callable
 from datetime import datetime, timedelta
 from email.utils import parsedate_to_datetime
 from pathlib import Path
-from typing import Callable
 from zoneinfo import ZoneInfo
 
 import pandas as pd

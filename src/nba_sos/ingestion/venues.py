@@ -49,7 +49,7 @@ def _sparql(query: str, cfg: dict) -> list[dict]:
 def lookup_candidates(names: list[str], cfg: dict) -> pd.DataFrame:
     """Wikidata items whose English label/alias equals each arena name (for manual review).
     One batched query, to stay within the Wikidata Query Service rate limits."""
-    values = " ".join('"%s"@en' % n.replace('"', '\\"') for n in sorted(set(names)))
+    values = " ".join('"{}"@en'.format(n.replace('"', '\\"')) for n in sorted(set(names)))
     rows = []
     for b in _sparql(SPARQL_CANDIDATES % {"values": values}, cfg):
         lat, lon = parse_wkt_point(b["coord"]["value"])

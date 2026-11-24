@@ -13,7 +13,7 @@ Every feature is known before tip-off:
             overtime in previous game
   travel    distance, time-zone shift, consecutive road games, b2b type, local and
             body-clock tip-off hour
-  injury    official pre-game report (2021-22 on): players out/doubtful, their prior
+  injury    official pre-game report (2019-20 on): players out/doubtful, their prior
             minutes, and their previous-season player value (LPM); NaN before reports exist
 
 Tuning seasons (``TUNE_SEASONS``) choose Elo and dynamic-strength hyper-parameters and

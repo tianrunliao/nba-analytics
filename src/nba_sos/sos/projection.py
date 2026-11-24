@@ -104,8 +104,8 @@ def game_rows(games: pd.DataFrame, load: pd.DataFrame) -> pd.DataFrame:
     g["home_team_id"], g["away_team_id"] = g.home_team_id.astype(int), g.away_team_id.astype(int)
     g["date"] = pd.to_datetime(g.game_date)
     for side in ("home", "away"):
-        l = load.rename(columns={"team_id": f"{side}_team_id", **{k: f"{k}_{side}" for k in LOAD}})
-        g = g.merge(l, on=["game_id", f"{side}_team_id"], how="left")
+        side_load = load.rename(columns={"team_id": f"{side}_team_id", **{k: f"{k}_{side}" for k in LOAD}})
+        g = g.merge(side_load, on=["game_id", f"{side}_team_id"], how="left")
     for k in LOAD:
         for side in ("home", "away"):
             g[f"{k}_{side}"] = g[f"{k}_{side}"].fillna(0.0)
@@ -635,7 +635,7 @@ def seed_paths(lg: _League, teams: np.ndarray, conference: pd.Series, division: 
         m = L_end[r, h] - L_end[r, a] + hca + rng.normal(0.0, sigma, n_paths)
         return np.where(m > 0, h, a), np.where(m > 0, a, h)
 
-    for c, o in order.items():
+    for _c, o in order.items():
         w78, l78 = game(o[:, 6], o[:, 7])
         w910, l910 = game(o[:, 8], o[:, 9])
         w_last, l_last = game(l78, w910)
