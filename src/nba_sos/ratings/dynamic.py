@@ -14,6 +14,7 @@ time-decayed ridge regression on season-s games before d,
 with prior_j = rho * (team j's final adjusted strength in season s-1) and HCA fixed at the
 previous seasons' estimate. Also returns the posterior sd of each S_j (uncertainty).
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -21,8 +22,15 @@ import pandas as pd
 
 
 def team_long(games: pd.DataFrame) -> pd.DataFrame:
-    h = pd.DataFrame({"game_id": games.game_id, "season": games.season, "date": pd.to_datetime(games.game_date),
-                      "team_id": games.home_team_id.astype(int), "y": games.net_rating_margin.astype(float)})
+    h = pd.DataFrame(
+        {
+            "game_id": games.game_id,
+            "season": games.season,
+            "date": pd.to_datetime(games.game_date),
+            "team_id": games.home_team_id.astype(int),
+            "y": games.net_rating_margin.astype(float),
+        }
+    )
     a = h.assign(team_id=games.away_team_id.astype(int).to_numpy(), y=-games.net_rating_margin.astype(float).to_numpy())
     return pd.concat([h, a], ignore_index=True).sort_values(["team_id", "date", "game_id"]).reset_index(drop=True)
 
@@ -94,8 +102,16 @@ def _season_setup(games: pd.DataFrame, final: pd.DataFrame, seasons: list[str], 
     return teams, prior, float(past[~past.is_neutral].net_rating_margin.mean())
 
 
-def _fit_on_date(before: pd.DataFrame, d: pd.Timestamp, teams: list[int], prior: np.ndarray, alpha: float,
-                 tau_days: float, hca: float, noise_sd: float) -> tuple[np.ndarray, np.ndarray]:
+def _fit_on_date(
+    before: pd.DataFrame,
+    d: pd.Timestamp,
+    teams: list[int],
+    prior: np.ndarray,
+    alpha: float,
+    tau_days: float,
+    hca: float,
+    noise_sd: float,
+) -> tuple[np.ndarray, np.ndarray]:
     """Strength and posterior sd of every team from the season's games before date d."""
     if len(before):
         w = np.exp(-(d - before.date).dt.days.to_numpy(float) / tau_days)
@@ -104,8 +120,9 @@ def _fit_on_date(before: pd.DataFrame, d: pd.Timestamp, teams: list[int], prior:
     return prior.copy(), noise_sd / np.sqrt(alpha) * np.ones(len(teams))
 
 
-def dynamic_pregame(games: pd.DataFrame, tau_days: float, alpha: float, rho: float,
-                    noise_sd: float = 13.0) -> pd.DataFrame:
+def dynamic_pregame(
+    games: pd.DataFrame, tau_days: float, alpha: float, rho: float, noise_sd: float = 13.0
+) -> pd.DataFrame:
     """game_id, team_id, dyn_strength, dyn_sd for every game (pre-game)."""
     final = season_final_strength(games)
     seasons = sorted(games.season.unique())
@@ -124,8 +141,16 @@ def dynamic_pregame(games: pd.DataFrame, tau_days: float, alpha: float, rho: flo
     return pd.DataFrame(rows, columns=["game_id", "team_id", "dyn_strength", "dyn_sd"])
 
 
-def strengths_asof(games: pd.DataFrame, season: str, cutoffs: list, tau_days: float, alpha: float, rho: float,
-                   noise_sd: float = 13.0, prior_fn=None) -> pd.DataFrame:
+def strengths_asof(
+    games: pd.DataFrame,
+    season: str,
+    cutoffs: list,
+    tau_days: float,
+    alpha: float,
+    rho: float,
+    noise_sd: float = 13.0,
+    prior_fn=None,
+) -> pd.DataFrame:
     """Strength of every team of ``season`` as of each cutoff date (games strictly before it),
     with the same prior / home-court rules as :func:`dynamic_pregame`. ``games`` holds
     completed games only (this season to date and earlier seasons).
@@ -136,7 +161,9 @@ def strengths_asof(games: pd.DataFrame, season: str, cutoffs: list, tau_days: fl
     seasons = sorted(games.season.unique())
     i = seasons.index(season)
     teams, prior, hca = _season_setup(games, final, seasons, i, rho)
-    prev_final = final[final.season == seasons[i - 1]].set_index("team_id").final_strength if i else pd.Series(dtype=float)
+    prev_final = (
+        final[final.season == seasons[i - 1]].set_index("team_id").final_strength if i else pd.Series(dtype=float)
+    )
     gs = games[games.season == season].copy()
     gs["date"] = pd.to_datetime(gs.game_date)
     out = []

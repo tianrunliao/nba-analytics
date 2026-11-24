@@ -19,6 +19,7 @@ Health index of a team-game (players missing, f = player's minutes per game / 48
 Both are converted to a per-100 effect by the regular-season team model
 (:mod:`nba_sos.ratings.team_strength`), so no hand-set weights are involved.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -31,8 +32,16 @@ def team_game_frame(games: pd.DataFrame) -> pd.DataFrame:
     """season, game_id, game_date, team_id, team_margin, game_minutes (48 + 5 per OT)."""
     ot = games.overtime_periods.astype(float).fillna(0)
     gm = 48 + 5 * ot
-    h = pd.DataFrame({"season": games.season, "game_id": games.game_id, "game_date": games.game_date,
-                      "team_id": games.home_team_id, "team_margin": games.margin.astype(float), "game_minutes": gm})
+    h = pd.DataFrame(
+        {
+            "season": games.season,
+            "game_id": games.game_id,
+            "game_date": games.game_date,
+            "team_id": games.home_team_id,
+            "team_margin": games.margin.astype(float),
+            "game_minutes": gm,
+        }
+    )
     a = h.assign(team_id=games.away_team_id, team_margin=-games.margin.astype(float))
     out = pd.concat([h, a], ignore_index=True)
     out["team_id"] = out.team_id.astype("Int64")
@@ -65,10 +74,16 @@ def player_values(rg: pd.DataFrame, shrink_minutes: float = SHRINK_MINUTES) -> p
     """Per (season, player, team stint): mpg, on/off per 48 and shrunk value."""
     x = rg.assign(off_min=rg.game_minutes - rg.minutes, off_pm=rg.team_margin - rg.plus_minus)
     g = x.groupby(["season", "player_id", "team_id"])
-    v = pd.DataFrame({
-        "games_played": g.played.sum(), "roster_games": g.size(),
-        "min_on": g.minutes.sum(), "pm_on": g.plus_minus.sum(),
-        "min_off": g.off_min.sum(), "pm_off": g.off_pm.sum()}).reset_index()
+    v = pd.DataFrame(
+        {
+            "games_played": g.played.sum(),
+            "roster_games": g.size(),
+            "min_on": g.minutes.sum(),
+            "pm_on": g.plus_minus.sum(),
+            "min_off": g.off_min.sum(),
+            "pm_off": g.off_pm.sum(),
+        }
+    ).reset_index()
     v["mpg"] = (v.min_on / v.games_played.replace(0, np.nan)).fillna(0.0)
     with np.errstate(invalid="ignore", divide="ignore"):
         on48 = v.pm_on / v.min_on * 48
@@ -80,10 +95,14 @@ def player_values(rg: pd.DataFrame, shrink_minutes: float = SHRINK_MINUTES) -> p
 
 def health_index(rg: pd.DataFrame, values: pd.DataFrame) -> pd.DataFrame:
     """Per team-game: hi_minutes and hi_value over roster players who did not play."""
-    m = rg[~rg.played].merge(values[["season", "player_id", "team_id", "mpg", "value"]],
-                             on=["season", "player_id", "team_id"])
+    m = rg[~rg.played].merge(
+        values[["season", "player_id", "team_id", "mpg", "value"]], on=["season", "player_id", "team_id"]
+    )
     m["f"] = m.mpg / 48
     m["fv"] = m.f * m.value
-    out = m.groupby(["game_id", "team_id"]).agg(hi_minutes=("f", "sum"), hi_value=("fv", "sum"),
-                                                n_missing=("f", "size")).reset_index()
+    out = (
+        m.groupby(["game_id", "team_id"])
+        .agg(hi_minutes=("f", "sum"), hi_value=("fv", "sum"), n_missing=("f", "size"))
+        .reset_index()
+    )
     return out

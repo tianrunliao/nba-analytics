@@ -12,6 +12,7 @@ also reported to show each group's marginal out-of-sample value.
 
     python -m nba_sos.pipeline playoff-improve
 """
+
 from __future__ import annotations
 
 import json
@@ -92,9 +93,12 @@ def run(paths: Paths, cfg: dict) -> dict:
     hist = cfg["data_sources"]["seasons"]["historical"]
     store = RawStore(paths.raw)
     pv = pd.read_parquet(paths.processed / "player_values.parquet")
-    all_games = pd.concat([pd.read_parquet(paths.processed / "prior_season_games.parquet"), d["games"]], ignore_index=True)
+    all_games = pd.concat(
+        [pd.read_parquet(paths.processed / "prior_season_games.parquet"), d["games"]], ignore_index=True
+    )
     elo_params = json.loads((paths.reports / "game_model_params.json").read_text())["tuned"]["elo"]
     from ..preprocessing.players import build_player_games
+
     prior_po = []
     for s in ["2004-05", "2005-06", "2006-07"]:
         try:
@@ -130,14 +134,24 @@ def run(paths: Paths, cfg: dict) -> dict:
     final_cols, final_groups, final_cv = forward_select({s: rows[s] for s in hist})
     b, sg = _fit(pd.concat([rows[s] for s in hist], ignore_index=True), final_cols)
     se = _se(pd.concat([rows[s] for s in hist], ignore_index=True), final_cols, sg)
-    return {"metrics": m, "selected": selected, "blocks": blocks,
-            "final": {"groups": final_groups, "cols": final_cols, "coef": dict(zip(final_cols, b)),
-                      "se": dict(zip(final_cols, se)), "sigma": sg, "cv_log_loss": final_cv}}
+    return {
+        "metrics": m,
+        "selected": selected,
+        "blocks": blocks,
+        "final": {
+            "groups": final_groups,
+            "cols": final_cols,
+            "coef": dict(zip(final_cols, b)),
+            "se": dict(zip(final_cols, se)),
+            "sigma": sg,
+            "cv_log_loss": final_cv,
+        },
+    }
 
 
 def _se(rows, cols, sg):
     X = rows[cols].fillna(0.0).to_numpy(float)
-    return np.sqrt(np.diag(sg ** 2 * np.linalg.pinv(X.T @ X)))
+    return np.sqrt(np.diag(sg**2 * np.linalg.pinv(X.T @ X)))
 
 
 def pooled(m: pd.DataFrame, names: list[str], later: bool = False) -> pd.DataFrame:
@@ -152,6 +166,7 @@ def series_eval(blocks: dict, hist: list[str], cols_by_variant: dict[str, list[s
     the series, for variants that use it); best-of-7 simulation with playoff home court."""
     from ..preprocessing.playoffs import series_table
     from . import playoff_model as PM
+
     rows = {s: blocks[s]["rows"][TAU] for s in hist}
     out = []
     for i, Y in enumerate(hist):
@@ -159,8 +174,9 @@ def series_eval(blocks: dict, hist: list[str], cols_by_variant: dict[str, list[s
             continue
         b = blocks[Y]
         tr = pd.concat([rows[s] for s in hist[:i]], ignore_index=True)
-        pg = b["pgames"].assign(home_team_id=lambda x: x.home_team_id.astype(int),
-                                away_team_id=lambda x: x.away_team_id.astype(int))
+        pg = b["pgames"].assign(
+            home_team_id=lambda x: x.home_team_id.astype(int), away_team_id=lambda x: x.away_team_id.astype(int)
+        )
         sr = series_table(pg)
         g1 = pg.sort_values("game_id").assign(key=lambda x: x.game_id.str[:9]).drop_duplicates("key")
         form = F.po_form(b["pgames"], b["teams"][TAU].set_index("team_id").theta_full, b["fit"]["coefs"][f"hca_{Y}"])
@@ -182,6 +198,7 @@ def series_eval(blocks: dict, hist: list[str], cols_by_variant: dict[str, list[s
                     ra, rb = ra + coef["d_po_form"] * f_lo, rb + coef["d_po_form"] * f_hi
                 hca = 0.0 if bool(pg.is_neutral.all()) else coef["home_flag"]
                 p = PM.series_win_prob(ra, rb, g.home_team_id == r.team_lo, hca, sg)
-                out.append({"season": Y, "round": r.round, "variant": name, "p_lo": p,
-                            "lo_won": int(r.winner == r.team_lo)})
+                out.append(
+                    {"season": Y, "round": r.round, "variant": name, "p_lo": p, "lo_won": int(r.winner == r.team_lo)}
+                )
     return pd.DataFrame(out)

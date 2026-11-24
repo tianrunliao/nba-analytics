@@ -1,5 +1,6 @@
 """Actual meeting-count matrix N_ij and its comparison with the traditional 82-game
 structure (which is only used as a reference, never as a rule)."""
+
 from __future__ import annotations
 
 import pandas as pd
@@ -10,7 +11,8 @@ def matchup_counts(schedule: pd.DataFrame) -> pd.DataFrame:
     s = schedule
     n = s.groupby(["season", "team_id", "team", "opponent_id", "opponent"]).size().rename("n_games").reset_index()
     rel = s.drop_duplicates(["season", "team_id", "opponent_id"])[
-        ["season", "team_id", "opponent_id", "conference", "division", "opponent_conference", "opponent_division"]]
+        ["season", "team_id", "opponent_id", "conference", "division", "opponent_conference", "opponent_division"]
+    ]
     n = n.merge(rel, on=["season", "team_id", "opponent_id"])
     n["relation"] = "other_conference"
     n.loc[n.conference == n.opponent_conference, "relation"] = "same_conference_other_division"
@@ -39,8 +41,15 @@ def structure_deviations(counts: pd.DataFrame) -> pd.DataFrame:
         got = dict(zip(grp.n_games, grp.n_opponents))
         exp = TRADITIONAL[relation]
         if got != exp:
-            rows.append({"season": season, "team": team, "relation": relation,
-                         "actual": str(dict(sorted(got.items()))), "traditional": str(exp)})
+            rows.append(
+                {
+                    "season": season,
+                    "team": team,
+                    "relation": relation,
+                    "actual": str(dict(sorted(got.items()))),
+                    "traditional": str(exp),
+                }
+            )
     return pd.DataFrame(rows, columns=["season", "team", "relation", "actual", "traditional"])
 
 

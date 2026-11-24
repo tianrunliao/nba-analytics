@@ -17,6 +17,7 @@ pairing of the extra games (by group-play rank, two of them cross-conference) is
 published in detail, so extra games are paired at random within the conference, with no
 pair repeated.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -27,14 +28,14 @@ import pandas as pd
 
 @dataclass
 class CupPlan:
-    groups: dict[str, list[int]]                 # "East Group A" -> team ids
-    group_games: pd.DataFrame                    # game_id, home_team_id, away_team_id, group
+    groups: dict[str, list[int]]  # "East Group A" -> team ids
+    group_games: pd.DataFrame  # game_id, home_team_id, away_team_id, group
     qf_date: pd.Timestamp
     sf_date: pd.Timestamp
     extra_dates: list[pd.Timestamp]
     sf_home_court: bool
-    prev_wins: pd.Series                         # team_id -> previous regular-season wins
-    conference: dict[str, str] = field(default_factory=dict)   # group -> "East"/"West"
+    prev_wins: pd.Series  # team_id -> previous regular-season wins
+    conference: dict[str, str] = field(default_factory=dict)  # group -> "East"/"West"
 
 
 def plan(sched: pd.DataFrame, season: str, cup_cfg: dict, prev_wins: pd.Series) -> CupPlan | None:
@@ -59,9 +60,16 @@ def plan(sched: pd.DataFrame, season: str, cup_cfg: dict, prev_wins: pd.Series) 
         extra = [mk.date.min(), mk.date.max()]
         sf_home = not bool(sf.is_neutral.astype(bool).all())
     gg = g[["game_id", "home_team_id", "away_team_id", "game_sublabel"]].rename(columns={"game_sublabel": "group"})
-    return CupPlan(groups=groups, group_games=gg.reset_index(drop=True), qf_date=qf.date.min(), sf_date=sf.date.min(),
-                   extra_dates=extra, sf_home_court=sf_home, prev_wins=prev_wins,
-                   conference={k: k.split()[0] for k in groups})
+    return CupPlan(
+        groups=groups,
+        group_games=gg.reset_index(drop=True),
+        qf_date=qf.date.min(),
+        sf_date=sf.date.min(),
+        extra_dates=extra,
+        sf_home_court=sf_home,
+        prev_wins=prev_wins,
+        conference={k: k.split()[0] for k in groups},
+    )
 
 
 def _break(group: list[int], crits, rng) -> list[int]:
@@ -101,6 +109,7 @@ def group_tables(plan_: CupPlan, home_win: np.ndarray, margin: np.ndarray, rng) 
             ws = sum(beat.get((t, o), 0) for o in grp if o != t)
             ls = sum(beat.get((o, t), 0) for o in grp if o != t)
             return round(ws / (ws + ls), 12) if ws + ls else 0.5
+
         crits = [h2h, lambda t, grp: round(pdiff[t], 9), lambda t, grp: float(plan_.prev_wins.get(t, 0))]
         order = []
         for lv in sorted(set(w.values()), reverse=True):
@@ -124,6 +133,7 @@ def quarterfinal_seeds(plan_: CupPlan, tables: dict, rng) -> dict[str, list[int]
             for lv in sorted({allw[t] for t in teams}, reverse=True):
                 o += _break([t for t in teams if allw[t] == lv], crits, rng)
             return o
+
         winners = rank([tables[n]["order"][0] for n in names])
         wild = rank([tables[n]["order"][1] for n in names])[0]
         out[conf] = winners + [wild]

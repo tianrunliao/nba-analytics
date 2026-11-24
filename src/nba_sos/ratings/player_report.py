@@ -4,6 +4,7 @@ For season s every input is the regular season of s (complete before its playoff
 the box-score weights are fit on team-seasons <= s only, so the values can feed the
 playoff model of season s without look-ahead.
 """
+
 from __future__ import annotations
 
 import logging
@@ -21,13 +22,14 @@ from . import players as P
 log = logging.getLogger(__name__)
 
 
-def compute_player_values(store: RawStore, games: pd.DataFrame, features: pd.DataFrame,
-                          player_games: pd.DataFrame, seasons: list[str]) -> tuple[pd.DataFrame, dict]:
+def compute_player_values(
+    store: RawStore, games: pd.DataFrame, features: pd.DataFrame, player_games: pd.DataFrame, seasons: list[str]
+) -> tuple[pd.DataFrame, dict]:
     """Per player-season:
-      pv_box  box-score prior: era-standardised box features weighted by coefficients fit
-              on five-man lineup results of seasons <= s only
-      lpm     lineup RAPM shrunk toward kappa * pv_box (kappa, lambda by CV)
-      z_onoff box-score on/off z-score (reference only)"""
+    pv_box  box-score prior: era-standardised box features weighted by coefficients fit
+            on five-man lineup results of seasons <= s only
+    lpm     lineup RAPM shrunk toward kappa * pv_box (kappa, lambda by CV)
+    z_onoff box-score on/off z-score (reference only)"""
     rg = P.roster_games(player_games, games)
     vals = P.player_values(rg)
     stats = pd.concat([V.season_player_stats(store, s) for s in seasons], ignore_index=True)
@@ -52,8 +54,13 @@ def compute_player_values(store: RawStore, games: pd.DataFrame, features: pd.Dat
         x["lpm"] = x.lpm.fillna(x.pv_box)  # players in no lineup keep their prior
         x["team_abbr"] = x.player_id.map(_main_team(player_games, games, s))
         out.append(x)
-        meta[s] = {"box_beta": fb["beta"], "box_lineups": fb["n_lineups"], "lpm_lambda": info["lambda"],
-                   "lpm_kappa": info["kappa"], "lpm_lineups": info["n_lineups"]}
+        meta[s] = {
+            "box_beta": fb["beta"],
+            "box_lineups": fb["n_lineups"],
+            "lpm_lambda": info["lambda"],
+            "lpm_kappa": info["kappa"],
+            "lpm_lineups": info["n_lineups"],
+        }
         log.info("%s: kappa=%s lambda=%s lineups=%d", s, info["kappa"], info["lambda"], info["n_lineups"])
     return pd.concat(out, ignore_index=True), meta
 
@@ -80,8 +87,19 @@ def top_players(pv: pd.DataFrame, games: pd.DataFrame, seasons: list[str], n: in
         x["box_rank"] = x.pv_box.rank(ascending=False, method="min").astype(int)
         x["rapm_rank"] = x.rapm_no_prior.rank(ascending=False, method="min").astype(int)
         rows.append(x.sort_values("rank").head(n))
-    cols = ["season", "rank", "player_name", "team_abbr", "gp", "min_total", "lpm", "pv_box", "rapm_no_prior",
-            "box_rank", "rapm_rank"]
+    cols = [
+        "season",
+        "rank",
+        "player_name",
+        "team_abbr",
+        "gp",
+        "min_total",
+        "lpm",
+        "pv_box",
+        "rapm_no_prior",
+        "box_rank",
+        "rapm_rank",
+    ]
     return pd.concat(rows, ignore_index=True)[cols]
 
 
@@ -94,7 +112,11 @@ def team_star_depth(roster_mpg: pd.DataFrame, value_col: str = "lpm") -> pd.Data
         g = g.sort_values("mpg", ascending=False)
         top8 = g.head(8)
         bench = g.iloc[5:9]
-        rows.append({"team_id": tid,
-                     "star": float(top8[value_col].nlargest(2).mean()),
-                     "depth": float(np.average(bench[value_col], weights=bench.mpg)) if len(bench) else 0.0})
+        rows.append(
+            {
+                "team_id": tid,
+                "star": float(top8[value_col].nlargest(2).mean()),
+                "depth": float(np.average(bench[value_col], weights=bench.mpg)) if len(bench) else 0.0,
+            }
+        )
     return pd.DataFrame(rows)

@@ -20,6 +20,7 @@ Lineup contribution (plan 7.1):
 Double counting: if the dynamic rating already reflects long absences, y should load on
 dM, and adding M_recent separately should carry a coefficient of about -coef(M_today).
 """
+
 from __future__ import annotations
 
 import logging
@@ -69,13 +70,14 @@ def player_game_frame(games: pd.DataFrame, player_games: pd.DataFrame, player_va
     played = rg.played.astype(float)
     rg["gp_before"] = grp.played.transform(lambda s: s.astype(int).cumsum().shift(1).fillna(0))
     cum_min = grp.minutes.transform(lambda s: s.cumsum().shift(1).fillna(0))
-    rg["mpg_to_date"] = (cum_min / rg.gp_before.replace(0, np.nan))
+    rg["mpg_to_date"] = cum_min / rg.gp_before.replace(0, np.nan)
     # mean of the last 10 games PLAYED strictly before this game: rolling mean on played
     # rows (inclusive), then shifted by one row and carried forward over missed games
     keys = [rg.season, rg.player_id, rg.team_id]
     pl = rg[rg.played]
     roll = pl.minutes.groupby([pl.season, pl.player_id, pl.team_id]).transform(
-        lambda s: s.rolling(10, min_periods=1).mean())
+        lambda s: s.rolling(10, min_periods=1).mean()
+    )
     incl = pd.Series(np.nan, index=rg.index)
     incl[pl.index] = roll
     rg["mpg_last10"] = incl.groupby(keys).transform(lambda s: s.shift(1).ffill())
@@ -86,6 +88,7 @@ def player_game_frame(games: pd.DataFrame, player_games: pd.DataFrame, player_va
             out.append(run)
             run = 0 if p else run + 1
         return pd.Series(out, index=s.index)
+
     rg["streak_before"] = grp.played.transform(streak)
     # previous-season value and minutes
     prev = player_values[["season", "player_id", "lpm", "min_total", "gp"]].copy()
@@ -112,8 +115,9 @@ def attach_reports(pgf: pd.DataFrame, availability: pd.DataFrame, team_status: p
     x = x.assign(team_id=x.team_id.astype(int)).merge(ts, on=["game_id", "team_id"], how="left")
     usable = x.snapshot_usable.astype("boolean").fillna(False).astype(bool)
     x["status"] = np.where(x.injury_status.notna(), x.injury_status, np.where(usable, "not_listed", "no_report"))
-    x["reason_cat"] = [reason_category(r) if s not in ("not_listed", "no_report") else s
-                       for r, s in zip(x.reason, x.status)]
+    x["reason_cat"] = [
+        reason_category(r) if s not in ("not_listed", "no_report") else s for r, s in zip(x.reason, x.status)
+    ]
     return x
 
 
@@ -132,8 +136,11 @@ def _design(x: pd.DataFrame, levels: dict | None = None):
         levels = {k: sorted(v.unique()) for k, v in cols.items()}
     mats = [np.ones((len(x), 1))]
     for k, v in cols.items():
-        mats.append(np.column_stack([(v == lv).to_numpy(float) for lv in levels[k][1:]]) if len(levels[k]) > 1
-                    else np.zeros((len(x), 0)))
+        mats.append(
+            np.column_stack([(v == lv).to_numpy(float) for lv in levels[k][1:]])
+            if len(levels[k]) > 1
+            else np.zeros((len(x), 0))
+        )
     return np.hstack(mats), levels
 
 
@@ -181,9 +188,17 @@ def lineup_features(x: pd.DataFrame, q: np.ndarray, games: pd.DataFrame, tau_day
     x["exp_f"] = (1 - x.q) * x.f
     x["act_v"] = (1 - x.y_played) * x.f * x.V
     x["act_f"] = (1 - x.y_played) * x.f
-    t = x.groupby(["season", "game_id", "team_id"]).agg(
-        Mv_today=("exp_v", "sum"), Mf_today=("exp_f", "sum"), Mv_actual=("act_v", "sum"),
-        Mf_actual=("act_f", "sum"), date=("game_date", "first")).reset_index()
+    t = (
+        x.groupby(["season", "game_id", "team_id"])
+        .agg(
+            Mv_today=("exp_v", "sum"),
+            Mf_today=("exp_f", "sum"),
+            Mv_actual=("act_v", "sum"),
+            Mf_actual=("act_f", "sum"),
+            date=("game_date", "first"),
+        )
+        .reset_index()
+    )
     t = t.sort_values(["season", "team_id", "date"]).reset_index(drop=True)
     for kind in ("v", "f"):
         rec = np.full(len(t), np.nan)
@@ -210,7 +225,9 @@ def return_table(pgf: pd.DataFrame, max_streak: int = 30) -> pd.DataFrame:
     # P(back within k more games | missed n) from the hazard sequence
     hz = out.set_index("streak_before").p_return_next
     for k in (5, 10, 20):
-        out[f"p_back_within_{k}"] = [1 - np.prod([1 - hz.get(n + i, hz.iloc[-1]) for i in range(k)]) for n in out.streak_before]
+        out[f"p_back_within_{k}"] = [
+            1 - np.prod([1 - hz.get(n + i, hz.iloc[-1]) for i in range(k)]) for n in out.streak_before
+        ]
     return out
 
 
@@ -225,12 +242,13 @@ def _ols(tr: pd.DataFrame, cols: list[str]):
     b, *_ = np.linalg.lstsq(X, tr.y.to_numpy(float), rcond=None)
     resid = tr.y.to_numpy(float) - X @ b
     sigma = float(np.std(resid))
-    cov = sigma ** 2 * np.linalg.pinv(X.T @ X)  # pinv: an all-zero column (no reports) gets se 0
+    cov = sigma**2 * np.linalg.pinv(X.T @ X)  # pinv: an all-zero column (no reports) gets se 0
     return b, sigma, np.sqrt(np.diag(cov))
 
 
 def evaluate(gx: pd.DataFrame, test_seasons: list[str]) -> tuple[pd.DataFrame, dict]:
     from .game_model import GROUPS, _fit_catboost
+
     specs = {
         "dyn": ["dyn_diff", "home_flag"],
         "dyn+phase2_injury": ["dyn_diff", "nout_d", "mmin_d", "home_flag"],
@@ -263,9 +281,15 @@ def evaluate(gx: pd.DataFrame, test_seasons: list[str]) -> tuple[pd.DataFrame, d
             res[f"{name}_log_loss"] = M.log_loss(te.home_win.astype(float), norm.cdf(pred / sg))
             res[f"{name}_mae"] = M.mae(te.y, pred)
         rows.append(res)
-        log.info("availability %s: dyn %.4f p2inj %.4f dM %.4f cb2 %.4f cb3 %.4f", test, res["dyn_log_loss"],
-                 res["dyn+phase2_injury_log_loss"], res["dyn+dM_log_loss"], res["cb_phase2_log_loss"],
-                 res["cb_phase3_log_loss"])
+        log.info(
+            "availability %s: dyn %.4f p2inj %.4f dM %.4f cb2 %.4f cb3 %.4f",
+            test,
+            res["dyn_log_loss"],
+            res["dyn+phase2_injury_log_loss"],
+            res["dyn+dM_log_loss"],
+            res["cb_phase2_log_loss"],
+            res["cb_phase3_log_loss"],
+        )
     return pd.DataFrame(rows), coefs
 
 
@@ -278,12 +302,14 @@ def run(paths: Paths, cfg: dict) -> dict:
     ts = pd.read_parquet(Pd / "injury_team_status.parquet")
     gx = pd.read_parquet(Pd / "game_model_features.parquet")
     import json
+
     tau = json.loads((paths.reports / "game_model_params.json").read_text())["tuned"]["dynamic"]["tau"]
     # seasons whose pre-game snapshots actually exist in the build (>50% of team-games usable);
     # configured seasons still being downloaded are excluded until the next build
     share = ts.groupby("season").snapshot_usable.mean()
-    report_seasons = [s for s in cfg["data_sources"]["injury_reports"]["regular_season_seasons"]
-                      if share.get(s, 0.0) > 0.5]
+    report_seasons = [
+        s for s in cfg["data_sources"]["injury_reports"]["regular_season_seasons"] if share.get(s, 0.0) > 0.5
+    ]
 
     pgf = player_game_frame(games, pg, pv)
     x = attach_reports(pgf, avail, ts)
@@ -303,10 +329,16 @@ def run(paths: Paths, cfg: dict) -> dict:
         q[te_m] = p_m
         rot = te.rotation.to_numpy()
         yv = te.y_played.to_numpy(float)
-        av_rows.append({"season": s, "rows": int(te_m.sum()),
-                        "model_log_loss": M.log_loss(yv, p_m), "status_table_log_loss": M.log_loss(yv, p_b),
-                        "model_log_loss_rotation": M.log_loss(yv[rot], p_m[rot]),
-                        "status_table_log_loss_rotation": M.log_loss(yv[rot], p_b[rot])})
+        av_rows.append(
+            {
+                "season": s,
+                "rows": int(te_m.sum()),
+                "model_log_loss": M.log_loss(yv, p_m),
+                "status_table_log_loss": M.log_loss(yv, p_b),
+                "model_log_loss_rotation": M.log_loss(yv[rot], p_m[rot]),
+                "status_table_log_loss_rotation": M.log_loss(yv[rot], p_b[rot]),
+            }
+        )
     av = pd.DataFrame(av_rows)
     # seasons without reports (or the first report season): availability from history only
     hist_only = np.isnan(q)
@@ -321,7 +353,11 @@ def run(paths: Paths, cfg: dict) -> dict:
     for c in ["Mv_today", "Mf_today", "Mv_actual", "Mf_actual", "Mv_recent", "Mf_recent", "dMv", "dMf"]:
         side = lf[["game_id", "team_id", c]]
         for s_ in ("home", "away"):
-            gx = gx.merge(side.rename(columns={"team_id": f"{s_}_team_id", c: f"{c}_{s_}"}), on=["game_id", f"{s_}_team_id"], how="left")
+            gx = gx.merge(
+                side.rename(columns={"team_id": f"{s_}_team_id", c: f"{c}_{s_}"}),
+                on=["game_id", f"{s_}_team_id"],
+                how="left",
+            )
         gx[f"{c}_d"] = gx[f"{c}_home"] - gx[f"{c}_away"]
     gx["nout_d"] = gx.nout_home - gx.nout_away
     gx["mmin_d"] = gx.mmin_home - gx.mmin_away
@@ -332,8 +368,20 @@ def run(paths: Paths, cfg: dict) -> dict:
 
     surv = return_table(pgf)
     reasons = return_by_reason(x[x.season.isin(rs)])
-    info = {"share_value_from_players_without_prev_season": float(
-        (x.exp_mp * (~x.has_prev)).sum() / x.exp_mp.sum()), "tau_days": tau, "test_seasons": tests,
-        "availability_first_test": rs[1], "report_seasons_used": rs}
-    return {"availability": av, "evaluation": ev, "coefs": coefs, "survival": surv, "reasons": reasons,
-            "info": info, "game_features": gx, "lineup": lf}
+    info = {
+        "share_value_from_players_without_prev_season": float((x.exp_mp * (~x.has_prev)).sum() / x.exp_mp.sum()),
+        "tau_days": tau,
+        "test_seasons": tests,
+        "availability_first_test": rs[1],
+        "report_seasons_used": rs,
+    }
+    return {
+        "availability": av,
+        "evaluation": ev,
+        "coefs": coefs,
+        "survival": surv,
+        "reasons": reasons,
+        "info": info,
+        "game_features": gx,
+        "lineup": lf,
+    }

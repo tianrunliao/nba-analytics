@@ -10,6 +10,7 @@ possessions (decision #1). Margin model, fit by OLS on training seasons only:
 sigma the training residual standard deviation. A constant baseline (training home
 win rate / mean margin; 0.5 and 0 at neutral sites) is reported alongside.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -47,13 +48,31 @@ def fit(train: pd.DataFrame) -> dict:
     resid = y - X @ coef
     sigma = float(np.sqrt(resid @ resid / (len(y) - X.shape[1])))
     nn = train[~train.is_neutral]
-    return {"b": float(coef[0]), "hca": float(coef[1]), "sigma": sigma, "n_train": int(len(y)),
-            "const_home_win_rate": float(nn.home_win.mean()), "const_home_margin": float(nn.margin.mean())}
+    return {
+        "b": float(coef[0]),
+        "hca": float(coef[1]),
+        "sigma": sigma,
+        "n_train": int(len(y)),
+        "const_home_win_rate": float(nn.home_win.mean()),
+        "const_home_margin": float(nn.margin.mean()),
+    }
 
 
 def predict(params: dict, d: pd.DataFrame) -> pd.DataFrame:
-    out = d[["season", "game_id", "game_date", "home_team", "away_team", "is_neutral", "margin", "home_win",
-             "prior_home", "prior_away"]].copy()
+    out = d[
+        [
+            "season",
+            "game_id",
+            "game_date",
+            "home_team",
+            "away_team",
+            "is_neutral",
+            "margin",
+            "home_win",
+            "prior_home",
+            "prior_away",
+        ]
+    ].copy()
     out["pred_margin"] = params["b"] * d.prior_diff + params["hca"] * d.home_flag
     out["pred_p_home"] = norm.cdf(out.pred_margin / params["sigma"])
     out["const_margin"] = np.where(d.is_neutral, 0.0, params["const_home_margin"])
@@ -73,8 +92,9 @@ def evaluate(pred: pd.DataFrame) -> dict:
     return res
 
 
-def rolling_backtest(games: pd.DataFrame, all_games: pd.DataFrame, model_cfg: dict,
-                     historical: list[str]) -> tuple[pd.DataFrame, pd.DataFrame]:
+def rolling_backtest(
+    games: pd.DataFrame, all_games: pd.DataFrame, model_cfg: dict, historical: list[str]
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """``games``: historical seasons; ``all_games``: also includes prior-only seasons."""
     cfg = model_cfg["baseline"]
     d = design(games, prior_ratings(all_games))

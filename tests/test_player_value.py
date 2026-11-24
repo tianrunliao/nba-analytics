@@ -1,4 +1,5 @@
 """Player value modules: era standardisation, box calibration, lineup RAPM, star/depth."""
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -10,10 +11,19 @@ from nba_sos.ratings.player_report import min_minutes, team_star_depth
 
 def _stats(season, n=40, seed=0, pts_shift=0.0):
     rng = np.random.default_rng(seed)
-    d = pd.DataFrame({"season": season, "player_id": np.arange(n) + (0 if season == "A" else 1000),
-                      "player_name": [f"p{i}" for i in range(n)], "min_total": rng.uniform(300, 2800, n),
-                      "gp": 70, "ts": rng.normal(0.57, 0.04, n), "usg": rng.uniform(0.12, 0.33, n),
-                      "pie": rng.normal(0.1, 0.03, n), "on_court_net": rng.normal(0, 4, n)})
+    d = pd.DataFrame(
+        {
+            "season": season,
+            "player_id": np.arange(n) + (0 if season == "A" else 1000),
+            "player_name": [f"p{i}" for i in range(n)],
+            "min_total": rng.uniform(300, 2800, n),
+            "gp": 70,
+            "ts": rng.normal(0.57, 0.04, n),
+            "usg": rng.uniform(0.12, 0.33, n),
+            "pie": rng.normal(0.1, 0.03, n),
+            "on_court_net": rng.normal(0, 4, n),
+        }
+    )
     for c in V.PER100:
         d[f"{c.lower()}_100"] = rng.normal(10, 3, n)
     d["pts_100"] = rng.normal(22 + pts_shift, 6, n)
@@ -33,8 +43,15 @@ def test_standardise_removes_era_level_shift():
 
 
 def test_team_design_minute_shares_sum_to_five():
-    pg = pd.DataFrame({"season": "A", "team_id": [1] * 6, "player_id": [1, 2, 3, 4, 5, 6],
-                       "minutes": [400, 300, 300, 200, 200, 100.0], "game_id": "g"})
+    pg = pd.DataFrame(
+        {
+            "season": "A",
+            "team_id": [1] * 6,
+            "player_id": [1, 2, 3, 4, 5, 6],
+            "minutes": [400, 300, 300, 200, 200, 100.0],
+            "game_id": "g",
+        }
+    )
     z = pd.DataFrame({"season": "A", "player_id": [1, 2, 3, 4, 5, 6]})
     for f in V.FEATURES:
         z[f"z_{f}"] = 1.0
@@ -70,18 +87,23 @@ def test_lineup_rapm_recovers_player_effects_and_uses_prior_when_helpful():
     out, info = L.fit_season(lu, pace=100.0, prior_by_player=good_prior)
     r = out.set_index("player_id").lpm.reindex(range(n_players)).to_numpy()
     assert np.corrcoef(r, true)[0, 1] > 0.9
-    assert info["kappa"] > 0                      # an informative prior is used
+    assert info["kappa"] > 0  # an informative prior is used
     noise_prior = pd.Series(rng.normal(0, 3, n_players), index=range(n_players))
     _, info2 = L.fit_season(lu, pace=100.0, prior_by_player=noise_prior)
-    assert info2["kappa"] <= info["kappa"]       # an uninformative prior gets less weight
+    assert info2["kappa"] <= info["kappa"]  # an uninformative prior gets less weight
 
 
 def test_star_depth_definition():
-    r = pd.DataFrame({"team_id": 1, "player_id": range(10),
-                      "mpg": [36, 34, 32, 30, 28, 22, 20, 18, 16, 5],
-                      "lpm": [6.0, 1.0, 4.0, 0.0, 0.0, -1.0, 1.0, 2.0, 0.0, 9.0]})
+    r = pd.DataFrame(
+        {
+            "team_id": 1,
+            "player_id": range(10),
+            "mpg": [36, 34, 32, 30, 28, 22, 20, 18, 16, 5],
+            "lpm": [6.0, 1.0, 4.0, 0.0, 0.0, -1.0, 1.0, 2.0, 0.0, 9.0],
+        }
+    )
     sd = team_star_depth(r).iloc[0]
-    assert sd.star == pytest.approx(5.0)          # two best among the top 8 by minutes: 6 and 4
+    assert sd.star == pytest.approx(5.0)  # two best among the top 8 by minutes: 6 and 4
     assert sd.depth == pytest.approx(np.average([-1.0, 1.0, 2.0, 0.0], weights=[22, 20, 18, 16]))
 
 
@@ -95,15 +117,28 @@ def test_lineup_box_weights_recover_feature_effect():
     rng = np.random.default_rng(7)
     n_p = 60
     feats = ["pts_100", "ast_100"]
-    z = pd.DataFrame({"season": "S", "player_id": np.arange(n_p),
-                      "z_pts_100": rng.normal(0, 1, n_p), "z_ast_100": rng.normal(0, 1, n_p)})
+    z = pd.DataFrame(
+        {
+            "season": "S",
+            "player_id": np.arange(n_p),
+            "z_pts_100": rng.normal(0, 1, n_p),
+            "z_ast_100": rng.normal(0, 1, n_p),
+        }
+    )
     rows = []
     for _ in range(4000):
         five = rng.choice(n_p, 5, replace=False)
         mins = rng.uniform(5, 40)
         y = 2 * z.z_pts_100.iloc[five].sum() + rng.normal(0, 25 / np.sqrt(mins))
-        rows.append({"GROUP_ID": "-" + "-".join(map(str, five)) + "-", "MIN": mins, "PLUS_MINUS": y * mins / 48,
-                     "TEAM_ID": int(rng.integers(0, 10)), "season": "S"})
+        rows.append(
+            {
+                "GROUP_ID": "-" + "-".join(map(str, five)) + "-",
+                "MIN": mins,
+                "PLUS_MINUS": y * mins / 48,
+                "TEAM_ID": int(rng.integers(0, 10)),
+                "season": "S",
+            }
+        )
     lu = pd.DataFrame(rows)
     for demean in (False, True):
         fb = L.fit_box_on_lineups([L.lineup_box_design(lu, 100.0, z, feats, demean=demean)], feats, alpha=10.0)

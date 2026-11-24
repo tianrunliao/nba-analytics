@@ -8,6 +8,7 @@ Opponent win% excludes the opponent's games against the team itself (standard OW
 opponent net rating does not.
 Ranks: 1 = hardest schedule.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -18,10 +19,13 @@ from ..features.pregame import team_game_long
 
 def season_team_totals(t: pd.DataFrame) -> pd.DataFrame:
     g = t.groupby(["season", "team_id"])
-    return pd.DataFrame({
-        "games": g.size(), "wins": g.win.sum(),
-        "net_rating": (g.pts_for.sum() - g.pts_against.sum()) / g.possessions.sum() * 100,
-    }).reset_index()
+    return pd.DataFrame(
+        {
+            "games": g.size(),
+            "wins": g.win.sum(),
+            "net_rating": (g.pts_for.sum() - g.pts_against.sum()) / g.possessions.sum() * 100,
+        }
+    ).reset_index()
 
 
 def retro_sos(t: pd.DataFrame) -> pd.DataFrame:
@@ -30,13 +34,20 @@ def retro_sos(t: pd.DataFrame) -> pd.DataFrame:
     h2h = t.groupby(["season", "team_id", "opponent_id"]).agg(g=("win", "size"), w=("win", "sum")).reset_index()
     # opponent's results in games against i = (games, wins) from the opponent's perspective
     opp_vs_i = h2h.rename(columns={"team_id": "opp", "opponent_id": "team_id", "g": "g_vs_i", "w": "w_vs_i"})
-    x = t[["season", "team_id", "opponent_id"]].merge(
-        tot.rename(columns={"team_id": "opponent_id", "games": "og", "wins": "ow", "net_rating": "onr"}),
-        on=["season", "opponent_id"]).merge(
-        opp_vs_i, left_on=["season", "team_id", "opponent_id"], right_on=["season", "team_id", "opp"])
+    x = (
+        t[["season", "team_id", "opponent_id"]]
+        .merge(
+            tot.rename(columns={"team_id": "opponent_id", "games": "og", "wins": "ow", "net_rating": "onr"}),
+            on=["season", "opponent_id"],
+        )
+        .merge(opp_vs_i, left_on=["season", "team_id", "opponent_id"], right_on=["season", "team_id", "opp"])
+    )
     x["owp"] = (x.ow - x.w_vs_i) / (x.og - x.g_vs_i)
-    r = x.groupby(["season", "team_id"]).agg(retro_owp=("owp", "mean"),
-                                              retro_opp_net_rating=("onr", "mean")).reset_index()
+    r = (
+        x.groupby(["season", "team_id"])
+        .agg(retro_owp=("owp", "mean"), retro_opp_net_rating=("onr", "mean"))
+        .reset_index()
+    )
     return r
 
 
@@ -52,27 +63,39 @@ def causal_per_game(t: pd.DataFrame) -> pd.DataFrame:
             prev = o[o.game_date < r.game_date]
             prev_ex = prev[prev.opponent_id != r.team_id]
             n_ex = len(prev_ex)
-            rows.append({
-                "season": season, "game_id": r.game_id, "team_id": r.team_id, "opponent_id": r.opponent_id,
-                "opp_games_to_date_ex": n_ex,
-                "opp_win_pct_to_date_ex": prev_ex.win.mean() if n_ex else np.nan,
-                "opp_net_rating_to_date": ((prev.pts_for.sum() - prev.pts_against.sum())
-                                           / prev.possessions.sum() * 100) if len(prev) else np.nan,
-            })
+            rows.append(
+                {
+                    "season": season,
+                    "game_id": r.game_id,
+                    "team_id": r.team_id,
+                    "opponent_id": r.opponent_id,
+                    "opp_games_to_date_ex": n_ex,
+                    "opp_win_pct_to_date_ex": prev_ex.win.mean() if n_ex else np.nan,
+                    "opp_net_rating_to_date": (
+                        (prev.pts_for.sum() - prev.pts_against.sum()) / prev.possessions.sum() * 100
+                    )
+                    if len(prev)
+                    else np.nan,
+                }
+            )
     return pd.DataFrame(rows)
 
 
 def static_sos(games: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     t = team_game_long(games)
     per_game = causal_per_game(t)
-    causal = per_game.groupby(["season", "team_id"]).agg(
-        causal_owp_mean=("opp_win_pct_to_date_ex", "mean"),
-        causal_opp_net_rating_mean=("opp_net_rating_to_date", "mean"),
-        causal_games_with_value=("opp_win_pct_to_date_ex", "count")).reset_index()
+    causal = (
+        per_game.groupby(["season", "team_id"])
+        .agg(
+            causal_owp_mean=("opp_win_pct_to_date_ex", "mean"),
+            causal_opp_net_rating_mean=("opp_net_rating_to_date", "mean"),
+            causal_games_with_value=("opp_win_pct_to_date_ex", "count"),
+        )
+        .reset_index()
+    )
     tot = season_team_totals(t)
     out = tot.merge(retro_sos(t), on=["season", "team_id"]).merge(causal, on=["season", "team_id"])
-    out = out.merge(t.drop_duplicates(["season", "team_id"])[["season", "team_id", "team"]],
-                    on=["season", "team_id"])
+    out = out.merge(t.drop_duplicates(["season", "team_id"])[["season", "team_id", "team"]], on=["season", "team_id"])
     for c in ["retro_owp", "retro_opp_net_rating", "causal_owp_mean", "causal_opp_net_rating_mean"]:
         out[f"{c}_rank"] = out.groupby("season")[c].rank(ascending=False, method="min").astype(int)
     out["win_pct"] = out.wins / out.games

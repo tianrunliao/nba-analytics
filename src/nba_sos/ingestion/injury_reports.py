@@ -10,6 +10,7 @@ URL naming (see configs/data_sources.yaml): before ``new_start_et`` files are ho
 ``..._05PM.pdf`` being published at 17:30 ET; from then on they are quarter-hourly,
 ``..._05_30PM.pdf`` being published at 17:30 ET.
 """
+
 from __future__ import annotations
 
 import logging
@@ -77,10 +78,11 @@ def http_client(url: str, timeout: int, user_agent: str) -> tuple[int, bytes, st
     return r.status_code, (r.content if r.status_code == 200 else b""), r.headers.get("Last-Modified")
 
 
-def fetch_report(store: RawStore, filename: str, cfg: dict, known: dict,
-                 client: Callable = http_client, sleep: Callable = time.sleep) -> dict:
+def fetch_report(
+    store: RawStore, filename: str, cfg: dict, known: dict, client: Callable = http_client, sleep: Callable = time.sleep
+) -> dict:
     """Download one report unless already known (downloaded or recorded as missing)."""
-    url = cfg["base_url"] + filename[len("Injury-Report_"):]
+    url = cfg["base_url"] + filename[len("Injury-Report_") :]
     rel = raw_relpath(filename)
     if rel in known:
         return known[rel]
@@ -92,22 +94,34 @@ def fetch_report(store: RawStore, filename: str, cfg: dict, known: dict,
             break
         except requests.exceptions.RequestException as err:  # DNS / connection / timeout
             if attempt == NETWORK_RETRIES:
-                log.warning("injury report %s: network error after %d attempts (%s); will retry next run",
-                            url, attempt, type(err).__name__)
+                log.warning(
+                    "injury report %s: network error after %d attempts (%s); will retry next run",
+                    url,
+                    attempt,
+                    type(err).__name__,
+                )
                 return {"path": None, "url": url, "http_status": None, "fetched_at": None}
             sleep(10.0 * attempt)
     sleep(float(cfg["sleep_between_requests_s"]))
-    published = (parsedate_to_datetime(last_modified).astimezone(UTC).isoformat()
-                 if last_modified else None)
+    published = parsedate_to_datetime(last_modified).astimezone(UTC).isoformat() if last_modified else None
     if status == 200 and body[:4] == b"%PDF":
-        rec = store.write(rel, body, {"source": "official.nba.com injury report", "url": url,
-                                      "http_status": 200, "last_modified": last_modified,
-                                      "published_at_utc": published})
+        rec = store.write(
+            rel,
+            body,
+            {
+                "source": "official.nba.com injury report",
+                "url": url,
+                "http_status": 200,
+                "last_modified": last_modified,
+                "published_at_utc": published,
+            },
+        )
         known[rel] = rec
         return rec
     rec = {"path": None, "url": url, "http_status": status, "fetched_at": None}
     if status in MISSING_STATUSES:  # permanent absence; anything else is retried next run
         from .raw_store import utc_now_iso
+
         rec["fetched_at"] = utc_now_iso()
         store.append_manifest(rec)
         known[url] = rec
@@ -116,8 +130,9 @@ def fetch_report(store: RawStore, filename: str, cfg: dict, known: dict,
     return rec
 
 
-def fetch_for_games(store: RawStore, games: pd.DataFrame, cfg: dict,
-                    client: Callable = http_client, sleep: Callable = time.sleep) -> pd.DataFrame:
+def fetch_for_games(
+    store: RawStore, games: pd.DataFrame, cfg: dict, client: Callable = http_client, sleep: Callable = time.sleep
+) -> pd.DataFrame:
     """``games`` needs ``game_id`` and ``tipoff_utc`` (tz-aware). For each distinct tip-off,
     walk back through slots until a report published before tip-off is found."""
     new_start = datetime.fromisoformat(cfg["new_start_et"])
@@ -145,16 +160,15 @@ def fetch_for_seasons(paths, cfg: dict) -> None:
     each team's first playoff game for the configured playoff seasons."""
     from ..preprocessing.games import build_schedule_games
     from ..preprocessing.playoffs import first_playoff_games
+
     store = RawStore(paths.raw)
     icfg = cfg["data_sources"]["injury_reports"]
     for season in icfg["regular_season_seasons"]:
         res = fetch_for_games(store, build_schedule_games(store, season), icfg)
-        log.info("%s RS: %d games, %d without a pre-tip-off report", season, len(res),
-                 res.report_path.isna().sum())
+        log.info("%s RS: %d games, %d without a pre-tip-off report", season, len(res), res.report_path.isna().sum())
     for season in icfg["playoff_start_seasons"]:
         res = fetch_for_games(store, first_playoff_games(store, season), icfg)
-        log.info("%s playoffs: %d first games, %d without a report", season, len(res),
-                 res.report_path.isna().sum())
+        log.info("%s playoffs: %d first games, %d without a report", season, len(res), res.report_path.isna().sum())
 
 
 # --------------------------------------------------------------------------- parse
@@ -162,17 +176,34 @@ def fetch_for_seasons(paths, cfg: dict) -> None:
 # Category / Previous Status columns, part of 2019-20 a trailing Previous Status column;
 # afterwards the 7-column layout.
 LAYOUTS = [
-    (["gamedate", "gametime", "matchup", "team", "playername", "currentstatus", "reason"],
-     ["game_date", "game_time", "matchup", "team", "player", "status", "reason"]),
-    (["gamedate", "gametime", "matchup", "team", "playername", "category", "reason", "currentstatus",
-      "previousstatus"],
-     ["game_date", "game_time", "matchup", "team", "player", "category", "reason", "status", "previous_status"]),
+    (
+        ["gamedate", "gametime", "matchup", "team", "playername", "currentstatus", "reason"],
+        ["game_date", "game_time", "matchup", "team", "player", "status", "reason"],
+    ),
+    (
+        [
+            "gamedate",
+            "gametime",
+            "matchup",
+            "team",
+            "playername",
+            "category",
+            "reason",
+            "currentstatus",
+            "previousstatus",
+        ],
+        ["game_date", "game_time", "matchup", "team", "player", "category", "reason", "status", "previous_status"],
+    ),
     # part of 2019-20: 7-column order plus a trailing Previous Status column
-    (["gamedate", "gametime", "matchup", "team", "playername", "currentstatus", "reason", "previousstatus"],
-     ["game_date", "game_time", "matchup", "team", "player", "status", "reason", "previous_status"]),
+    (
+        ["gamedate", "gametime", "matchup", "team", "playername", "currentstatus", "reason", "previousstatus"],
+        ["game_date", "game_time", "matchup", "team", "player", "status", "reason", "previous_status"],
+    ),
     # Nov-Dec 2019: Reason before Current Status
-    (["gamedate", "gametime", "matchup", "team", "playername", "reason", "currentstatus", "previousstatus"],
-     ["game_date", "game_time", "matchup", "team", "player", "reason", "status", "previous_status"]),
+    (
+        ["gamedate", "gametime", "matchup", "team", "playername", "reason", "currentstatus", "previousstatus"],
+        ["game_date", "game_time", "matchup", "team", "player", "reason", "status", "previous_status"],
+    ),
 ]
 COLS = ["game_date", "game_time", "matchup", "team", "player", "status", "reason"]
 _NOT_SUBMITTED = "notyetsubmitted"
@@ -259,7 +290,8 @@ def parse_report_pdf(path: Path) -> tuple[pd.DataFrame, dict]:
                     m = _REPORT_TIME.search("".join(w["text"] for w in line))
                     if m and info["report_time_et"] is None:
                         info["report_time_et"] = datetime.strptime(
-                            f"{m.group(1)} {m.group(2)}{m.group(3)}", "%m/%d/%y %I:%M%p")
+                            f"{m.group(1)} {m.group(2)}{m.group(3)}", "%m/%d/%y %I:%M%p"
+                        )
                     continue
                 if text.startswith("page") or text == header_key:
                     continue
@@ -275,12 +307,29 @@ def parse_report_pdf(path: Path) -> tuple[pd.DataFrame, dict]:
                     if cells[c]:
                         state[c] = cells[c]
                 if cells["player"] and cells["status"]:
-                    page_rows.append({**state, "player": cells["player"], "status": cells["status"],
-                                      "reason": cells["reason"] or "", "top": top, "page": page_no + 1,
-                                      "not_submitted": False})
+                    page_rows.append(
+                        {
+                            **state,
+                            "player": cells["player"],
+                            "status": cells["status"],
+                            "reason": cells["reason"] or "",
+                            "top": top,
+                            "page": page_no + 1,
+                            "not_submitted": False,
+                        }
+                    )
                 elif cells["reason"] and norm_key(cells["reason"]) == _NOT_SUBMITTED:
-                    page_rows.append({**state, "player": None, "status": None, "reason": cells["reason"],
-                                      "top": top, "page": page_no + 1, "not_submitted": True})
+                    page_rows.append(
+                        {
+                            **state,
+                            "player": None,
+                            "status": None,
+                            "reason": cells["reason"],
+                            "top": top,
+                            "page": page_no + 1,
+                            "not_submitted": True,
+                        }
+                    )
                 elif cells["reason"] or cells["player"]:
                     fragments.append((top, cells["reason"] or cells["player"]))
             # attach wrapped reason fragments to the vertically nearest player row
@@ -290,8 +339,11 @@ def parse_report_pdf(path: Path) -> tuple[pd.DataFrame, dict]:
                     info["orphan_fragments"] += 1
                     continue
                 near = min(players, key=lambda r: (abs(r["top"] - top), r["top"] > top))
-                near["reason"] = (near["reason"] + " " + frag).strip() if near["top"] <= top \
+                near["reason"] = (
+                    (near["reason"] + " " + frag).strip()
+                    if near["top"] <= top
                     else (frag + " " + near["reason"]).strip()
+                )
             rows.extend(page_rows)
     df = pd.DataFrame(rows, columns=COLS + ["top", "page", "not_submitted"])
     return df.drop(columns=["top"]), info
@@ -308,9 +360,11 @@ def resolve_rows(df: pd.DataFrame, nickname_by_tricode: dict[str, str]) -> pd.Da
         # among the two matchup teams, the longest nickname that suffixes the team cell
         # ("charlottehornets" ends with both "hornets" and "nets")
         key = norm_key(row.team or "")
-        hits = [t for t in (row.away_tricode, row.home_tricode)
-                if isinstance(t, str) and t in nickname_by_tricode
-                and key.endswith(nickname_by_tricode[t])]
+        hits = [
+            t
+            for t in (row.away_tricode, row.home_tricode)
+            if isinstance(t, str) and t in nickname_by_tricode and key.endswith(nickname_by_tricode[t])
+        ]
         if not hits:
             return None
         hits.sort(key=lambda t: len(nickname_by_tricode[t]), reverse=True)

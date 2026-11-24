@@ -20,6 +20,7 @@ minutes already reflect who played). Ridge penalty chosen by 5-fold CV over team
 PV rate (per 100 possessions, team-strength units) = beta . z_p, shrunk toward 0 by
 MIN / (MIN + SHRINK_MIN).
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -43,10 +44,21 @@ def season_player_stats(store: RawStore, season: str, prefix: str = "") -> pd.Da
     a = nba_stats.load(store, f"{prefix}player_advanced", season)
     b = nba_stats.load(store, f"{prefix}player_per100", season)
     d = a[["PLAYER_ID", "PLAYER_NAME", "MIN", "GP", "TS_PCT", "USG_PCT", "PIE", "NET_RATING"]].merge(
-        b[["PLAYER_ID"] + PER100], on="PLAYER_ID")
+        b[["PLAYER_ID"] + PER100], on="PLAYER_ID"
+    )
     d = d.rename(columns={c: f"{c.lower()}_100" for c in PER100})
-    d = d.rename(columns={"PLAYER_ID": "player_id", "PLAYER_NAME": "player_name", "MIN": "min_total",
-                          "GP": "gp", "TS_PCT": "ts", "USG_PCT": "usg", "PIE": "pie", "NET_RATING": "on_court_net"})
+    d = d.rename(
+        columns={
+            "PLAYER_ID": "player_id",
+            "PLAYER_NAME": "player_name",
+            "MIN": "min_total",
+            "GP": "gp",
+            "TS_PCT": "ts",
+            "USG_PCT": "usg",
+            "PIE": "pie",
+            "NET_RATING": "on_court_net",
+        }
+    )
     # the Advanced measure reports MIN per game even with per_mode "Totals"
     d["min_total"] = d.min_total * d.gp
     d["season"] = season
@@ -112,9 +124,15 @@ def fit_weights(design: pd.DataFrame, theta: pd.DataFrame, seed: int = 0) -> dic
     alpha = min(cv, key=cv.get)
     b = _ridge(X, y, alpha)
     pred = b[0] + X @ b[1:]
-    return {"alpha": alpha, "cv_mse": cv, "intercept": float(b[0]), "beta": dict(zip(FEATURES, b[1:])),
-            "r2": float(1 - ((y - pred) ** 2).sum() / ((y - y.mean()) ** 2).sum()),
-            "cv_r2": float(1 - cv[alpha] / y.var()), "n_team_seasons": int(len(y))}
+    return {
+        "alpha": alpha,
+        "cv_mse": cv,
+        "intercept": float(b[0]),
+        "beta": dict(zip(FEATURES, b[1:])),
+        "r2": float(1 - ((y - pred) ** 2).sum() / ((y - y.mean()) ** 2).sum()),
+        "cv_r2": float(1 - cv[alpha] / y.var()),
+        "n_team_seasons": int(len(y)),
+    }
 
 
 def player_pv(z: pd.DataFrame, weights: dict) -> pd.DataFrame:
@@ -135,13 +153,23 @@ def onoff_by_season(values: pd.DataFrame) -> pd.DataFrame:
 
 def team_net_for_players(games: pd.DataFrame, player_games: pd.DataFrame) -> pd.DataFrame:
     """Each player's team net rating (minutes-weighted over his teams) for on_court_rel."""
-    t = pd.concat([games[["season", "home_team_id", "home_score", "away_score", "possessions"]].set_axis(
-        ["season", "team_id", "pf", "pa", "poss"], axis=1),
-        games[["season", "away_team_id", "away_score", "home_score", "possessions"]].set_axis(
-        ["season", "team_id", "pf", "pa", "poss"], axis=1)])
+    t = pd.concat(
+        [
+            games[["season", "home_team_id", "home_score", "away_score", "possessions"]].set_axis(
+                ["season", "team_id", "pf", "pa", "poss"], axis=1
+            ),
+            games[["season", "away_team_id", "away_score", "home_score", "possessions"]].set_axis(
+                ["season", "team_id", "pf", "pa", "poss"], axis=1
+            ),
+        ]
+    )
     t[["pf", "pa", "poss"]] = t[["pf", "pa", "poss"]].astype(float)
-    tn = t.groupby(["season", "team_id"]).apply(lambda x: (x.pf.sum() - x.pa.sum()) / x.poss.sum() * 100,
-                                                include_groups=False).rename("tn").reset_index()
+    tn = (
+        t.groupby(["season", "team_id"])
+        .apply(lambda x: (x.pf.sum() - x.pa.sum()) / x.poss.sum() * 100, include_groups=False)
+        .rename("tn")
+        .reset_index()
+    )
     tn["team_id"] = tn.team_id.astype(int)
     m = player_games.groupby(["season", "player_id", "team_id"]).minutes.sum().rename("mins").reset_index()
     m["team_id"] = m.team_id.astype(int)
@@ -182,7 +210,8 @@ def fit_absence(gf: pd.DataFrame, absf: pd.DataFrame, alpha_team: float = 10.0, 
     for side in ("home", "away"):
         x = a.rename(columns={"team_id": f"{side}_team_id", **{c: f"{side}_{c}" for c in zc + ["f"]}})
         d = d.assign(**{f"{side}_team_id": d[f"{side}_team_id"].astype(int)}).merge(
-            x, on=["game_id", f"{side}_team_id"], how="left")
+            x, on=["game_id", f"{side}_team_id"], how="left"
+        )
     for c in zc + ["f"]:
         d[f"d_{c}"] = d[f"home_{c}"].fillna(0.0) - d[f"away_{c}"].fillna(0.0)
     keys = sorted(set(d.home_key) | set(d.away_key))
@@ -194,17 +223,22 @@ def fit_absence(gf: pd.DataFrame, absf: pd.DataFrame, alpha_team: float = 10.0, 
     X[np.arange(n), d.home_key.map(idx).to_numpy()] = 1.0
     X[np.arange(n), d.away_key.map(idx).to_numpy()] = -1.0
     X[np.arange(n), k + d.season.map({s: i for i, s in enumerate(seasons)}).to_numpy()] = d.home_flag.to_numpy(float)
-    X[:, k + len(seasons):] = d[extra].to_numpy(float)
+    X[:, k + len(seasons) :] = d[extra].to_numpy(float)
     pen = np.zeros(X.shape[1])
     pen[:k] = alpha_team
-    pen[k + len(seasons) + 2:] = alpha_gamma
+    pen[k + len(seasons) + 2 :] = alpha_gamma
     y = d.y.to_numpy(float)
     beta = np.linalg.solve(X.T @ X + np.diag(pen), X.T @ y)
     off = k + len(seasons)
-    gamma = dict(zip(FEATURES, beta[off + 2:]))
+    gamma = dict(zip(FEATURES, beta[off + 2 :]))
     resid = y - X @ beta
-    return {"gamma": gamma, "b_b2b": float(beta[off]), "b_min": float(beta[off + 1]),
-            "sigma": float(resid.std()), "n_games": int(n)}
+    return {
+        "gamma": gamma,
+        "b_b2b": float(beta[off]),
+        "b_min": float(beta[off + 1]),
+        "sigma": float(resid.std()),
+        "n_games": int(n),
+    }
 
 
 def player_pv_abs(z: pd.DataFrame, fit: dict) -> pd.DataFrame:
@@ -252,7 +286,8 @@ def fit_blend(gf: pd.DataFrame, absf: pd.DataFrame, alpha_team: float = 10.0) ->
     for side in ("home", "away"):
         x = a.rename(columns={"team_id": f"{side}_team_id", **{c: f"{side}_{c}" for c in cols}})
         d = d.assign(**{f"{side}_team_id": d[f"{side}_team_id"].astype(int)}).merge(
-            x, on=["game_id", f"{side}_team_id"], how="left")
+            x, on=["game_id", f"{side}_team_id"], how="left"
+        )
     for c in cols:
         d[f"d_{c}"] = d[f"home_{c}"].fillna(0.0) - d[f"away_{c}"].fillna(0.0)
     keys = sorted(set(d.home_key) | set(d.away_key))
@@ -264,7 +299,7 @@ def fit_blend(gf: pd.DataFrame, absf: pd.DataFrame, alpha_team: float = 10.0) ->
     X[np.arange(n), d.home_key.map(idx).to_numpy()] = 1.0
     X[np.arange(n), d.away_key.map(idx).to_numpy()] = -1.0
     X[np.arange(n), k + d.season.map({s: i for i, s in enumerate(seasons)}).to_numpy()] = d.home_flag.to_numpy(float)
-    X[:, k + len(seasons):] = d[extra].to_numpy(float)
+    X[:, k + len(seasons) :] = d[extra].to_numpy(float)
     pen = np.zeros(X.shape[1])
     pen[:k] = alpha_team
     y = d.y.to_numpy(float)
@@ -274,9 +309,15 @@ def fit_blend(gf: pd.DataFrame, absf: pd.DataFrame, alpha_team: float = 10.0) ->
     sigma2 = resid @ resid / (n - X.shape[1])
     se = np.sqrt(np.diag(np.linalg.inv(A)) * sigma2)
     off = k + len(seasons)
-    return {"g_box": float(beta[off + 2]), "g_onoff": float(beta[off + 3]),
-            "se_box": float(se[off + 2]), "se_onoff": float(se[off + 3]),
-            "b_min": float(beta[off + 1]), "b_b2b": float(beta[off]), "n_games": int(n)}
+    return {
+        "g_box": float(beta[off + 2]),
+        "g_onoff": float(beta[off + 3]),
+        "se_box": float(se[off + 2]),
+        "se_onoff": float(se[off + 3]),
+        "b_min": float(beta[off + 1]),
+        "b_b2b": float(beta[off]),
+        "n_games": int(n),
+    }
 
 
 def player_pv_blend(inputs: pd.DataFrame, fit: dict) -> pd.DataFrame:

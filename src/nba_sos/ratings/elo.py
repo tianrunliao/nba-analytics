@@ -10,6 +10,7 @@ Between seasons ratings regress toward the mean: R <- (1 - carry) * 1500 + carry
 K, HCA and carry are chosen by log loss on training seasons only (``tune``).
 Ratings stored for a game are those BEFORE it is played.
 """
+
 from __future__ import annotations
 
 import itertools

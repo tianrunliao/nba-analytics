@@ -58,14 +58,24 @@ def test_schedule_rows_have_divisions_coordinates_and_local_time(venue_cfg):
 
 
 def test_venue_table_builder_rejects_ambiguous_and_missing():
-    aliases = pd.DataFrame({"arena_name": ["A", "B"], "arena_city": ["x", "y"], "venue_id": ["V", "V"],
-                            "wikidata_qid": ["Q1", "Q2"], "neutral_site": [False, False]})
+    aliases = pd.DataFrame(
+        {
+            "arena_name": ["A", "B"],
+            "arena_city": ["x", "y"],
+            "venue_id": ["V", "V"],
+            "wikidata_qid": ["Q1", "Q2"],
+            "neutral_site": [False, False],
+        }
+    )
     with pytest.raises(ValueError, match="several Wikidata items"):
         build_venue_table(aliases, pd.DataFrame(), "t")
     aliases.loc[1, "wikidata_qid"] = "Q1"
     with pytest.raises(ValueError, match="no Wikidata coordinates"):
-        build_venue_table(aliases, pd.DataFrame({"wikidata_qid": ["Q9"], "wikidata_label": ["z"],
-                                                 "latitude": [1.0], "longitude": [1.0]}), "t")
+        build_venue_table(
+            aliases,
+            pd.DataFrame({"wikidata_qid": ["Q9"], "wikidata_label": ["z"], "latitude": [1.0], "longitude": [1.0]}),
+            "t",
+        )
     assert parse_wkt_point("Point(-118.343102 33.945127)") == (33.945127, -118.343102)
 
 
@@ -95,23 +105,37 @@ def full_round_robin():
 def test_check_games_clean_data_passes_except_team_count():
     res = _by_name(C.check_games(full_round_robin(), "2022-23"))
     assert not res["team_count"].passed  # synthetic league has 4 teams
-    for name in ["game_id_unique", "two_team_rows_per_game", "equal_games_per_team", "game_count",
-                 "wl_matches_score", "plus_minus_matches_margin", "no_ties", "one_game_per_team_per_date",
-                 "home_matches_schedule", "possessions_present"]:
+    for name in [
+        "game_id_unique",
+        "two_team_rows_per_game",
+        "equal_games_per_team",
+        "game_count",
+        "wl_matches_score",
+        "plus_minus_matches_margin",
+        "no_ties",
+        "one_game_per_team_per_date",
+        "home_matches_schedule",
+        "possessions_present",
+    ]:
         assert res[name].passed, name
 
 
-@pytest.mark.parametrize("mutate,check", [
-    (lambda g: pd.concat([g, g.iloc[[0]]]), "game_id_unique"),
-    (lambda g: g.assign(_pair=["left_only"] + ["both"] * (len(g) - 1)), "two_team_rows_per_game"),
-    (lambda g: g.assign(home_wl=["L"] + list(g.home_wl[1:])), "wl_matches_score"),
-    (lambda g: g.assign(home_score=pd.array([90] + list(g.home_score[1:]), dtype="Int64")), "no_ties"),
-    (lambda g: g.assign(home_plus_minus=[0] + list(g.home_plus_minus[1:])), "plus_minus_matches_margin"),
-    (lambda g: g.assign(game_date=[g.game_date.iloc[1]] + list(g.game_date[1:])), "one_game_per_team_per_date"),
-    (lambda g: g.iloc[1:], "equal_games_per_team"),
-    (lambda g: g.assign(sched_home_team_id=pd.array([3] + list(g.sched_home_team_id[1:]), dtype="Int64")),
-     "home_matches_schedule"),
-])
+@pytest.mark.parametrize(
+    "mutate,check",
+    [
+        (lambda g: pd.concat([g, g.iloc[[0]]]), "game_id_unique"),
+        (lambda g: g.assign(_pair=["left_only"] + ["both"] * (len(g) - 1)), "two_team_rows_per_game"),
+        (lambda g: g.assign(home_wl=["L"] + list(g.home_wl[1:])), "wl_matches_score"),
+        (lambda g: g.assign(home_score=pd.array([90] + list(g.home_score[1:]), dtype="Int64")), "no_ties"),
+        (lambda g: g.assign(home_plus_minus=[0] + list(g.home_plus_minus[1:])), "plus_minus_matches_margin"),
+        (lambda g: g.assign(game_date=[g.game_date.iloc[1]] + list(g.game_date[1:])), "one_game_per_team_per_date"),
+        (lambda g: g.iloc[1:], "equal_games_per_team"),
+        (
+            lambda g: g.assign(sched_home_team_id=pd.array([3] + list(g.sched_home_team_id[1:]), dtype="Int64")),
+            "home_matches_schedule",
+        ),
+    ],
+)
 def test_check_games_detects_errors(mutate, check):
     g = mutate(full_round_robin())
     assert not _by_name(C.check_games(g, "2022-23"))[check].passed

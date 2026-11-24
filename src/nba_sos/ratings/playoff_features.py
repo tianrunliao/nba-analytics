@@ -16,6 +16,7 @@ game being predicted.
   po_form         (per game) shrunk mean residual of the team's earlier games in this postseason
                   vs its pre-playoff strength: sum(resid) / (n + FORM_PRIOR_GAMES)
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -55,15 +56,33 @@ def team_style(store: RawStore, season: str) -> pd.DataFrame:
     adv = nba_stats.load(store, "team_advanced", season)
     lgl["GAME_ID"], adv["GAME_ID"] = lgl.GAME_ID.astype(str).str.zfill(10), adv.GAME_ID.astype(str).str.zfill(10)
     lgl = lgl[lgl.GAME_ID.str[:3] == "002"].merge(adv[["GAME_ID", "TEAM_ID", "POSS"]], on=["GAME_ID", "TEAM_ID"])
-    opp = lgl[["GAME_ID", "TEAM_ID", "DREB", "PTS"]].rename(columns={"TEAM_ID": "OPP_ID", "DREB": "OPP_DREB", "PTS": "OPP_PTS"})
+    opp = lgl[["GAME_ID", "TEAM_ID", "DREB", "PTS"]].rename(
+        columns={"TEAM_ID": "OPP_ID", "DREB": "OPP_DREB", "PTS": "OPP_PTS"}
+    )
     x = lgl.merge(opp, on="GAME_ID")
     x = x[x.TEAM_ID != x.OPP_ID]
-    t = x.groupby("TEAM_ID").agg(FGA=("FGA", "sum"), FG3A=("FG3A", "sum"), FTA=("FTA", "sum"), OREB=("OREB", "sum"),
-                                 OPP_DREB=("OPP_DREB", "sum"), TOV=("TOV", "sum"), POSS=("POSS", "sum"),
-                                 PTS=("PTS", "sum"), OPP_PTS=("OPP_PTS", "sum"), G=("GAME_ID", "nunique"))
-    out = pd.DataFrame({"team_id": t.index.astype(int),
-                        "fg3a_rate": t.FG3A / t.FGA, "fta_rate": t.FTA / t.FGA, "oreb_pct": t.OREB / (t.OREB + t.OPP_DREB),
-                        "tov_rate": t.TOV / t.POSS, "pace": t.POSS / t.G})
+    t = x.groupby("TEAM_ID").agg(
+        FGA=("FGA", "sum"),
+        FG3A=("FG3A", "sum"),
+        FTA=("FTA", "sum"),
+        OREB=("OREB", "sum"),
+        OPP_DREB=("OPP_DREB", "sum"),
+        TOV=("TOV", "sum"),
+        POSS=("POSS", "sum"),
+        PTS=("PTS", "sum"),
+        OPP_PTS=("OPP_PTS", "sum"),
+        G=("GAME_ID", "nunique"),
+    )
+    out = pd.DataFrame(
+        {
+            "team_id": t.index.astype(int),
+            "fg3a_rate": t.FG3A / t.FGA,
+            "fta_rate": t.FTA / t.FGA,
+            "oreb_pct": t.OREB / (t.OREB + t.OPP_DREB),
+            "tov_rate": t.TOV / t.POSS,
+            "pace": t.POSS / t.G,
+        }
+    )
     ortg, drtg = t.PTS / t.POSS * 100, t.OPP_PTS / t.POSS * 100
     lg = ortg.mean()
     out["off_def_split"] = ((ortg - lg) - (lg - drtg)).to_numpy()
@@ -78,14 +97,25 @@ def playoff_share_curve(playoff_pg: pd.DataFrame, rs_pg: pd.DataFrame, seasons: 
     for s in seasons:
         rs = rs_pg[rs_pg.season == s].groupby(["team_id", "player_id"]).minutes.sum().reset_index()
         rs["rk"] = rs.groupby("team_id").minutes.rank(ascending=False, method="first")
-        po = playoff_pg[playoff_pg.season == s].groupby(["team_id", "player_id"]).minutes.sum().rename("po").reset_index()
+        po = (
+            playoff_pg[playoff_pg.season == s]
+            .groupby(["team_id", "player_id"])
+            .minutes.sum()
+            .rename("po")
+            .reset_index()
+        )
         tot = po.groupby("team_id").po.transform("sum")
         po["po_share"] = po.po / tot * 5
         m = rs.merge(po[["team_id", "player_id", "po_share"]], on=["team_id", "player_id"])
         m = m[m.team_id.isin(po.team_id.unique())]
-        full = rs[rs.team_id.isin(po.team_id.unique())].merge(m[["team_id", "player_id", "po_share"]],
-                                                              on=["team_id", "player_id"], how="left").fillna({"po_share": 0.0})
-        shares.append(full[full.rk <= top].groupby("rk").po_share.mean().reindex(range(1, top + 1)).fillna(0.0).to_numpy())
+        full = (
+            rs[rs.team_id.isin(po.team_id.unique())]
+            .merge(m[["team_id", "player_id", "po_share"]], on=["team_id", "player_id"], how="left")
+            .fillna({"po_share": 0.0})
+        )
+        shares.append(
+            full[full.rk <= top].groupby("rk").po_share.mean().reindex(range(1, top + 1)).fillna(0.0).to_numpy()
+        )
     return np.mean(shares, axis=0) if shares else None
 
 
@@ -108,8 +138,13 @@ def experience_age(roster_mpg: pd.DataFrame, prev_playoff_minutes: pd.Series, ag
     out = []
     for tid, g in r.groupby("team_id"):
         w = g.rs_minutes
-        out.append({"team_id": tid, "experience": float(np.average(g.exp, weights=w)),
-                    "age": float(np.average(g.age.fillna(g.age.mean()), weights=w))})
+        out.append(
+            {
+                "team_id": tid,
+                "experience": float(np.average(g.exp, weights=w)),
+                "age": float(np.average(g.age.fillna(g.age.mean()), weights=w)),
+            }
+        )
     return pd.DataFrame(out)
 
 
@@ -132,8 +167,15 @@ def po_form(pgames: pd.DataFrame, theta: pd.Series, hca: float) -> pd.DataFrame:
     return out
 
 
-def augment_blocks(blocks: dict, store: RawStore, d: dict, pv: pd.DataFrame, all_games: pd.DataFrame,
-                   elo_params: dict, prior_playoff_pg: pd.DataFrame) -> dict:
+def augment_blocks(
+    blocks: dict,
+    store: RawStore,
+    d: dict,
+    pv: pd.DataFrame,
+    all_games: pd.DataFrame,
+    elo_params: dict,
+    prior_playoff_pg: pd.DataFrame,
+) -> dict:
     """Attach the extra team columns and po_form to every season block (rows rebuilt)."""
     from . import playoff_model as PM
 
@@ -146,7 +188,9 @@ def augment_blocks(blocks: dict, store: RawStore, d: dict, pv: pd.DataFrame, all
         b = blocks[s]
         earlier = [x for x in po_seasons_all if season_start_year(x) < season_start_year(s)]
         curve = playoff_share_curve(po_pg, rs_pg, [x for x in earlier if x in set(rs_pg.season)])
-        mins = rs_pg[rs_pg.season == s].groupby(["team_id", "player_id"]).minutes.sum().rename("rs_minutes").reset_index()
+        mins = (
+            rs_pg[rs_pg.season == s].groupby(["team_id", "player_id"]).minutes.sum().rename("rs_minutes").reset_index()
+        )
         mins["team_id"] = mins.team_id.astype(int)
         v = pv[pv.season == s].set_index("player_id").lpm
         mins["value"] = mins.player_id.map(v).fillna(0.0)
@@ -158,18 +202,25 @@ def augment_blocks(blocks: dict, store: RawStore, d: dict, pv: pd.DataFrame, all
         if s not in adv_age:
             a = nba_stats.load(store, "player_advanced", s)
             adv_age[s] = a.set_index("PLAYER_ID").AGE
-        extra = (ee[ee.season == s][["team_id", "elo_end"]]
-                 .merge(playoff_shift(roster, curve), on="team_id", how="right")
-                 .merge(experience_age(roster, prev_min, adv_age[s]), on="team_id", how="left")
-                 .merge(team_style(store, s)[["team_id"] + STYLE_COLS], on="team_id", how="left"))
+        extra = (
+            ee[ee.season == s][["team_id", "elo_end"]]
+            .merge(playoff_shift(roster, curve), on="team_id", how="right")
+            .merge(experience_age(roster, prev_min, adv_age[s]), on="team_id", how="left")
+            .merge(team_style(store, s)[["team_id"] + STYLE_COLS], on="team_id", how="left")
+        )
         new_cols = ["elo_end", "playoff_shift", "experience", "age"] + STYLE_COLS
         teams = {tau: t.merge(extra, on="team_id", how="left") for tau, t in b["teams"].items()}
         team_cols = b["team_cols"] + [c for c in new_cols if c not in b["team_cols"]]
         theta = teams[next(iter(teams))].set_index("team_id").theta_full
         form = po_form(b["pgames"], theta, b["fit"]["coefs"][f"hca_{s}"])
         inplay = b["inplay_table"]
-        rows = {tau: PM.playoff_rows(b["pgames"], teams[tau], inplay, team_cols).merge(
-            form[["game_id", "d_po_form"]], on="game_id", how="left") for tau in teams}
-        b.update({"teams": teams, "team_cols": team_cols, "rows": rows, "share_curve": curve,
-                  "exp_history_seasons": prev3})
+        rows = {
+            tau: PM.playoff_rows(b["pgames"], teams[tau], inplay, team_cols).merge(
+                form[["game_id", "d_po_form"]], on="game_id", how="left"
+            )
+            for tau in teams
+        }
+        b.update(
+            {"teams": teams, "team_cols": team_cols, "rows": rows, "share_curve": curve, "exp_history_seasons": prev3}
+        )
     return blocks

@@ -1,4 +1,5 @@
 """Playoff feature additions: in-playoff form, rotation shift, experience, selection."""
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -9,9 +10,13 @@ from nba_sos.ratings import playoff_improve as PI
 
 
 def _po_games():
-    g = make_games([("2022-23", "2023-04-15", "AAA", "BBB", 120, 100),
-                    ("2022-23", "2023-04-17", "AAA", "BBB", 100, 110),
-                    ("2022-23", "2023-04-20", "BBB", "AAA", 90, 100)])
+    g = make_games(
+        [
+            ("2022-23", "2023-04-15", "AAA", "BBB", 120, 100),
+            ("2022-23", "2023-04-17", "AAA", "BBB", 100, 110),
+            ("2022-23", "2023-04-20", "BBB", "AAA", 90, 100),
+        ]
+    )
     g["game_id"] = ["0042200101", "0042200102", "0042200103"]
     return g
 
@@ -21,7 +26,7 @@ def test_po_form_uses_only_earlier_playoff_games():
     theta = pd.Series({1: 2.0, 2: 0.0})
     f = F.po_form(g, theta, hca=3.0).set_index("game_id")
     assert f.loc["0042200101", "home_po_form"] == 0.0 and f.loc["0042200101", "away_po_form"] == 0.0
-    r1 = 20 - (2 + 3)                                     # game 1 residual for AAA
+    r1 = 20 - (2 + 3)  # game 1 residual for AAA
     assert f.loc["0042200102", "home_po_form"] == pytest.approx(r1 / (1 + F.FORM_PRIOR_GAMES))
     assert f.loc["0042200102", "away_po_form"] == pytest.approx(-r1 / (1 + F.FORM_PRIOR_GAMES))
     # changing game 3 cannot change the form entering games 1-2
@@ -32,14 +37,19 @@ def test_po_form_uses_only_earlier_playoff_games():
 
 
 def test_playoff_shift_rewards_top_heavy_value():
-    roster = pd.DataFrame({"team_id": 1, "player_id": range(10), "rs_minutes": [2500, 2400, 2200, 2000, 1800,
-                                                                             1500, 1200, 1000, 600, 300.0],
-                           "value": [6.0, 3.0, 1.0, 0.0, 0.0, -1.0, -1.0, -2.0, -2.0, -3.0]})
+    roster = pd.DataFrame(
+        {
+            "team_id": 1,
+            "player_id": range(10),
+            "rs_minutes": [2500, 2400, 2200, 2000, 1800, 1500, 1200, 1000, 600, 300.0],
+            "value": [6.0, 3.0, 1.0, 0.0, 0.0, -1.0, -1.0, -2.0, -2.0, -3.0],
+        }
+    )
     tot = roster.rs_minutes.sum()
     rs_share = roster.rs_minutes / tot * 5
     curve = rs_share.to_numpy().copy()
-    curve[:5] += 0.1                                       # playoffs: +0.1 share for the top five ...
-    curve[5:] -= 0.1                                       # ... taken from the bench
+    curve[:5] += 0.1  # playoffs: +0.1 share for the top five ...
+    curve[5:] -= 0.1  # ... taken from the bench
     sh = F.playoff_shift(roster, curve, top=10).iloc[0].playoff_shift
     assert sh == pytest.approx(0.1 * (6 + 3 + 1 + 0 + 0) - 0.1 * (-1 - 1 - 2 - 2 - 3))
     assert F.playoff_shift(roster, None, top=10).iloc[0].playoff_shift == pytest.approx(0.0)

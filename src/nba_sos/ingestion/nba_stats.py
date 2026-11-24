@@ -3,6 +3,7 @@
 Raw response text is stored verbatim; parsing back to DataFrames reuses nba_api's own
 response parser so offline rebuilds match what nba_api would have produced.
 """
+
 from __future__ import annotations
 
 import time
@@ -17,50 +18,74 @@ from .raw_store import RawStore
 # name -> (nba_api endpoint name, builder(season, season_type, timeout) -> endpoint object)
 def _league_game_log(season, season_type, timeout, get_request=True):
     from nba_api.stats.endpoints import leaguegamelog
+
     return leaguegamelog.LeagueGameLog(
-        season=season, season_type_all_star=season_type,
-        player_or_team_abbreviation="T", timeout=timeout, get_request=get_request)
+        season=season,
+        season_type_all_star=season_type,
+        player_or_team_abbreviation="T",
+        timeout=timeout,
+        get_request=get_request,
+    )
 
 
 def _team_advanced(season, season_type, timeout, get_request=True):
     from nba_api.stats.endpoints import teamgamelogs
+
     return teamgamelogs.TeamGameLogs(
-        season_nullable=season, season_type_nullable=season_type,
-        measure_type_player_game_logs_nullable="Advanced", timeout=timeout,
-        get_request=get_request)
+        season_nullable=season,
+        season_type_nullable=season_type,
+        measure_type_player_game_logs_nullable="Advanced",
+        timeout=timeout,
+        get_request=get_request,
+    )
 
 
 def _player_game_logs(season, season_type, timeout, get_request=True):
     from nba_api.stats.endpoints import playergamelogs
+
     return playergamelogs.PlayerGameLogs(
-        season_nullable=season, season_type_nullable=season_type, timeout=timeout,
-        get_request=get_request)
+        season_nullable=season, season_type_nullable=season_type, timeout=timeout, get_request=get_request
+    )
 
 
 def _player_advanced(season, season_type, timeout, get_request=True):
     from nba_api.stats.endpoints import leaguedashplayerstats
+
     return leaguedashplayerstats.LeagueDashPlayerStats(
-        season=season, season_type_all_star=season_type, measure_type_detailed_defense="Advanced",
-        per_mode_detailed="Totals", timeout=timeout, get_request=get_request)
+        season=season,
+        season_type_all_star=season_type,
+        measure_type_detailed_defense="Advanced",
+        per_mode_detailed="Totals",
+        timeout=timeout,
+        get_request=get_request,
+    )
 
 
 def _player_per100(season, season_type, timeout, get_request=True):
     from nba_api.stats.endpoints import leaguedashplayerstats
+
     return leaguedashplayerstats.LeagueDashPlayerStats(
-        season=season, season_type_all_star=season_type, measure_type_detailed_defense="Base",
-        per_mode_detailed="Per100Possessions", timeout=timeout, get_request=get_request)
+        season=season,
+        season_type_all_star=season_type,
+        measure_type_detailed_defense="Base",
+        per_mode_detailed="Per100Possessions",
+        timeout=timeout,
+        get_request=get_request,
+    )
 
 
 def _schedule(season, season_type, timeout, get_request=True):
     from nba_api.stats.endpoints import scheduleleaguev2
-    return scheduleleaguev2.ScheduleLeagueV2(season=season, timeout=timeout,
-                                             get_request=get_request)
+
+    return scheduleleaguev2.ScheduleLeagueV2(season=season, timeout=timeout, get_request=get_request)
 
 
 def _standings(season, season_type, timeout, get_request=True):
     from nba_api.stats.endpoints import leaguestandingsv3
+
     return leaguestandingsv3.LeagueStandingsV3(
-        season=season, season_type=season_type, timeout=timeout, get_request=get_request)
+        season=season, season_type=season_type, timeout=timeout, get_request=get_request
+    )
 
 
 ENDPOINTS: dict[str, tuple[str, Callable]] = {
@@ -121,9 +146,16 @@ def nba_api_client(name: str, season: str, season_type: str, timeout: int) -> tu
     return ep.nba_response.get_response(), ep.nba_response.get_url()
 
 
-def fetch(store: RawStore, name: str, season: str, cfg: dict, *, refresh: bool = False,
-          client: Callable[..., tuple[str, str]] = nba_api_client,
-          sleep: Callable[[float], None] = time.sleep) -> dict | None:
+def fetch(
+    store: RawStore,
+    name: str,
+    season: str,
+    cfg: dict,
+    *,
+    refresh: bool = False,
+    client: Callable[..., tuple[str, str]] = nba_api_client,
+    sleep: Callable[[float], None] = time.sleep,
+) -> dict | None:
     """Fetch one endpoint/season into the raw store. Returns the manifest record,
     or None when cached. Raises after ``max_retries`` failed attempts."""
     relpath = raw_relpath(name, season)
@@ -136,10 +168,19 @@ def fetch(store: RawStore, name: str, season: str, cfg: dict, *, refresh: bool =
         try:
             text, url = client(name, season, season_type, int(cfg["request_timeout_s"]))
             parse_payload(name, text)  # refuse to store payloads we cannot parse
-            rec = store.write(relpath, text.encode("utf-8"), {
-                "source": "stats.nba.com", "endpoint": ENDPOINTS[name][0], "name": name,
-                "season": season, "season_type": season_type, "url": url,
-                "attempt": attempt})
+            rec = store.write(
+                relpath,
+                text.encode("utf-8"),
+                {
+                    "source": "stats.nba.com",
+                    "endpoint": ENDPOINTS[name][0],
+                    "name": name,
+                    "season": season,
+                    "season_type": season_type,
+                    "url": url,
+                    "attempt": attempt,
+                },
+            )
             sleep(float(cfg["sleep_between_requests_s"]))
             return rec
         except Exception as err:  # noqa: BLE001 - re-raised below after retries

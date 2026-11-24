@@ -37,6 +37,7 @@ knockout games and the extra games are simulated from the simulated group tables
 (:mod:`nba_sos.sos.cup`); seeds use the official tie-break procedures
 (:mod:`nba_sos.sos.standings`); 7-10 play in (7v8, loser v winner of 9v10).
 """
+
 from __future__ import annotations
 
 import itertools
@@ -53,47 +54,66 @@ from . import cup as CUP
 from .standings import Season
 
 LOAD = {  # name: category
-    "b2b": "rest", "rest3": "rest", "g4": "rest", "g7": "rest", "short_turn": "rest",
-    "km": "travel", "tz_abs": "travel", "tz_east": "travel", "road": "travel", "road_b2b": "travel",
-    "body_early": "travel", "body_late": "travel",
+    "b2b": "rest",
+    "rest3": "rest",
+    "g4": "rest",
+    "g7": "rest",
+    "short_turn": "rest",
+    "km": "travel",
+    "tz_abs": "travel",
+    "tz_east": "travel",
+    "road": "travel",
+    "road_b2b": "travel",
+    "body_early": "travel",
+    "body_late": "travel",
 }
 HCA_SEASONS = 3
 COMPONENTS = ["opponent", "opp_availability", "venue", "own_rest", "own_travel", "opp_fatigue"]
 INJ = ["rec_v", "rec_f", "ret_v", "ret_f", "new_v", "new_f"]
 # availability specifications compared by season-grouped k-fold (projection.horizon_cv)
-INJ_SPECS = {"none": [], "rec+ret (value)": ["rec_v", "ret_v"],
-             "rec+ret (value, minutes)": ["rec_v", "ret_v", "rec_f", "ret_f"], "all": INJ}
+INJ_SPECS = {
+    "none": [],
+    "rec+ret (value)": ["rec_v", "ret_v"],
+    "rec+ret (value, minutes)": ["rec_v", "ret_v", "rec_f", "ret_f"],
+    "all": INJ,
+}
 
 
 # ------------------------------------------------------------------ inputs
 def schedule_load(f: pd.DataFrame) -> pd.DataFrame:
     """Per (game_id, team_id) candidate schedule-load features (all known from the schedule).
-      b2b         second night of a back-to-back
-      rest3       days of rest, capped at 3
-      g4, g7      games in the last 4 / 7 days (incl. this one)
-      short_turn  hours under 26 between tip-offs (late game then early game), / 10
-      km          travel from the previous game's venue, / 1000
-      tz_abs      |time-zone change|;  tz_east: eastward change (hours, >= 0)
-      road        consecutive road games, capped at 6
-      road_b2b    back-to-back with both legs away
-      body_early  hours the tip-off is before 19:00 on the team's home clock
-      body_late   hours after 22:00 on the team's home clock"""
+    b2b         second night of a back-to-back
+    rest3       days of rest, capped at 3
+    g4, g7      games in the last 4 / 7 days (incl. this one)
+    short_turn  hours under 26 between tip-offs (late game then early game), / 10
+    km          travel from the previous game's venue, / 1000
+    tz_abs      |time-zone change|;  tz_east: eastward change (hours, >= 0)
+    road        consecutive road games, capped at 6
+    road_b2b    back-to-back with both legs away
+    body_early  hours the tip-off is before 19:00 on the team's home clock
+    body_late   hours after 22:00 on the team's home clock"""
     b2b = f.is_back_to_back.astype("boolean").fillna(False).astype(float)
     tz = f.timezone_change_hours.astype(float).fillna(0.0)
     body = f.body_clock_tipoff_hour.astype(float)
     turn = f.turnaround_hours.astype(float)
-    return pd.DataFrame({
-        "game_id": f.game_id.to_numpy(), "team_id": f.team_id.astype(int).to_numpy(),
-        "b2b": b2b.to_numpy(), "rest3": f.rest_days.astype(float).clip(upper=3).fillna(3.0).to_numpy(),
-        "g4": f.games_last_4_days.astype(float).fillna(1.0).to_numpy(),
-        "g7": f.games_last_7_days.astype(float).fillna(1.0).to_numpy(),
-        "short_turn": ((26 - turn).clip(lower=0) / 10).fillna(0.0).to_numpy(),
-        "km": (f.travel_distance_km.astype(float).fillna(0.0) / 1000).to_numpy(),
-        "tz_abs": tz.abs().to_numpy(), "tz_east": tz.clip(lower=0).to_numpy(),
-        "road": f.consecutive_road_games.astype(float).clip(upper=6).fillna(0.0).to_numpy(),
-        "road_b2b": (f.b2b_type.astype(object) == "AA").astype(float).to_numpy(),
-        "body_early": (19 - body).clip(lower=0).fillna(0.0).to_numpy(),
-        "body_late": (body - 22).clip(lower=0).fillna(0.0).to_numpy()})
+    return pd.DataFrame(
+        {
+            "game_id": f.game_id.to_numpy(),
+            "team_id": f.team_id.astype(int).to_numpy(),
+            "b2b": b2b.to_numpy(),
+            "rest3": f.rest_days.astype(float).clip(upper=3).fillna(3.0).to_numpy(),
+            "g4": f.games_last_4_days.astype(float).fillna(1.0).to_numpy(),
+            "g7": f.games_last_7_days.astype(float).fillna(1.0).to_numpy(),
+            "short_turn": ((26 - turn).clip(lower=0) / 10).fillna(0.0).to_numpy(),
+            "km": (f.travel_distance_km.astype(float).fillna(0.0) / 1000).to_numpy(),
+            "tz_abs": tz.abs().to_numpy(),
+            "tz_east": tz.clip(lower=0).to_numpy(),
+            "road": f.consecutive_road_games.astype(float).clip(upper=6).fillna(0.0).to_numpy(),
+            "road_b2b": (f.b2b_type.astype(object) == "AA").astype(float).to_numpy(),
+            "body_early": (19 - body).clip(lower=0).fillna(0.0).to_numpy(),
+            "body_late": (body - 22).clip(lower=0).fillna(0.0).to_numpy(),
+        }
+    )
 
 
 def game_rows(games: pd.DataFrame, load: pd.DataFrame) -> pd.DataFrame:
@@ -139,14 +159,19 @@ def fit_pregame(x: pd.DataFrame, feats: list[str]) -> dict:
     b, *_ = np.linalg.lstsq(X, y, rcond=None)
     res = y - X @ b
     sigma = float(np.sqrt(res @ res / (len(y) - len(b))))
-    se = np.sqrt(np.diag(sigma ** 2 * np.linalg.pinv(X.T @ X)))
+    se = np.sqrt(np.diag(sigma**2 * np.linalg.pinv(X.T @ X)))
     coef = dict(zip(names, b))
     hcas = {n.split(":")[1]: float(v) for n, v in coef.items() if n.startswith("hca:")}
     recent = sorted(hcas)[-HCA_SEASONS:]
-    return {"b_strength_h0": float(coef["dyn_diff"]), "hca": float(np.mean([hcas[s] for s in recent])),
-            "hca_by_season": hcas, "c": {k: float(coef[k]) for k in feats},
-            "se": {k: float(s) for k, s in zip(names, se) if not k.startswith("hca:")},
-            "sigma": sigma, "n_games": int(len(y))}
+    return {
+        "b_strength_h0": float(coef["dyn_diff"]),
+        "hca": float(np.mean([hcas[s] for s in recent])),
+        "hca_by_season": hcas,
+        "c": {k: float(coef[k]) for k in feats},
+        "se": {k: float(s) for k, s in zip(names, se) if not k.startswith("hca:")},
+        "sigma": sigma,
+        "n_games": int(len(y)),
+    }
 
 
 def select_load(x: pd.DataFrame, k: int = 5) -> dict:
@@ -181,14 +206,17 @@ def select_load(x: pd.DataFrame, k: int = 5) -> dict:
             break
         chosen.append(best[0])
         cur = best[3]
-        path.append({"step": len(chosen), "added": best[0], "oof_mse": float(cur.mean()), "gain": best[1], "se": best[2]})
+        path.append(
+            {"step": len(chosen), "added": best[0], "oof_mse": float(cur.mean()), "gain": best[1], "se": best[2]}
+        )
     return {"features": chosen, "path": path, "folds": k}
 
 
 def load_effect(g: pd.DataFrame, c: dict, keys=None) -> np.ndarray:
     keys = list(c) if keys is None else keys
-    return sum((c[k] * (g[f"{k}_home"].to_numpy(float) - g[f"{k}_away"].to_numpy(float)) for k in keys),
-               np.zeros(len(g)))
+    return sum(
+        (c[k] * (g[f"{k}_home"].to_numpy(float) - g[f"{k}_away"].to_numpy(float)) for k in keys), np.zeros(len(g))
+    )
 
 
 # ------------------------------------------------------------------ horizon model
@@ -197,8 +225,12 @@ def future_index(rows: pd.DataFrame, cutoff: pd.Timestamp) -> pd.DataFrame:
     fut = rows[rows.date >= cutoff].sort_values(["date", "game_id"])
     if fut.empty:
         return fut.assign(k_home=pd.Series(dtype=int), k_away=pd.Series(dtype=int))
-    side = pd.concat([fut[["game_id", "date", "home_team_id"]].rename(columns={"home_team_id": "team_id"}).assign(s="home"),
-                      fut[["game_id", "date", "away_team_id"]].rename(columns={"away_team_id": "team_id"}).assign(s="away")])
+    side = pd.concat(
+        [
+            fut[["game_id", "date", "home_team_id"]].rename(columns={"home_team_id": "team_id"}).assign(s="home"),
+            fut[["game_id", "date", "away_team_id"]].rename(columns={"away_team_id": "team_id"}).assign(s="away"),
+        ]
+    )
     side = side.sort_values(["date", "game_id"])
     side["k"] = side.groupby("team_id").cumcount() + 1
     k = side.pivot(index="game_id", columns="s", values="k")
@@ -214,13 +246,18 @@ def horizon_rows(games_rows: pd.DataFrame, strengths: pd.DataFrame, y: pd.Series
         if fut.empty:
             continue
         s = st.set_index("team_id")
-        r = fut[["game_id", "home_team_id", "away_team_id", "venue", "k_home", "k_away"]
-                + [f"{k}_{sd}" for k in LOAD for sd in ("home", "away")]].copy()
+        r = fut[
+            ["game_id", "home_team_id", "away_team_id", "venue", "k_home", "k_away"]
+            + [f"{k}_{sd}" for k in LOAD for sd in ("home", "away")]
+        ].copy()
         r["cutoff"] = cut
         r["h"] = (fut.date - cut).dt.days.to_numpy(float)
         r["S_home"], r["S_away"] = s.S.reindex(fut.home_team_id).to_numpy(), s.S.reindex(fut.away_team_id).to_numpy()
-        r["sd_home"], r["sd_away"] = s.sd.reindex(fut.home_team_id).to_numpy(), s.sd.reindex(fut.away_team_id).to_numpy()
-        r["sd2"] = r.sd_home ** 2 + r.sd_away ** 2
+        r["sd_home"], r["sd_away"] = (
+            s.sd.reindex(fut.home_team_id).to_numpy(),
+            s.sd.reindex(fut.away_team_id).to_numpy(),
+        )
+        r["sd2"] = r.sd_home**2 + r.sd_away**2
         r["y"] = fut.game_id.map(y).to_numpy(float)
         add_injury(r, injury(cut) if injury is not None else None)
         out.append(r)
@@ -270,36 +307,66 @@ def fit_horizon(rows: pd.DataFrame, pre: dict, inj_cols: list[str] | None = None
     r = float(math.exp(res.x))
     b, X = solve(r)
     e = y - base - X @ b
-    side = pd.concat([
-        pd.DataFrame({"cutoff": rows.cutoff.to_numpy(), "team_id": rows.home_team_id.to_numpy(), "e": e, "h": h,
-                      "sd": rows.sd_home.to_numpy(float)}),
-        pd.DataFrame({"cutoff": rows.cutoff.to_numpy(), "team_id": rows.away_team_id.to_numpy(), "e": -e, "h": h,
-                      "sd": rows.sd_away.to_numpy(float)})], ignore_index=True)
+    side = pd.concat(
+        [
+            pd.DataFrame(
+                {
+                    "cutoff": rows.cutoff.to_numpy(),
+                    "team_id": rows.home_team_id.to_numpy(),
+                    "e": e,
+                    "h": h,
+                    "sd": rows.sd_home.to_numpy(float),
+                }
+            ),
+            pd.DataFrame(
+                {
+                    "cutoff": rows.cutoff.to_numpy(),
+                    "team_id": rows.away_team_id.to_numpy(),
+                    "e": -e,
+                    "h": h,
+                    "sd": rows.sd_away.to_numpy(float),
+                }
+            ),
+        ],
+        ignore_index=True,
+    )
     side = side.sort_values(["cutoff", "team_id", "h"]).reset_index(drop=True)
     grp = side.groupby(["cutoff", "team_id"], sort=False)
     G = grp.e.size().to_numpy(float)
     s_e = grp.e.sum().to_numpy()
-    s_e2 = side.assign(e2=side.e ** 2).groupby(["cutoff", "team_id"], sort=False).e2.sum().to_numpy()
+    s_e2 = side.assign(e2=side.e**2).groupby(["cutoff", "team_id"], sort=False).e2.sum().to_numpy()
     sd2 = grp.sd.first().to_numpy(float) ** 2
     side["k"] = grp.cumcount()
     side["G"] = grp.e.transform("size")
-    side["minsum"] = side.h * (side.G - 1 - side.k)            # sum_{g<g'} min(h_g, h_g') over sorted h
+    side["minsum"] = side.h * (side.G - 1 - side.k)  # sum_{g<g'} min(h_g, h_g') over sorted h
     minsum = side.groupby(["cutoff", "team_id"], sort=False).minsum.sum().to_numpy(float)
     M = np.column_stack([sd2 * G * (G - 1), 2 * minsum])
-    coef, *_ = np.linalg.lstsq(M, s_e ** 2 - s_e2, rcond=None)
+    coef, *_ = np.linalg.lstsq(M, s_e**2 - s_e2, rcond=None)
     kappa, q = (max(float(c), 0.0) for c in coef)
-    sigma_game = float(np.sqrt(np.mean(e ** 2 - kappa * rows.sd2.to_numpy(float) - 2 * q * h)))
-    out = {"b0": float(b[0]), "r_per_day": r, "kappa": kappa, "q_per_day": q, "kappa_raw": float(coef[0]),
-           "q_raw": float(coef[1]), "sigma_game": sigma_game, "n_rows": int(len(rows)), "n_cells": int(len(G)),
-           "mse": float(np.mean(e ** 2))}
+    sigma_game = float(np.sqrt(np.mean(e**2 - kappa * rows.sd2.to_numpy(float) - 2 * q * h)))
+    out = {
+        "b0": float(b[0]),
+        "r_per_day": r,
+        "kappa": kappa,
+        "q_per_day": q,
+        "kappa_raw": float(coef[0]),
+        "q_raw": float(coef[1]),
+        "sigma_game": sigma_game,
+        "n_rows": int(len(rows)),
+        "n_cells": int(len(G)),
+        "mse": float(np.mean(e**2)),
+    }
     if inj_cols:
         out["c_inj"] = {c: float(v) for c, v in zip(inj_cols, b[1:])}
     return out
 
 
 def mean_margin(rows: pd.DataFrame, pre: dict, hz: dict) -> np.ndarray:
-    m = (hz["b0"] * np.exp(-hz["r_per_day"] * rows.h.to_numpy(float)) * (rows.S_home - rows.S_away).to_numpy(float)
-         + pre["hca"] * rows.venue.to_numpy(float) + load_effect(rows, pre["c"]))
+    m = (
+        hz["b0"] * np.exp(-hz["r_per_day"] * rows.h.to_numpy(float)) * (rows.S_home - rows.S_away).to_numpy(float)
+        + pre["hca"] * rows.venue.to_numpy(float)
+        + load_effect(rows, pre["c"])
+    )
     for c, v in hz.get("c_inj", {}).items():
         m = m + v * (rows[f"inj_{c}_home"] - rows[f"inj_{c}_away"]).to_numpy(float)
     return m
@@ -334,12 +401,30 @@ def horizon_cv(rows: pd.DataFrame, pre: dict, k: int = 5) -> dict:
 def team_games(g: pd.DataFrame) -> pd.DataFrame:
     """Game rows -> one row per (team, game) from the team's perspective."""
     inj = [f"inj_{c}" for c in INJ if f"inj_{c}_home" in g]
-    h = pd.DataFrame({"game_id": g.game_id, "date": g.date, "team_id": g.home_team_id, "opponent_id": g.away_team_id,
-                      "venue": g.venue, **{f"{k}_own": g[f"{k}_home"] for k in LOAD},
-                      **{f"{k}_opp": g[f"{k}_away"] for k in LOAD}, **{f"{c}_opp": g[f"{c}_away"] for c in inj}})
-    a = pd.DataFrame({"game_id": g.game_id, "date": g.date, "team_id": g.away_team_id, "opponent_id": g.home_team_id,
-                      "venue": -g.venue, **{f"{k}_own": g[f"{k}_away"] for k in LOAD},
-                      **{f"{k}_opp": g[f"{k}_home"] for k in LOAD}, **{f"{c}_opp": g[f"{c}_home"] for c in inj}})
+    h = pd.DataFrame(
+        {
+            "game_id": g.game_id,
+            "date": g.date,
+            "team_id": g.home_team_id,
+            "opponent_id": g.away_team_id,
+            "venue": g.venue,
+            **{f"{k}_own": g[f"{k}_home"] for k in LOAD},
+            **{f"{k}_opp": g[f"{k}_away"] for k in LOAD},
+            **{f"{c}_opp": g[f"{c}_away"] for c in inj},
+        }
+    )
+    a = pd.DataFrame(
+        {
+            "game_id": g.game_id,
+            "date": g.date,
+            "team_id": g.away_team_id,
+            "opponent_id": g.home_team_id,
+            "venue": -g.venue,
+            **{f"{k}_own": g[f"{k}_away"] for k in LOAD},
+            **{f"{k}_opp": g[f"{k}_home"] for k in LOAD},
+            **{f"{c}_opp": g[f"{c}_home"] for c in inj},
+        }
+    )
     return pd.concat([h, a], ignore_index=True)
 
 
@@ -353,8 +438,10 @@ def _ref_mu_parts(tg: pd.DataFrame, s: pd.DataFrame, pre: dict, hz: dict, cutoff
     xbar = {k: float(tg[f"{k}_own"].mean()) for k in c}
 
     def load(side, cat):
-        return sum((c[k] * (tg[f"{k}_{side}"].to_numpy(float) - xbar[k]) for k in c if cat is None or LOAD[k] == cat),
-                   np.zeros(len(tg)))
+        return sum(
+            (c[k] * (tg[f"{k}_{side}"].to_numpy(float) - xbar[k]) for k in c if cat is None or LOAD[k] == cat),
+            np.zeros(len(tg)),
+        )
 
     # availability terms only move teams relative to each other in a game; the reference
     # team is league-average in them too, so they are centred on the league mean of the
@@ -375,8 +462,9 @@ def _ref_mu_parts(tg: pd.DataFrame, s: pd.DataFrame, pre: dict, hz: dict, cutoff
     }
 
 
-def schedule_difficulty(tg: pd.DataFrame, strengths: pd.DataFrame, pre: dict, hz: dict,
-                        cutoff: pd.Timestamp) -> pd.DataFrame:
+def schedule_difficulty(
+    tg: pd.DataFrame, strengths: pd.DataFrame, pre: dict, hz: dict, cutoff: pd.Timestamp
+) -> pd.DataFrame:
     """Per team: games, EW_ref, D-SOS, opponent SOS, Shapley parts of D-SOS."""
     s = strengths.set_index("team_id")
     parts = _ref_mu_parts(tg, s, pre, hz, cutoff)
@@ -401,8 +489,16 @@ def schedule_difficulty(tg: pd.DataFrame, strengths: pd.DataFrame, pre: dict, hz
                 tot += wgt * (value[frozenset(S) | {k}] - value[frozenset(S)])
         shap[k] = tot
     full = value[frozenset(COMPONENTS)]
-    out = pd.DataFrame({"team_id": teams, "games": n.astype(int), "ew_ref": n / 2 - full, "d_sos": full,
-                        "opp_sos": value[frozenset({"opponent"})], **{f"part_{k}": v for k, v in shap.items()}})
+    out = pd.DataFrame(
+        {
+            "team_id": teams,
+            "games": n.astype(int),
+            "ew_ref": n / 2 - full,
+            "d_sos": full,
+            "opp_sos": value[frozenset({"opponent"})],
+            **{f"part_{k}": v for k, v in shap.items()},
+        }
+    )
     out["sos_rate"] = 1 - out.ew_ref / out.games.replace(0, np.nan)
     out["d_sos_rank"] = out.d_sos.rank(ascending=False, method="min").astype(int)
     return out
@@ -450,11 +546,23 @@ class _League:
         self.pdiff[p, a] -= m
 
 
-def simulate(rem: pd.DataFrame, strengths: pd.DataFrame, pre: dict, hz: dict, cutoff: pd.Timestamp,
-             done: pd.DataFrame | None = None, n_paths: int = 10000, seed: int = 0,
-             conference: pd.Series | None = None, division: pd.Series | None = None,
-             injuries: dict | None = None, cup: CUP.CupPlan | None = None, cup_done: pd.DataFrame | None = None,
-             poss: float = 100.0, tg_ref: pd.DataFrame | None = None) -> dict:
+def simulate(
+    rem: pd.DataFrame,
+    strengths: pd.DataFrame,
+    pre: dict,
+    hz: dict,
+    cutoff: pd.Timestamp,
+    done: pd.DataFrame | None = None,
+    n_paths: int = 10000,
+    seed: int = 0,
+    conference: pd.Series | None = None,
+    division: pd.Series | None = None,
+    injuries: dict | None = None,
+    cup: CUP.CupPlan | None = None,
+    cup_done: pd.DataFrame | None = None,
+    poss: float = 100.0,
+    tg_ref: pd.DataFrame | None = None,
+) -> dict:
     """Joint simulation of the remaining games ``rem`` (game rows).
     ``done``: completed games (home/away ids and scores) for records and tie-breaks.
     ``injuries``: :func:`availability.sample_paths` output. ``cup``: simulate the NBA Cup
@@ -516,13 +624,26 @@ def simulate(rem: pd.DataFrame, strengths: pd.DataFrame, pre: dict, hz: dict, cu
     cs = None
     if cup is not None:
         gid = cup.group_games.game_id.tolist()
-        cs = {"idx": {g: i for i, g in enumerate(gid)}, "hw": np.zeros((n_paths, len(gid)), dtype=bool),
-              "m": np.zeros((n_paths, len(gid))), "ko": {},
-              "out": {k: np.zeros((n_paths, T), bool) for k in ("qf", "sf", "final")},
-              "days": {k: max(float((d - cutoff).days), 0.0) for k, d in
-                       (("qf", cup.qf_date), ("sf", cup.sf_date), ("x0", cup.extra_dates[0]), ("x1", cup.extra_dates[1]))}}
+        cs = {
+            "idx": {g: i for i, g in enumerate(gid)},
+            "hw": np.zeros((n_paths, len(gid)), dtype=bool),
+            "m": np.zeros((n_paths, len(gid))),
+            "ko": {},
+            "out": {k: np.zeros((n_paths, T), bool) for k in ("qf", "sf", "final")},
+            "days": {
+                k: max(float((d - cutoff).days), 0.0)
+                for k, d in (
+                    ("qf", cup.qf_date),
+                    ("sf", cup.sf_date),
+                    ("x0", cup.extra_dates[0]),
+                    ("x1", cup.extra_dates[1]),
+                )
+            },
+        }
         if cup_done is not None:
-            for g_, hs, as_ in zip(cup_done.game_id, cup_done.home_score.astype(float), cup_done.away_score.astype(float)):
+            for g_, hs, as_ in zip(
+                cup_done.game_id, cup_done.home_score.astype(float), cup_done.away_score.astype(float)
+            ):
                 if g_ in cs["idx"]:
                     cs["hw"][:, cs["idx"][g_]], cs["m"][:, cs["idx"][g_]] = hs > as_, hs - as_
 
@@ -530,9 +651,11 @@ def simulate(rem: pd.DataFrame, strengths: pd.DataFrame, pre: dict, hz: dict, cu
     if tg_ref is not None:
         tg_ref = tg_ref.sort_values("date")
         r_team, r_opp = tg_ref.team_id.map(pos).to_numpy(), tg_ref.opponent_id.map(pos).to_numpy()
-        r_fixed = (hca * tg_ref.venue.to_numpy(float)
-                   + sum((pre["c"][k] * tg_ref[f"{k}_own"].to_numpy(float) for k in pre["c"]), np.zeros(len(tg_ref)))
-                   - sum((pre["c"][k] * tg_ref[f"{k}_opp"].to_numpy(float) for k in pre["c"]), np.zeros(len(tg_ref))))
+        r_fixed = (
+            hca * tg_ref.venue.to_numpy(float)
+            + sum((pre["c"][k] * tg_ref[f"{k}_own"].to_numpy(float) for k in pre["c"]), np.zeros(len(tg_ref)))
+            - sum((pre["c"][k] * tg_ref[f"{k}_opp"].to_numpy(float) for k in pre["c"]), np.zeros(len(tg_ref)))
+        )
         r_days = ((tg_ref.date - cutoff).dt.days.to_numpy(float)).clip(min=0)
         ref_ew = np.zeros((n_paths, T))
 
@@ -594,7 +717,7 @@ def _cup_day(day, cs, cup, L, play, lg, pos, rng, rows_p, hca, sigma, to_pts) ->
             a_, b_ = ko[("w14", ci)], ko[("w23", ci)]
             sa = np.argmax(ko["seeds"][:, ci, :] == a_[:, None], axis=1)
             sb = np.argmax(ko["seeds"][:, ci, :] == b_[:, None], axis=1)
-            a_home = sa < sb                                    # the better (lower) seed hosts
+            a_home = sa < sb  # the better (lower) seed hosts
             h_, w_ = np.where(a_home, a_, b_), np.where(a_home, b_, a_)
             win, _ = play(L, h_, w_, 1.0 if cup.sf_home_court else 0.0)
             out["final"][rows_p, win] = True
@@ -602,8 +725,13 @@ def _cup_day(day, cs, cup, L, play, lg, pos, rng, rows_p, hca, sigma, to_pts) ->
         for p in range(n_paths):
             qf_teams = set(ko["seeds"][p].ravel().tolist())
             for conf in ("East", "West"):
-                pool = [pos[t] for n_, ts in cup.groups.items() if cup.conference[n_] == conf for t in ts
-                        if pos[t] not in qf_teams]
+                pool = [
+                    pos[t]
+                    for n_, ts in cup.groups.items()
+                    if cup.conference[n_] == conf
+                    for t in ts
+                    if pos[t] not in qf_teams
+                ]
                 for x_, y_ in CUP.pair_extra(pool, 2, rng):
                     h_, a_ = (x_, y_) if rng.random() < 0.5 else (y_, x_)
                     lg.record_one(p, h_, a_, (L[p, h_] - L[p, a_] + hca + rng.normal(0.0, sigma)) * to_pts)
@@ -614,8 +742,16 @@ def _cup_day(day, cs, cup, L, play, lg, pos, rng, rows_p, hca, sigma, to_pts) ->
             play(L, np.where(flip, a_, b_), np.where(flip, b_, a_), 1.0)
 
 
-def seed_paths(lg: _League, teams: np.ndarray, conference: pd.Series, division: pd.Series | None, rng,
-               L_end: np.ndarray, sigma: float, hca: float) -> np.ndarray:
+def seed_paths(
+    lg: _League,
+    teams: np.ndarray,
+    conference: pd.Series,
+    division: pd.Series | None,
+    rng,
+    L_end: np.ndarray,
+    sigma: float,
+    hca: float,
+) -> np.ndarray:
     """Final seed per path and team: 1-6 by the official standings order, 7-8 from the
     play-in, 9-10 its losers, 11-15 by standings."""
     n_paths, T = lg.wins.shape
@@ -647,9 +783,19 @@ def summarise(sim: dict, wins_now: pd.Series, games_now: pd.Series) -> pd.DataFr
     w = sim["wins"]
     t = sim["teams"]
     q = np.percentile(w, [5, 25, 50, 75, 95], axis=0)
-    out = pd.DataFrame({"team_id": t, "wins_now": wins_now.reindex(t).fillna(0).to_numpy(),
-                        "games_now": games_now.reindex(t).fillna(0).to_numpy(),
-                        "exp_wins": w.mean(axis=0), "p05": q[0], "p25": q[1], "median": q[2], "p75": q[3], "p95": q[4]})
+    out = pd.DataFrame(
+        {
+            "team_id": t,
+            "wins_now": wins_now.reindex(t).fillna(0).to_numpy(),
+            "games_now": games_now.reindex(t).fillna(0).to_numpy(),
+            "exp_wins": w.mean(axis=0),
+            "p05": q[0],
+            "p25": q[1],
+            "median": q[2],
+            "p75": q[3],
+            "p95": q[4],
+        }
+    )
     out["exp_remaining_wins"] = out.exp_wins - out.wins_now
     if "seeds" in sim:
         sd = sim["seeds"]

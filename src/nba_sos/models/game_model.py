@@ -19,6 +19,7 @@ Every feature is known before tip-off:
 Tuning seasons (``TUNE_SEASONS``) choose Elo and dynamic-strength hyper-parameters and
 are never test seasons.
 """
+
 from __future__ import annotations
 
 import itertools
@@ -39,13 +40,56 @@ TUNE_SEASONS = ["2013-14", "2014-15", "2015-16"]
 DYN_GRID = {"tau": (30.0, 60.0, 120.0), "alpha": (2.0, 5.0, 15.0), "rho": (0.5, 0.7, 0.9)}
 
 GROUPS = {
-    "strength": ["elo_diff", "p_home_elo", "ewma7_diff", "ewma14_diff", "ewma21_diff", "dyn_diff",
-                 "dyn_sd_home", "dyn_sd_away", "prior_diff", "gp_home", "gp_away"],
-    "rest": ["rest_home", "rest_away", "b2b_home", "b2b_away", "g4_home", "g4_away", "g7_home", "g7_away",
-             "turn_home", "turn_away", "prevot_home", "prevot_away"],
-    "travel": ["km_home", "km_away", "tz_home", "tz_away", "road_home", "road_away", "b2bt_home", "b2bt_away",
-               "local_hour", "body_home", "body_away"],
-    "injury": ["nout_home", "nout_away", "mmin_home", "mmin_away", "mval_home", "mval_away", "inj_ok_home", "inj_ok_away"],
+    "strength": [
+        "elo_diff",
+        "p_home_elo",
+        "ewma7_diff",
+        "ewma14_diff",
+        "ewma21_diff",
+        "dyn_diff",
+        "dyn_sd_home",
+        "dyn_sd_away",
+        "prior_diff",
+        "gp_home",
+        "gp_away",
+    ],
+    "rest": [
+        "rest_home",
+        "rest_away",
+        "b2b_home",
+        "b2b_away",
+        "g4_home",
+        "g4_away",
+        "g7_home",
+        "g7_away",
+        "turn_home",
+        "turn_away",
+        "prevot_home",
+        "prevot_away",
+    ],
+    "travel": [
+        "km_home",
+        "km_away",
+        "tz_home",
+        "tz_away",
+        "road_home",
+        "road_away",
+        "b2bt_home",
+        "b2bt_away",
+        "local_hour",
+        "body_home",
+        "body_away",
+    ],
+    "injury": [
+        "nout_home",
+        "nout_away",
+        "mmin_home",
+        "mmin_away",
+        "mval_home",
+        "mval_away",
+        "inj_ok_home",
+        "inj_ok_away",
+    ],
 }
 CATEGORICAL = ["b2bt_home", "b2bt_away"]
 
@@ -57,8 +101,9 @@ def _tune_dynamic(all_games: pd.DataFrame) -> dict:
     sub = all_games[all_games.season.map(season_start_year) <= season_start_year(TUNE_SEASONS[-1])]
     for tau, alpha, rho in itertools.product(DYN_GRID["tau"], DYN_GRID["alpha"], DYN_GRID["rho"]):
         d = DY.dynamic_pregame(sub, tau, alpha, rho)
-        x = _side_merge(tune[["game_id", "home_team_id", "away_team_id", "net_rating_margin", "is_neutral"]], d,
-                        ["dyn_strength"])
+        x = _side_merge(
+            tune[["game_id", "home_team_id", "away_team_id", "net_rating_margin", "is_neutral"]], d, ["dyn_strength"]
+        )
         diff = x.dyn_strength_home - x.dyn_strength_away
         hca = float(x[~x.is_neutral].net_rating_margin.mean())
         mse = float(np.mean((x.net_rating_margin - diff - hca * (~x.is_neutral)) ** 2))
@@ -86,7 +131,7 @@ def _injury_value(availability: pd.DataFrame, player_values: pd.DataFrame, featu
     prev["season"] = prev.season.map(lambda s: f"{int(s[:4]) + 1}-{str(int(s[:4]) + 2)[-2:]}")
     prev["mpg_prev"] = prev.min_total / prev.gp.replace(0, np.nan)
     a = a.merge(prev[["season", "player_id", "lpm", "mpg_prev"]], on=["season", "player_id"], how="left")
-    a["v"] = (a.lpm.fillna(0) * a.mpg_prev.fillna(0) / 48)
+    a["v"] = a.lpm.fillna(0) * a.mpg_prev.fillna(0) / 48
     v = a.groupby(["game_id", "team_id"]).v.sum().rename("missing_value_prev").reset_index()
     v["team_id"] = v.team_id.astype(int)
     f = features[["game_id", "team_id", "injury_snapshot_usable"]].assign(team_id=lambda x: x.team_id.astype(int))
@@ -104,17 +149,31 @@ def build_features(paths: Paths) -> tuple[pd.DataFrame, dict]:
     avail = pd.read_parquet(P_ / "player_availability.parquet")
     pv = pd.read_parquet(P_ / "player_values.parquet")
 
-    elo_par = E.tune(all_games, [s for s in all_games.season.unique()
-                                 if season_start_year(s) <= season_start_year(TUNE_SEASONS[-1])],
-                     burn_in=[all_games.season.min()])
+    elo_par = E.tune(
+        all_games,
+        [s for s in all_games.season.unique() if season_start_year(s) <= season_start_year(TUNE_SEASONS[-1])],
+        burn_in=[all_games.season.min()],
+    )
     elo = E.run_elo(all_games, elo_par["k"], elo_par["hca"], elo_par["carry"])
     dyn_par = _tune_dynamic(all_games)
     dyn = DY.dynamic_pregame(all_games, dyn_par["tau"], dyn_par["alpha"], dyn_par["rho"])
     ew = {t: DY.ewma_pregame(all_games, t).rename(columns={"ewma_net": f"ewma{t}"}) for t in (7, 14, 21)}
     log.info("elo %s dyn %s", elo_par, dyn_par)
 
-    base = games[["season", "game_id", "game_date", "tipoff_utc", "home_team_id", "away_team_id", "is_neutral",
-                  "net_rating_margin", "home_win", "margin"]].copy()
+    base = games[
+        [
+            "season",
+            "game_id",
+            "game_date",
+            "tipoff_utc",
+            "home_team_id",
+            "away_team_id",
+            "is_neutral",
+            "net_rating_margin",
+            "home_win",
+            "margin",
+        ]
+    ].copy()
     base["home_team_id"], base["away_team_id"] = base.home_team_id.astype(int), base.away_team_id.astype(int)
     x = base.merge(elo, on="game_id", how="left")
     x = _side_merge(x, dyn, ["dyn_strength", "dyn_sd"])
@@ -122,17 +181,38 @@ def build_features(paths: Paths) -> tuple[pd.DataFrame, dict]:
         x = _side_merge(x, e, [f"ewma{t}"])
     tf = feats.assign(team_id=feats.team_id.astype(int))
     tf = tf.merge(_injury_value(avail, pv, feats), on=["game_id", "team_id"], how="left")
-    cols = {"season_games_played": "gp", "rest_days": "rest", "is_back_to_back": "b2b", "games_last_4_days": "g4",
-            "games_last_7_days": "g7", "turnaround_hours": "turn", "prev_overtime_periods": "prevot",
-            "travel_distance_km": "km", "timezone_change_hours": "tz", "consecutive_road_games": "road",
-            "b2b_type": "b2bt", "body_clock_tipoff_hour": "body", "n_out": "nout",
-            "missing_minutes_prior_avg": "mmin", "missing_value_prev": "mval", "injury_snapshot_usable": "inj_ok",
-            "tipoff_local_hour": "lh"}
+    cols = {
+        "season_games_played": "gp",
+        "rest_days": "rest",
+        "is_back_to_back": "b2b",
+        "games_last_4_days": "g4",
+        "games_last_7_days": "g7",
+        "turnaround_hours": "turn",
+        "prev_overtime_periods": "prevot",
+        "travel_distance_km": "km",
+        "timezone_change_hours": "tz",
+        "consecutive_road_games": "road",
+        "b2b_type": "b2bt",
+        "body_clock_tipoff_hour": "body",
+        "n_out": "nout",
+        "missing_minutes_prior_avg": "mmin",
+        "missing_value_prev": "mval",
+        "injury_snapshot_usable": "inj_ok",
+        "tipoff_local_hour": "lh",
+    }
     t2 = tf[["game_id", "team_id"] + list(cols)].rename(columns=cols)
     x = _side_merge(x, t2, list(cols.values()))
     pr = preseason.prior_ratings(all_games)
-    x = x.merge(pr.rename(columns={"team_id": "home_team_id", "prior_net_rating": "prior_h"}), on=["season", "home_team_id"], how="left")
-    x = x.merge(pr.rename(columns={"team_id": "away_team_id", "prior_net_rating": "prior_a"}), on=["season", "away_team_id"], how="left")
+    x = x.merge(
+        pr.rename(columns={"team_id": "home_team_id", "prior_net_rating": "prior_h"}),
+        on=["season", "home_team_id"],
+        how="left",
+    )
+    x = x.merge(
+        pr.rename(columns={"team_id": "away_team_id", "prior_net_rating": "prior_a"}),
+        on=["season", "away_team_id"],
+        how="left",
+    )
     x["elo_diff"] = x.home_elo - x.away_elo
     x["dyn_diff"] = x.dyn_strength_home - x.dyn_strength_away
     x["dyn_sd_home"], x["dyn_sd_away"] = x.dyn_sd_home, x.dyn_sd_away
@@ -152,11 +232,25 @@ def build_features(paths: Paths) -> tuple[pd.DataFrame, dict]:
 # ------------------------------------------------------------------ models
 def _fit_catboost(train: pd.DataFrame, valid: pd.DataFrame, cols: list[str], seed: int = 0):
     from catboost import CatBoostRegressor, Pool
+
     cats = [c for c in cols if c in CATEGORICAL]
-    m = CatBoostRegressor(iterations=2000, depth=4, learning_rate=0.03, l2_leaf_reg=5, loss_function="RMSE",
-                          random_seed=seed, verbose=False, od_type="Iter", od_wait=100, allow_writing_files=False)
-    m.fit(Pool(train[cols], train.y, cat_features=cats), eval_set=Pool(valid[cols], valid.y, cat_features=cats),
-          use_best_model=True)
+    m = CatBoostRegressor(
+        iterations=2000,
+        depth=4,
+        learning_rate=0.03,
+        l2_leaf_reg=5,
+        loss_function="RMSE",
+        random_seed=seed,
+        verbose=False,
+        od_type="Iter",
+        od_wait=100,
+        allow_writing_files=False,
+    )
+    m.fit(
+        Pool(train[cols], train.y, cat_features=cats),
+        eval_set=Pool(valid[cols], valid.y, cat_features=cats),
+        use_best_model=True,
+    )
     sigma = float(np.std(valid.y - m.predict(valid[cols])))
     return m, sigma
 
@@ -169,7 +263,7 @@ def _platt(margin: np.ndarray, won: np.ndarray) -> tuple[float, float]:
         p = 1 / (1 + np.exp(-z))
         g = np.array([np.sum((p - won) * margin), np.sum(p - won)])
         wgt = p * (1 - p)
-        H = np.array([[np.sum(wgt * margin ** 2), np.sum(wgt * margin)], [np.sum(wgt * margin), np.sum(wgt)]])
+        H = np.array([[np.sum(wgt * margin**2), np.sum(wgt * margin)], [np.sum(wgt * margin), np.sum(wgt)]])
         step = np.linalg.solve(H + 1e-9 * np.eye(2), g)
         a, b = a - step[0], b - step[1]
         if np.abs(step).max() < 1e-8:
@@ -186,8 +280,12 @@ def _linear(train: pd.DataFrame, cols: list[str]):
 
 def _metrics(y_win, y, pred, sigma) -> dict:
     p = norm.cdf(pred / sigma)
-    return {"log_loss": M.log_loss(y_win, p), "brier": M.brier(y_win, p), "mae_per100": M.mae(y, pred),
-            "ece": M.expected_calibration_error(y_win, p)}
+    return {
+        "log_loss": M.log_loss(y_win, p),
+        "brier": M.brier(y_win, p),
+        "mae_per100": M.mae(y, pred),
+        "ece": M.expected_calibration_error(y_win, p),
+    }
 
 
 def backtest(x: pd.DataFrame, test_seasons: list[str]) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
@@ -210,10 +308,21 @@ def backtest(x: pd.DataFrame, test_seasons: list[str]) -> tuple[pd.DataFrame, pd
         res = {"season": test, "n_games": len(te), "train_seasons": len(train_seasons)}
         # simple baselines (fit on all training seasons)
         p_elo = te.p_home_elo.to_numpy(float)
-        res.update({f"elo_{k}": v for k, v in {"log_loss": M.log_loss(yw, p_elo), "brier": M.brier(yw, p_elo),
-                                               "ece": M.expected_calibration_error(yw, p_elo)}.items()})
-        for name, cols in {"preseason": ["prior_diff", "home_flag"], "ewma14": ["ewma14_diff", "home_flag"],
-                           "dynamic": ["dyn_diff", "home_flag"]}.items():
+        res.update(
+            {
+                f"elo_{k}": v
+                for k, v in {
+                    "log_loss": M.log_loss(yw, p_elo),
+                    "brier": M.brier(yw, p_elo),
+                    "ece": M.expected_calibration_error(yw, p_elo),
+                }.items()
+            }
+        )
+        for name, cols in {
+            "preseason": ["prior_diff", "home_flag"],
+            "ewma14": ["ewma14_diff", "home_flag"],
+            "dynamic": ["dyn_diff", "home_flag"],
+        }.items():
             b, sg = _linear(tr_all, cols)
             pred = np.column_stack([te[c].fillna(0).to_numpy(float) for c in cols]) @ b
             res.update({f"{name}_{k}": v for k, v in _metrics(yw, y, pred, sg).items()})
@@ -225,15 +334,30 @@ def backtest(x: pd.DataFrame, test_seasons: list[str]) -> tuple[pd.DataFrame, pd
                 # probability calibration fit on the held-out last training season only
                 a, b = _platt(m.predict(valid[cols]), valid.home_win.astype(float).to_numpy())
                 p_cal = 1 / (1 + np.exp(-(a * pred + b)))
-                res.update({"cb_full_cal_log_loss": M.log_loss(yw, p_cal), "cb_full_cal_brier": M.brier(yw, p_cal),
-                            "cb_full_cal_mae_per100": M.mae(y, pred), "cb_full_cal_ece": M.expected_calibration_error(yw, p_cal),
-                            "platt_a": a, "platt_b": b})
-                preds.append(te[["season", "game_id", "home_team_id", "away_team_id", "y", "home_win"]].assign(
-                    pred_margin100=pred, p_home=norm.cdf(pred / sg), p_home_cal=p_cal))
+                res.update(
+                    {
+                        "cb_full_cal_log_loss": M.log_loss(yw, p_cal),
+                        "cb_full_cal_brier": M.brier(yw, p_cal),
+                        "cb_full_cal_mae_per100": M.mae(y, pred),
+                        "cb_full_cal_ece": M.expected_calibration_error(yw, p_cal),
+                        "platt_a": a,
+                        "platt_b": b,
+                    }
+                )
+                preds.append(
+                    te[["season", "game_id", "home_team_id", "away_team_id", "y", "home_win"]].assign(
+                        pred_margin100=pred, p_home=norm.cdf(pred / sg), p_home_cal=p_cal
+                    )
+                )
                 importances[test] = dict(zip(cols, m.get_feature_importance()))
         rows.append(res)
-        log.info("game-model %s: elo %.4f dyn %.4f cb_full %.4f", test, res["elo_log_loss"], res["dynamic_log_loss"],
-                 res["cb_full_log_loss"])
+        log.info(
+            "game-model %s: elo %.4f dyn %.4f cb_full %.4f",
+            test,
+            res["elo_log_loss"],
+            res["dynamic_log_loss"],
+            res["cb_full_log_loss"],
+        )
     return pd.DataFrame(rows), pd.concat(preds, ignore_index=True), importances
 
 

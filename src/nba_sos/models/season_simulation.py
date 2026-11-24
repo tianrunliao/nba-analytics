@@ -19,6 +19,7 @@ Variants: ``full`` (all of the above), ``v1`` (the first season-simulation versi
 prior, no availability terms, load = b2b / g4 / km / |tz|), ``fixed_strength`` (full model
 without strength uncertainty), ``pace`` (current win% carried forward).
 """
+
 from __future__ import annotations
 
 import json
@@ -38,8 +39,18 @@ from ..sos import roster_prior as RP
 
 log = logging.getLogger(__name__)
 FIRST_TRAIN = "2008-09"
-TEST_SEASONS = ["2016-17", "2017-18", "2018-19", "2019-20", "2020-21", "2021-22", "2022-23", "2023-24",
-                "2024-25", "2025-26"]
+TEST_SEASONS = [
+    "2016-17",
+    "2017-18",
+    "2018-19",
+    "2019-20",
+    "2020-21",
+    "2021-22",
+    "2022-23",
+    "2023-24",
+    "2024-25",
+    "2025-26",
+]
 CUTOFF_GAMES = [0, 20, 40, 60]
 V1_LOAD = ["b2b", "g4", "km", "tz_abs"]
 K_FOLDS = 5
@@ -55,10 +66,17 @@ def load_history(paths: Paths) -> dict:
     rows = PJ.game_rows(games, PJ.schedule_load(r("team_game_features")))
     x = r("game_model_features")[["game_id", "dyn_diff", "y"]].merge(rows, on="game_id")
     all_games = pd.concat([prior, games], ignore_index=True)
-    return {"games": games, "all_games": all_games, "rows": rows, "x": x, "pgf": AV.player_frame(paths),
-            "final": DY.season_final_strength(all_games),
-            "y": games.set_index("game_id").net_rating_margin.astype(float), "dyn": _dyn_params(paths),
-            "_states": {}}
+    return {
+        "games": games,
+        "all_games": all_games,
+        "rows": rows,
+        "x": x,
+        "pgf": AV.player_frame(paths),
+        "final": DY.season_final_strength(all_games),
+        "y": games.set_index("game_id").net_rating_margin.astype(float),
+        "dyn": _dyn_params(paths),
+        "_states": {},
+    }
 
 
 def weekly_cutoffs(dates: pd.Series) -> list[pd.Timestamp]:
@@ -68,8 +86,10 @@ def weekly_cutoffs(dates: pd.Series) -> list[pd.Timestamp]:
 
 def train_seasons(h: dict, before: str) -> list[str]:
     yr = season_start_year(before)
-    return sorted({s for s in h["x"].season.unique() if season_start_year(FIRST_TRAIN) <= season_start_year(s) < yr},
-                  key=season_start_year)
+    return sorted(
+        {s for s in h["x"].season.unique() if season_start_year(FIRST_TRAIN) <= season_start_year(s) < yr},
+        key=season_start_year,
+    )
 
 
 # ------------------------------------------------------------------ per-cutoff inputs
@@ -89,6 +109,7 @@ def prior_fn(h: dict, season: str, coef: dict | None):
 
     def f(cut, teams, prev):
         return RP.prior_at(pgf_s, prev, None if cut <= first else cut, coef, teams)
+
     return f
 
 
@@ -101,13 +122,21 @@ def injury_fn(h: dict, season: str, tabs: tuple | None):
     def f(cut):
         players, teams = _state(h, season, cut)
         return AV.expected_change(players, teams, haz, pi, ids)
+
     return f
 
 
 def strengths(h: dict, season: str, cutoffs, coef, all_games=None) -> pd.DataFrame:
     p = h["dyn"]
-    return DY.strengths_asof(h["all_games"] if all_games is None else all_games, season, cutoffs, p["tau"],
-                             p["alpha"], p["rho"], prior_fn=prior_fn(h, season, coef))
+    return DY.strengths_asof(
+        h["all_games"] if all_games is None else all_games,
+        season,
+        cutoffs,
+        p["tau"],
+        p["alpha"],
+        p["rho"],
+        prior_fn=prior_fn(h, season, coef),
+    )
 
 
 def horizon_table(h: dict, seasons: list[str], coef, tabs) -> pd.DataFrame:
@@ -136,16 +165,28 @@ def fit_models(h: dict, before: str, variant: str = "full") -> dict:
     hrows = horizon_table(h, train, coef, tabs)
     cv = PJ.horizon_cv(hrows, pre, K_FOLDS) if tabs is not None else None
     hz = PJ.fit_horizon(hrows, pre, PJ.INJ_SPECS[cv["chosen"]] if cv else [])
-    return {"variant": variant, "train": [train[0], train[-1]], "pre": pre, "hz": hz, "load_selection": sel,
-            "roster_prior": coef, "injury_tables": tabs, "horizon_cv": cv,
-            "poss": float(h["games"][h["games"].season == train[-1]].possessions.astype(float).mean())}
+    return {
+        "variant": variant,
+        "train": [train[0], train[-1]],
+        "pre": pre,
+        "hz": hz,
+        "load_selection": sel,
+        "roster_prior": coef,
+        "injury_tables": tabs,
+        "horizon_cv": cv,
+        "poss": float(h["games"][h["games"].season == train[-1]].possessions.astype(float).mean()),
+    }
 
 
 # ------------------------------------------------------------------ replays
 def cutoff_date(rows: pd.DataFrame, n: int) -> pd.Timestamp:
     """First date by which the median team has played n games (n = 0: opening night)."""
-    tg = pd.concat([rows[["date", "home_team_id"]].set_axis(["date", "team_id"], axis=1),
-                    rows[["date", "away_team_id"]].set_axis(["date", "team_id"], axis=1)])
+    tg = pd.concat(
+        [
+            rows[["date", "home_team_id"]].set_axis(["date", "team_id"], axis=1),
+            rows[["date", "away_team_id"]].set_axis(["date", "team_id"], axis=1),
+        ]
+    )
     if n == 0:
         return tg.date.min()
     for d in sorted(tg.date.unique()):
@@ -188,7 +229,9 @@ def cup_split(rows: pd.DataFrame, cut: pd.Timestamp, season: str, prev_w: pd.Ser
     return rows[~drop], plan
 
 
-def replay(h: dict, store: RawStore, season: str, fits: dict, n_paths: int, cup_cfg: dict, seed: int = 0) -> pd.DataFrame:
+def replay(
+    h: dict, store: RawStore, season: str, fits: dict, n_paths: int, cup_cfg: dict, seed: int = 0
+) -> pd.DataFrame:
     rows = h["rows"][h["rows"].season == season]
     games = h["games"][h["games"].season == season]
     conf, div, prank = standings_meta(store, season)
@@ -208,16 +251,35 @@ def replay(h: dict, store: RawStore, season: str, fits: dict, n_paths: int, cup_
             sos = PJ.schedule_difficulty(PJ.team_games(rem), st, fit["pre"], fit["hz"], cut)
             hz_runs = {name: fit["hz"]}
             if name == "full":
-                hz_runs["fixed_strength"] = {**fit["hz"], "kappa": 0.0, "q_per_day": 0.0, "sigma_game": fit["pre"]["sigma"]}
+                hz_runs["fixed_strength"] = {
+                    **fit["hz"],
+                    "kappa": 0.0,
+                    "q_per_day": 0.0,
+                    "sigma_game": fit["pre"]["sigma"],
+                }
             inj_paths = None
             if fit["injury_tables"] is not None:
                 players, teams = _state(h, season, cut)
-                inj_paths = AV.sample_paths(players, teams, *fit["injury_tables"], sorted(conf.index), n_paths,
-                                            np.random.default_rng(seed + 1))
+                inj_paths = AV.sample_paths(
+                    players, teams, *fit["injury_tables"], sorted(conf.index), n_paths, np.random.default_rng(seed + 1)
+                )
             for vname, hzv in hz_runs.items():
-                sim = PJ.simulate(rem, st, fit["pre"], hzv, cut, done=done, n_paths=n_paths, seed=seed,
-                                  conference=conf, division=div, injuries=inj_paths, cup=plan, cup_done=done,
-                                  poss=fit["poss"])
+                sim = PJ.simulate(
+                    rem,
+                    st,
+                    fit["pre"],
+                    hzv,
+                    cut,
+                    done=done,
+                    n_paths=n_paths,
+                    seed=seed,
+                    conference=conf,
+                    division=div,
+                    injuries=inj_paths,
+                    cup=plan,
+                    cup_done=done,
+                    poss=fit["poss"],
+                )
                 s = PJ.summarise(sim, w_now, g_now)
                 s = s.merge(sos[["team_id", "d_sos", "opp_sos", "games"]], on="team_id", how="left")
                 s["variant"], s["cutoff_games"], s["cutoff"], s["season"] = vname, n, cut, season
@@ -242,8 +304,13 @@ def evaluate(res: pd.DataFrame) -> pd.DataFrame:
     rows = []
     for (v, n), g in res.groupby(["variant", "cutoff_games"]):
         e = g.exp_wins - g.final_wins
-        r = {"variant": v, "cutoff_games": n, "team_seasons": len(g), "mae": float(e.abs().mean()),
-             "rmse": float(np.sqrt((e ** 2).mean()))}
+        r = {
+            "variant": v,
+            "cutoff_games": n,
+            "team_seasons": len(g),
+            "mae": float(e.abs().mean()),
+            "rmse": float(np.sqrt((e**2).mean())),
+        }
         if "p05" in g and g.p05.notna().all():
             r["cover50"] = float(((g.final_wins >= g.p25) & (g.final_wins <= g.p75)).mean())
             r["cover90"] = float(((g.final_wins >= g.p05) & (g.final_wins <= g.p95)).mean())
@@ -266,9 +333,15 @@ def sos_check(res: pd.DataFrame) -> dict:
     b, *_ = np.linalg.lstsq(X, y.to_numpy(float), rcond=None)
     res_ = y.to_numpy(float) - X @ b
     se = np.sqrt(np.diag(res_ @ res_ / (len(y) - 2) * np.linalg.inv(X.T @ X)))
-    return {"coef_strength": float(b[0]), "coef_minus_dsos": float(b[1]), "se": [float(v) for v in se],
-            "n": int(len(g)), "mae_remaining_wins_with_dsos": float(np.mean(np.abs(y - strength + g.d_sos))),
-            "mae_without_dsos": float(np.mean(np.abs(y - strength))), "d_sos_sd": float(g.d_sos.std())}
+    return {
+        "coef_strength": float(b[0]),
+        "coef_minus_dsos": float(b[1]),
+        "se": [float(v) for v in se],
+        "n": int(len(g)),
+        "mae_remaining_wins_with_dsos": float(np.mean(np.abs(y - strength + g.d_sos))),
+        "mae_without_dsos": float(np.mean(np.abs(y - strength))),
+        "d_sos_sd": float(g.d_sos.std()),
+    }
 
 
 def _fit_summary(f: dict) -> dict:
@@ -283,10 +356,14 @@ def run_backtest(paths: Paths, cfg: dict, n_paths: int = 2000) -> dict:
     for T in TEST_SEASONS:
         fits = {"full": fit_models(h, T, "full"), "v1": fit_models(h, T, "v1")}
         params[T] = {k: _fit_summary(v) for k, v in fits.items()}
-        log.info("%s load %s prior %s hz %s cv %s", T, fits["full"]["load_selection"]["features"],
-                 {k: round(v, 4) for k, v in fits["full"]["roster_prior"].items()},
-                 {k: v for k, v in fits["full"]["hz"].items() if k in ("b0", "kappa", "q_per_day", "c_inj")},
-                 fits["full"]["horizon_cv"])
+        log.info(
+            "%s load %s prior %s hz %s cv %s",
+            T,
+            fits["full"]["load_selection"]["features"],
+            {k: round(v, 4) for k, v in fits["full"]["roster_prior"].items()},
+            {k: v for k, v in fits["full"]["hz"].items() if k in ("b0", "kappa", "q_per_day", "c_inj")},
+            fits["full"]["horizon_cv"],
+        )
         out.append(replay(h, store, T, fits, n_paths, cup_cfg))
     res = pd.concat(out, ignore_index=True)
     return {"replays": res, "metrics": evaluate(res), "params": params, "sos_check": sos_check(res)}
@@ -318,7 +395,11 @@ def run_current(paths: Paths, cfg: dict, n_paths: int = 10000, seed: int = 0) ->
 
     h = load_history(paths)
     fit = fit_models(h, season, "full")
-    cut = pd.to_datetime(done.game_date).max() + pd.Timedelta(1, unit="D") if len(done) else pd.to_datetime(g.game_date).min()
+    cut = (
+        pd.to_datetime(done.game_date).max() + pd.Timedelta(1, unit="D")
+        if len(done)
+        else pd.to_datetime(g.game_date).min()
+    )
 
     # current-season player frame (participation so far) for rosters and injuries
     pg = build_player_games(cur_store, season)
@@ -349,11 +430,27 @@ def run_current(paths: Paths, cfg: dict, n_paths: int = 10000, seed: int = 0) ->
     PJ.add_injury(rem, AV.expected_change(players, teams_state, *fit["injury_tables"], ids))
     w_now, g_now = _wins_to_date(done, cut)
     conf, div, _ = standings_meta(RawStore(paths.raw), last_hist)
-    inj_paths = AV.sample_paths(players, teams_state, *fit["injury_tables"], ids, n_paths, np.random.default_rng(seed + 1))
+    inj_paths = AV.sample_paths(
+        players, teams_state, *fit["injury_tables"], ids, n_paths, np.random.default_rng(seed + 1)
+    )
     tg = PJ.team_games(rem)
-    sim = PJ.simulate(rem, st, fit["pre"], fit["hz"], cut, done=done, n_paths=n_paths, seed=seed, conference=conf,
-                      division=div, injuries=inj_paths, cup=plan, cup_done=done,
-                      poss=float(done.possessions.mean()), tg_ref=tg)
+    sim = PJ.simulate(
+        rem,
+        st,
+        fit["pre"],
+        fit["hz"],
+        cut,
+        done=done,
+        n_paths=n_paths,
+        seed=seed,
+        conference=conf,
+        division=div,
+        injuries=inj_paths,
+        cup=plan,
+        cup_done=done,
+        poss=float(done.possessions.mean()),
+        tg_ref=tg,
+    )
     summ = PJ.summarise(sim, w_now, g_now)
     sos_rem = PJ.schedule_difficulty(tg, st, fit["pre"], fit["hz"], cut)
     out = summ.merge(sos_rem, on="team_id").merge(st[["team_id", "S", "sd"]], on="team_id")
@@ -363,7 +460,14 @@ def run_current(paths: Paths, cfg: dict, n_paths: int = 10000, seed: int = 0) ->
     hurt = players[players.n > 0].assign(fv=lambda d: d.f * d.V)
     out["injured_out_value"] = out.team_id.map(hurt.groupby("team_id").fv.sum()).fillna(0.0)
     out["n_injured_out"] = out.team_id.map(hurt.groupby("team_id").size()).fillna(0).astype(int)
-    meta = {"season": season, "snapshot": snap.name, "cutoff": str(cut.date()), "completed_games": int(len(done)),
-            "remaining_scheduled_games": int(len(rem)), "cup_simulated": plan is not None,
-            "n_paths": n_paths, **_fit_summary(fit)}
+    meta = {
+        "season": season,
+        "snapshot": snap.name,
+        "cutoff": str(cut.date()),
+        "completed_games": int(len(done)),
+        "remaining_scheduled_games": int(len(rem)),
+        "cup_simulated": plan is not None,
+        "n_paths": n_paths,
+        **_fit_summary(fit),
+    }
     return {"table": out.sort_values("exp_wins", ascending=False).reset_index(drop=True), "meta": meta}

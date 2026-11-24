@@ -5,6 +5,7 @@ synthetic data. Run from the project root after `python -m nba_sos.pipeline fetc
 
     .venv/bin/python tests/fixtures/make_raw_subset.py
 """
+
 from __future__ import annotations
 
 import json

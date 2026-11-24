@@ -1,4 +1,5 @@
 """End-to-end check on the real local raw store (skipped when it has not been fetched)."""
+
 import shutil
 
 import pandas as pd
@@ -7,13 +8,15 @@ import pytest
 from nba_sos.config import PROJECT_ROOT, Paths, load_configs
 
 PATHS = Paths(PROJECT_ROOT)
-pytestmark = pytest.mark.skipif(not (PATHS.raw / "manifest.jsonl").exists(),
-                                reason="raw data not fetched; run `python -m nba_sos.pipeline fetch`")
+pytestmark = pytest.mark.skipif(
+    not (PATHS.raw / "manifest.jsonl").exists(), reason="raw data not fetched; run `python -m nba_sos.pipeline fetch`"
+)
 
 
 @pytest.fixture(scope="module")
 def built(tmp_path_factory):
     from nba_sos.build import build_all
+
     out = tmp_path_factory.mktemp("build")
 
     class TmpPaths(Paths):

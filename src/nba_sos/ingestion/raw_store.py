@@ -5,6 +5,7 @@ holding the source, request parameters, fetch time (UTC), HTTP metadata and sha2
 The upstream sources expose no per-record update timestamps, so ``fetched_at`` is the
 only provenance time we can honestly record.
 """
+
 from __future__ import annotations
 
 import hashlib

@@ -1,6 +1,7 @@
 """Five-man lineup totals per team-season (stats.nba.com LeagueDashLineups filtered by
 team). The league-wide call is capped at 2,000 lineups (~60-70% of minutes), so lineups
 are fetched team by team, which returns every lineup."""
+
 from __future__ import annotations
 
 import logging
@@ -20,14 +21,22 @@ def raw_relpath(season: str, team_id: int) -> str:
 
 def lineup_client(season: str, team_id: int, season_type: str, timeout: int) -> tuple[str, str]:
     from nba_api.stats.endpoints import leaguedashlineups
+
     ep = leaguedashlineups.LeagueDashLineups(
-        season=season, team_id_nullable=team_id, group_quantity=5, measure_type_detailed_defense="Base",
-        per_mode_detailed="Totals", season_type_all_star=season_type, timeout=timeout)
+        season=season,
+        team_id_nullable=team_id,
+        group_quantity=5,
+        measure_type_detailed_defense="Base",
+        per_mode_detailed="Totals",
+        season_type_all_star=season_type,
+        timeout=timeout,
+    )
     return ep.nba_response.get_response(), ep.nba_response.get_url()
 
 
-def fetch_team_lineups(store: RawStore, season: str, team_ids: list[int], cfg: dict,
-                       client=lineup_client, sleep=time.sleep) -> int:
+def fetch_team_lineups(
+    store: RawStore, season: str, team_ids: list[int], cfg: dict, client=lineup_client, sleep=time.sleep
+) -> int:
     n = 0
     for tid in team_ids:
         rel = raw_relpath(season, tid)
@@ -37,9 +46,19 @@ def fetch_team_lineups(store: RawStore, season: str, team_ids: list[int], cfg: d
             try:
                 text, url = client(season, tid, cfg["season_type"], int(cfg["request_timeout_s"]))
                 nba_stats.parse_payload("team_lineups", text)
-                store.write(rel, text.encode("utf-8"), {"source": "stats.nba.com", "endpoint": "leaguedashlineups",
-                                                        "name": "team_lineups", "season": season,
-                                                        "team_id": int(tid), "url": url, "attempt": attempt})
+                store.write(
+                    rel,
+                    text.encode("utf-8"),
+                    {
+                        "source": "stats.nba.com",
+                        "endpoint": "leaguedashlineups",
+                        "name": "team_lineups",
+                        "season": season,
+                        "team_id": int(tid),
+                        "url": url,
+                        "attempt": attempt,
+                    },
+                )
                 n += 1
                 break
             except Exception as err:  # noqa: BLE001 - retried, then raised

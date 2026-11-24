@@ -6,6 +6,7 @@ earlier games"). Schedule/travel features use the schedule, which is published b
 the season. Injury features use only the pre-tip-off report chosen in
 :mod:`nba_sos.preprocessing.availability`.
 """
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -20,14 +21,23 @@ ASSUMED_MAX_GAME_DURATION = timedelta(hours=4)
 
 def team_game_long(games: pd.DataFrame) -> pd.DataFrame:
     """Two rows per game, from each team's perspective, with results."""
-    cols = ["season", "game_id", "game_date", "tipoff_utc", "is_neutral", "venue_id", "possessions",
-            "overtime_periods"]
-    h = games[cols].assign(team_id=games.home_team_id, team=games.home_team,
-                           opponent_id=games.away_team_id, home_away="H",
-                           pts_for=games.home_score, pts_against=games.away_score)
-    a = games[cols].assign(team_id=games.away_team_id, team=games.away_team,
-                           opponent_id=games.home_team_id, home_away="A",
-                           pts_for=games.away_score, pts_against=games.home_score)
+    cols = ["season", "game_id", "game_date", "tipoff_utc", "is_neutral", "venue_id", "possessions", "overtime_periods"]
+    h = games[cols].assign(
+        team_id=games.home_team_id,
+        team=games.home_team,
+        opponent_id=games.away_team_id,
+        home_away="H",
+        pts_for=games.home_score,
+        pts_against=games.away_score,
+    )
+    a = games[cols].assign(
+        team_id=games.away_team_id,
+        team=games.away_team,
+        opponent_id=games.home_team_id,
+        home_away="A",
+        pts_for=games.away_score,
+        pts_against=games.home_score,
+    )
     t = pd.concat([h, a], ignore_index=True)
     t["win"] = (t.pts_for > t.pts_against).astype(float)
     t["margin"] = (t.pts_for - t.pts_against).astype(float)
@@ -65,8 +75,9 @@ def schedule_density(t: pd.DataFrame, windows: list[int]) -> pd.DataFrame:
     out = pd.DataFrame(index=t.index)
     g = t.groupby(["season", "team_id"], sort=False)
     prev_date = g.game_date.shift(1)
-    rest = pd.Series([(d - p).days - 1 if pd.notna(p) else np.nan
-                      for d, p in zip(t.game_date, prev_date)], index=t.index)
+    rest = pd.Series(
+        [(d - p).days - 1 if pd.notna(p) else np.nan for d, p in zip(t.game_date, prev_date)], index=t.index
+    )
     out["rest_days"] = rest
     out["is_back_to_back"] = (rest == 0).astype("boolean").where(rest.notna())
     for w in windows:
@@ -86,7 +97,8 @@ def home_venues(t: pd.DataFrame) -> pd.DataFrame:
     c = h.groupby(["season", "team_id", "venue_id"]).size().rename("n").reset_index()
     c = c.sort_values(["season", "team_id", "n", "venue_id"], ascending=[True, True, False, True])
     return c.drop_duplicates(["season", "team_id"])[["season", "team_id", "venue_id"]].rename(
-        columns={"venue_id": "home_venue_id"})
+        columns={"venue_id": "home_venue_id"}
+    )
 
 
 def travel(t: pd.DataFrame, venues: pd.DataFrame) -> pd.DataFrame:
@@ -95,15 +107,20 @@ def travel(t: pd.DataFrame, venues: pd.DataFrame) -> pd.DataFrame:
     v = venues.set_index("venue_id")
     hv = home_venues(t)
     tt = t[["season", "team_id", "venue_id", "tipoff_utc", "home_away", "is_neutral"]].merge(
-        hv, on=["season", "team_id"], how="left")
+        hv, on=["season", "team_id"], how="left"
+    )
     tt.index = t.index
     prev = t.groupby(["season", "team_id"], sort=False).venue_id.shift(1)
     origin = prev.fillna(tt.home_venue_id)
     out = pd.DataFrame(index=t.index)
     out["prev_venue_id"] = origin
     out["travel_origin"] = np.where(prev.isna(), "season_start_home_venue", "previous_game_venue")
-    out["travel_distance_km"] = haversine_km(v.latitude.reindex(origin).values, v.longitude.reindex(origin).values,
-                                             v.latitude.reindex(t.venue_id).values, v.longitude.reindex(t.venue_id).values)
+    out["travel_distance_km"] = haversine_km(
+        v.latitude.reindex(origin).values,
+        v.longitude.reindex(origin).values,
+        v.latitude.reindex(t.venue_id).values,
+        v.longitude.reindex(t.venue_id).values,
+    )
 
     def offset_h(zone, ts):
         return ts.tz_convert(ZoneInfo(zone)).utcoffset().total_seconds() / 3600
@@ -111,12 +128,12 @@ def travel(t: pd.DataFrame, venues: pd.DataFrame) -> pd.DataFrame:
     tz_cur = v.timezone.reindex(t.venue_id).values
     tz_prev = v.timezone.reindex(origin).values
     # both offsets evaluated at the current tip-off instant, so DST changes are not counted as travel
-    out["timezone_change_hours"] = [offset_h(c, ts) - offset_h(p, ts)
-                                    for c, p, ts in zip(tz_cur, tz_prev, t.tipoff_utc)]
+    out["timezone_change_hours"] = [
+        offset_h(c, ts) - offset_h(p, ts) for c, p, ts in zip(tz_cur, tz_prev, t.tipoff_utc)
+    ]
     # road = away, or neutral site for either team
     road = (t.home_away == "A") | t.is_neutral
-    run = road.groupby([t.season, t.team_id]).transform(
-        lambda s: s.groupby((~s).cumsum()).cumsum())
+    run = road.groupby([t.season, t.team_id]).transform(lambda s: s.groupby((~s).cumsum()).cumsum())
     out["consecutive_road_games"] = run.astype(int)
     return out
 
@@ -161,32 +178,41 @@ def back_to_back_context(t: pd.DataFrame, venues: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-def injury_features(t: pd.DataFrame, availability: pd.DataFrame, team_status: pd.DataFrame,
-                    player_games: pd.DataFrame, missing_statuses: list[str]) -> pd.DataFrame:
+def injury_features(
+    t: pd.DataFrame,
+    availability: pd.DataFrame,
+    team_status: pd.DataFrame,
+    player_games: pd.DataFrame,
+    missing_statuses: list[str],
+) -> pd.DataFrame:
     """Counts by status and the season-to-date average minutes of missing players.
     NaN when no usable pre-tip-off snapshot exists (never imputed as 0)."""
     key = t[["season", "game_id", "team_id", "game_date"]].copy()
     key["team_id"] = key.team_id.astype("Int64")
-    ts = team_status[["game_id", "team_id", "snapshot_usable", "not_submitted", "report_found",
-                      "report_published_at_utc"]]
+    ts = team_status[
+        ["game_id", "team_id", "snapshot_usable", "not_submitted", "report_found", "report_published_at_utc"]
+    ]
     k = key.merge(ts, on=["game_id", "team_id"], how="left")
     # rows whose team could not be resolved are excluded here and counted in the audit
     a = availability[availability.status_valid.astype(bool) & availability.team_id.notna()].copy()
 
-    counts = a.pivot_table(index=["game_id", "team_id"], columns="injury_status", values="player_key",
-                           aggfunc="count", fill_value=0)
+    counts = a.pivot_table(
+        index=["game_id", "team_id"], columns="injury_status", values="player_key", aggfunc="count", fill_value=0
+    )
     for s in ["Out", "Doubtful", "Questionable", "Probable"]:
         if s not in counts.columns:
             counts[s] = 0
-    counts = counts[["Out", "Doubtful", "Questionable", "Probable"]].rename(
-        columns=lambda s: f"n_{s.lower()}").reset_index()
+    counts = (
+        counts[["Out", "Doubtful", "Questionable", "Probable"]].rename(columns=lambda s: f"n_{s.lower()}").reset_index()
+    )
 
     # season-to-date minutes per game for each player, strictly before the game date
     pg = player_games.sort_values(["season", "player_id", "game_date"])
     gp = pg.groupby(["season", "player_id"])
     pg = pg.assign(cum_min=gp.minutes.cumsum(), cum_n=gp.cumcount() + 1)
     miss = a[a.injury_status.isin(missing_statuses) & a.player_id.notna()].merge(
-        key[["game_id", "team_id", "game_date"]], on=["game_id", "team_id"], how="left")
+        key[["game_id", "team_id", "game_date"]], on=["game_id", "team_id"], how="left"
+    )
     mins = []
     for (season, pid), grp in miss.groupby(["season", "player_id"]):
         hist = pg[(pg.season == season) & (pg.player_id == pid)]
@@ -199,21 +225,29 @@ def injury_features(t: pd.DataFrame, availability: pd.DataFrame, team_status: pd
     else:
         miss["prior_mpg"] = pd.Series(dtype=float)
     mm = miss.groupby(["game_id", "team_id"]).prior_mpg.sum().rename("missing_minutes_prior_avg").reset_index()
-    unmatched = a[a.injury_status.isin(missing_statuses) & a.player_id.isna()].groupby(
-        ["game_id", "team_id"]).size().rename("n_missing_unmatched").reset_index()
+    unmatched = (
+        a[a.injury_status.isin(missing_statuses) & a.player_id.isna()]
+        .groupby(["game_id", "team_id"])
+        .size()
+        .rename("n_missing_unmatched")
+        .reset_index()
+    )
 
-    k = k.merge(counts, on=["game_id", "team_id"], how="left").merge(
-        mm, on=["game_id", "team_id"], how="left").merge(unmatched, on=["game_id", "team_id"], how="left")
+    k = (
+        k.merge(counts, on=["game_id", "team_id"], how="left")
+        .merge(mm, on=["game_id", "team_id"], how="left")
+        .merge(unmatched, on=["game_id", "team_id"], how="left")
+    )
     usable = k.snapshot_usable.fillna(False).astype(bool)
-    cols = ["n_out", "n_doubtful", "n_questionable", "n_probable", "missing_minutes_prior_avg",
-            "n_missing_unmatched"]
+    cols = ["n_out", "n_doubtful", "n_questionable", "n_probable", "missing_minutes_prior_avg", "n_missing_unmatched"]
     for c in cols:
         k[c] = k[c].fillna(0).where(usable)
     k["n_missing_players"] = (k.n_out + k.n_doubtful).where(usable)
     k["injury_snapshot_usable"] = usable
     k.index = t.index
     return k[["injury_snapshot_usable", "report_published_at_utc", *cols, "n_missing_players"]].rename(
-        columns={"report_published_at_utc": "injury_report_published_at_utc"})
+        columns={"report_published_at_utc": "injury_report_published_at_utc"}
+    )
 
 
 def results_cutoff(t: pd.DataFrame, games: pd.DataFrame) -> pd.Series:
@@ -224,19 +258,35 @@ def results_cutoff(t: pd.DataFrame, games: pd.DataFrame) -> pd.Series:
     return t.game_date.map(prev_max) + ASSUMED_MAX_GAME_DURATION
 
 
-def build_team_game_features(games: pd.DataFrame, venues: pd.DataFrame, availability: pd.DataFrame,
-                             team_status: pd.DataFrame, player_games: pd.DataFrame,
-                             feature_cfg: dict) -> pd.DataFrame:
+def build_team_game_features(
+    games: pd.DataFrame,
+    venues: pd.DataFrame,
+    availability: pd.DataFrame,
+    team_status: pd.DataFrame,
+    player_games: pd.DataFrame,
+    feature_cfg: dict,
+) -> pd.DataFrame:
     t = team_game_long(games)
     parts = [
-        t[["season", "game_id", "game_date", "tipoff_utc", "team_id", "team", "opponent_id",
-           "home_away", "is_neutral", "venue_id"]],
+        t[
+            [
+                "season",
+                "game_id",
+                "game_date",
+                "tipoff_utc",
+                "team_id",
+                "team",
+                "opponent_id",
+                "home_away",
+                "is_neutral",
+                "venue_id",
+            ]
+        ],
         efficiency_to_date(t),
         schedule_density(t, feature_cfg["schedule_density"]["windows_days"]),
         travel(t, venues),
         back_to_back_context(t, venues),
-        injury_features(t, availability, team_status, player_games,
-                        feature_cfg["injury"]["missing_statuses"]),
+        injury_features(t, availability, team_status, player_games, feature_cfg["injury"]["missing_statuses"]),
     ]
     f = pd.concat(parts, axis=1)
     f["results_cutoff_utc"] = results_cutoff(t, games)  # index-aligned; keeps tz

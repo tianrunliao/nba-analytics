@@ -1,7 +1,8 @@
 """First-n-games schedule difficulty for the current season, from the latest snapshot.
 
-    python -m nba_sos.pipeline window-sos --n 15
+python -m nba_sos.pipeline window-sos --n 15
 """
+
 from __future__ import annotations
 
 import logging
@@ -72,29 +73,45 @@ def run(paths: Paths, cfg: dict, n: int = 15) -> tuple[pd.DataFrame, dict]:
     gp = pd.concat([done.home_team_id, done.away_team_id]).value_counts()
     n_fit = int(gp.median())
     params = window.fit_strength(hist, all_hist, n_fit)
-    params.update({"n_fit": n_fit, "snapshot": snap.name, "completed_games": int(len(done)),
-                   "games_played_min": int(gp.min()), "games_played_max": int(gp.max())})
+    params.update(
+        {
+            "n_fit": n_fit,
+            "snapshot": snap.name,
+            "completed_games": int(len(done)),
+            "games_played_min": int(gp.min()),
+            "games_played_max": int(gp.max()),
+        }
+    )
 
     # strengths now: prior (last season) + this season to date
     prior = pd.read_parquet(paths.processed / "games.parquet")
     pr = window.preseason.prior_ratings(prior)
     pr = pr[pr.season == season][["team_id", "prior_net_rating"]]
     tl = team_game_long(done.assign(possessions=done.possessions.astype(float)))
-    cur = tl.groupby("team_id").apply(
-        lambda d: (d.pts_for.sum() - d.pts_against.sum()) / d.possessions.sum() * 100,
-        include_groups=False).rename("net_to_date").reset_index()
+    cur = (
+        tl.groupby("team_id")
+        .apply(lambda d: (d.pts_for.sum() - d.pts_against.sum()) / d.possessions.sum() * 100, include_groups=False)
+        .rename("net_to_date")
+        .reset_index()
+    )
     st = pr.merge(cur, on="team_id", how="outer")
     st["team_id"] = st.team_id.astype("Int64")
     st["S"] = params["a"] * st.prior_net_rating + params["c"] * st.net_to_date
     st["team"] = st.team_id.map(code)
 
     # window = each team's first n scheduled games
-    t = team_game_long(g.assign(home_score=g.home_score.astype("Float64"), away_score=g.away_score.astype("Float64"),
-                                possessions=g.possessions.astype(float)))
+    t = team_game_long(
+        g.assign(
+            home_score=g.home_score.astype("Float64"),
+            away_score=g.away_score.astype("Float64"),
+            possessions=g.possessions.astype(float),
+        )
+    )
     t = pd.concat([t, schedule_density(t, [4, 7]), travel(t, venues), back_to_back_context(t, venues)], axis=1)
     t["k"] = t.groupby(["season", "team_id"]).cumcount()
     opp = t[["game_id", "team_id", "rest_days", "is_back_to_back"]].rename(
-        columns={"team_id": "opponent_id", "rest_days": "opp_rest_days", "is_back_to_back": "opp_b2b"})
+        columns={"team_id": "opponent_id", "rest_days": "opp_rest_days", "is_back_to_back": "opp_b2b"}
+    )
     t = t.merge(opp, on=["game_id", "opponent_id"], how="left")
     t["team_id"], t["opponent_id"] = t.team_id.astype("Int64"), t.opponent_id.astype("Int64")
     w = t[t.k < n].copy()
@@ -112,15 +129,23 @@ def run(paths: Paths, cfg: dict, n: int = 15) -> tuple[pd.DataFrame, dict]:
     pair_s = pd.DataFrame(rows)
     pair_s["team_id"], pair_s["opponent_id"] = pair_s.team_id.astype("Int64"), pair_s.opponent_id.astype("Int64")
     out = window.window_sos(w, pair_s, params)
-    burden = w.groupby("team_id").agg(
-        played=("pts_for", lambda s: int(s.notna().sum())),
-        home=("home_away", lambda s: int((s == "H").sum())),
-        b2b=("is_back_to_back", lambda s: int(s.fillna(False).sum())),
-        b2b_road_road=("b2b_type", lambda s: int((s == "AA").sum())),
-        opp_on_b2b=("opp_b2b", lambda s: int(s.fillna(False).sum())),
-        rest_edge=("rest_days", "sum"), opp_rest=("opp_rest_days", "sum"),
-        travel_km=("travel_distance_km", "sum"), max_road_run=("consecutive_road_games", "max")).reset_index()
+    burden = (
+        w.groupby("team_id")
+        .agg(
+            played=("pts_for", lambda s: int(s.notna().sum())),
+            home=("home_away", lambda s: int((s == "H").sum())),
+            b2b=("is_back_to_back", lambda s: int(s.fillna(False).sum())),
+            b2b_road_road=("b2b_type", lambda s: int((s == "AA").sum())),
+            opp_on_b2b=("opp_b2b", lambda s: int(s.fillna(False).sum())),
+            rest_edge=("rest_days", "sum"),
+            opp_rest=("opp_rest_days", "sum"),
+            travel_km=("travel_distance_km", "sum"),
+            max_road_run=("consecutive_road_games", "max"),
+        )
+        .reset_index()
+    )
     burden["rest_edge"] = burden.rest_edge - burden.opp_rest
     out = out.merge(burden.drop(columns=["opp_rest"]), on="team_id").merge(
-        st[["team_id", "prior_net_rating", "net_to_date", "S"]], on="team_id")
+        st[["team_id", "prior_net_rating", "net_to_date", "S"]], on="team_id"
+    )
     return out.sort_values("d_sos_rank").reset_index(drop=True), params

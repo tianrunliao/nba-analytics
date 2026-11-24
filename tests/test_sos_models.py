@@ -23,7 +23,7 @@ def test_causal_sos_uses_only_opponent_games_before_the_date(mini_season):
     _, per_game = static_sos(mini_season)
     gid = mini_season[(mini_season.home_team == "AAA") & (mini_season.away_team == "CCC")].game_id.iloc[0]
     r = per_game[(per_game.game_id == gid) & (per_game.team_id == 1)].iloc[0]
-    assert r.opp_win_pct_to_date_ex == 0.0          # CCC lost both earlier games
+    assert r.opp_win_pct_to_date_ex == 0.0  # CCC lost both earlier games
     assert r.opp_net_rating_to_date == pytest.approx(-20.0)
     opener = per_game[per_game.game_id == mini_season.game_id.iloc[0]]
     assert opener.opp_win_pct_to_date_ex.isna().all()
@@ -34,14 +34,20 @@ def test_causal_sos_uses_only_opponent_games_before_the_date(mini_season):
     _, per_game2 = static_sos(g2)
     early = per_game.merge(mini_season[["game_id", "game_date"]], on="game_id")
     keep = early.game_date <= pd.Timestamp("2022-10-24").date()
-    pd.testing.assert_frame_equal(per_game[keep.values].reset_index(drop=True),
-                                  per_game2[keep.values].reset_index(drop=True))
+    pd.testing.assert_frame_equal(
+        per_game[keep.values].reset_index(drop=True), per_game2[keep.values].reset_index(drop=True)
+    )
 
 
 # ------------------------------------------------------------------ matchups
-STANDINGS = pd.DataFrame({"season": "2022-23", "team_id": pd.array([1, 2, 3, 4], dtype="Int64"),
-                          "conference": ["East", "East", "West", "West"],
-                          "division": ["Atlantic", "Atlantic", "Pacific", "Northwest"]})
+STANDINGS = pd.DataFrame(
+    {
+        "season": "2022-23",
+        "team_id": pd.array([1, 2, 3, 4], dtype="Int64"),
+        "conference": ["East", "East", "West", "West"],
+        "division": ["Atlantic", "Atlantic", "Pacific", "Northwest"],
+    }
+)
 
 
 def test_matchup_counts_symmetric_with_relations(mini_season, venues):
@@ -103,8 +109,9 @@ def test_fit_recovers_known_coefficients():
 
 
 def test_prior_ratings_come_from_previous_season_only():
-    prev = make_games([("2021-22", "2021-11-01", "AAA", "BBB", 120, 100),
-                       ("2021-22", "2021-11-02", "CCC", "DDD", 100, 100 + 10)])
+    prev = make_games(
+        [("2021-22", "2021-11-01", "AAA", "BBB", 120, 100), ("2021-22", "2021-11-02", "CCC", "DDD", 100, 100 + 10)]
+    )
     cur = make_games([("2022-23", "2022-11-01", "AAA", "CCC", 90, 100)])
     pr = preseason.prior_ratings(pd.concat([prev, cur]))
     a = pr[(pr.season == "2022-23") & (pr.team_id == 1)].prior_net_rating.iloc[0]
@@ -116,8 +123,12 @@ def test_prior_ratings_come_from_previous_season_only():
 
 def test_neutral_games_get_no_home_advantage():
     params = {"b": 0.5, "hca": 2.0, "sigma": 13.0, "const_home_win_rate": 0.56, "const_home_margin": 2.0}
-    g = make_games([("2022-23", "2022-11-01", "AAA", "BBB", 100, 90),
-                    ("2022-23", "2022-11-02", "AAA", "BBB", 100, 90, 100.0, True)])
+    g = make_games(
+        [
+            ("2022-23", "2022-11-01", "AAA", "BBB", 100, 90),
+            ("2022-23", "2022-11-02", "AAA", "BBB", 100, 90, 100.0, True),
+        ]
+    )
     d = g.assign(prior_home=0.0, prior_away=0.0, prior_diff=0.0, home_flag=(~g.is_neutral).astype(float))
     p = preseason.predict(params, d)
     assert p.pred_margin.tolist() == [2.0, 0.0]

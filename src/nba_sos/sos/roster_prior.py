@@ -14,6 +14,7 @@ team-seasons of the training seasons only: target = the season's final schedule-
 strength, R measured on opening night. Grouped k-fold over seasons compares the blend
 with the old rho * last-season rule out of fold.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -71,12 +72,20 @@ def fit_prior(table: pd.DataFrame, rho: float, k: int = 5) -> dict:
         base.append(v.y - rho * v.prev)
     oof, base = pd.concat(oof), pd.concat(base)
     b = _fit(table)
-    return {"a_prev": float(b[0]), "b_roster": float(b[1]), "c": float(b[2]), "n": int(len(table)),
-            "oof_mse": float((oof ** 2).mean()), "oof_mse_rho_prev": float((base ** 2).mean()), "rho": rho}
+    return {
+        "a_prev": float(b[0]),
+        "b_roster": float(b[1]),
+        "c": float(b[2]),
+        "n": int(len(table)),
+        "oof_mse": float((oof**2).mean()),
+        "oof_mse_rho_prev": float((base**2).mean()),
+        "rho": rho,
+    }
 
 
-def prior_at(pgf_season: pd.DataFrame, final_prev: pd.Series, cutoff: pd.Timestamp | None, coef: dict,
-             teams: list[int]) -> pd.Series:
+def prior_at(
+    pgf_season: pd.DataFrame, final_prev: pd.Series, cutoff: pd.Timestamp | None, coef: dict, teams: list[int]
+) -> pd.Series:
     R = roster_value(pgf_season, cutoff).reindex(teams).fillna(0.0)
     prev = final_prev.reindex(teams).fillna(0.0)
     return coef["a_prev"] * prev + coef["b_roster"] * R + coef["c"]

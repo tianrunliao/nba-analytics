@@ -14,6 +14,7 @@ his teammates' — the shared-credit problem of raw on/off. Opponent lineups are
 the data; they average out over a season and are treated as noise. ``lam`` (in minutes)
 is chosen per season by 5-fold cross-validation over lineups.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -65,14 +66,19 @@ def fit_season(lu: pd.DataFrame, pace: float, prior_by_player: pd.Series, seed: 
     c, r = _solve(X, y, w, prior, lam)
     c0, r0 = _solve(X, y, w, np.zeros_like(prior), lam)  # same penalty, no prior (pure RAPM-style)
     minutes = X.T @ w
-    out = pd.DataFrame({"player_id": players, "lpm": r, "rapm_no_prior": r0, "prior": prior,
-                        "lineup_minutes": minutes})
-    return out, {"lambda": lam, "kappa": kappa, "cv": {f"{a}|{b}": v for (a, b), v in cv.items()},
-                 "intercept": float(c), "n_lineups": int(len(lu))}
+    out = pd.DataFrame({"player_id": players, "lpm": r, "rapm_no_prior": r0, "prior": prior, "lineup_minutes": minutes})
+    return out, {
+        "lambda": lam,
+        "kappa": kappa,
+        "cv": {f"{a}|{b}": v for (a, b), v in cv.items()},
+        "intercept": float(c),
+        "n_lineups": int(len(lu)),
+    }
 
 
-def lineup_box_design(lu: pd.DataFrame, pace: float, z: pd.DataFrame, features: list[str],
-                      demean: bool = True) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+def lineup_box_design(
+    lu: pd.DataFrame, pace: float, z: pd.DataFrame, features: list[str], demean: bool = True
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """One season: x_l = sum of the five players' era-standardised features, y_l = net per
     100, both demeaned (minutes-weighted) within team-season; weights = minutes."""
     zc = [f"z_{f}" for f in features]
@@ -95,8 +101,9 @@ def lineup_box_design(lu: pd.DataFrame, pace: float, z: pd.DataFrame, features: 
     return X, y, w
 
 
-def fit_box_on_lineups(designs: list[tuple[np.ndarray, np.ndarray, np.ndarray]], features: list[str],
-                       alpha: float = 1000.0) -> dict:
+def fit_box_on_lineups(
+    designs: list[tuple[np.ndarray, np.ndarray, np.ndarray]], features: list[str], alpha: float = 1000.0
+) -> dict:
     """Box-score weights identified from lineup variation WITHIN team-seasons: team quality
     and cross-team box-score accounting cannot drive them — only which box profiles make a
     team's own lineups better or worse. ``designs``: outputs of ``lineup_box_design``."""

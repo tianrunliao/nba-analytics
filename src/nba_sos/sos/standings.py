@@ -13,6 +13,7 @@ the first criterion of the list for their size; if nothing separates them, a ran
 "Postseason-eligible": teams with one of the 10 best records of their conference, ties
 for 10th included.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -51,8 +52,9 @@ class Season:
         confrec = lambda t, g: self.pct(t, np.flatnonzero(self.conf == self.conf[t]))  # noqa: E731
         elig_own = lambda t, g: self.pct(t, self._eligible(self.conf[t]))  # noqa: E731
         others = lambda c: [x for x in np.unique(self.conf) if x != c]  # noqa: E731
-        elig_opp = lambda t, g: (self.pct(t, self._eligible(others(self.conf[t])[0]))  # noqa: E731
-                                 if others(self.conf[t]) else None)
+        elig_opp = lambda t, g: (  # noqa: E731
+            self.pct(t, self._eligible(others(self.conf[t])[0])) if others(self.conf[t]) else None
+        )
         pdiff = lambda t, g: round(float(self.pdiff[t]), 9)  # noqa: E731
         if n == 2:
             return [h2h, divw, divrec, confrec, elig_own, elig_opp, pdiff]
@@ -69,7 +71,7 @@ class Season:
             if len(levels) == 1:
                 continue
             out = []
-            for lv in levels:                                   # better group(s) first; restart within
+            for lv in levels:  # better group(s) first; restart within
                 out += self.break_ties([t for t, v in zip(group, vals) if v == lv], for_division)
             return out
         g = list(group)

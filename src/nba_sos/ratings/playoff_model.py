@@ -24,6 +24,7 @@ playoff injuries do not distort c1..c3, and it is set to 0 in the ranking:
 
     rating = c1*theta + c2*momentum + c3*h_start
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -52,7 +53,9 @@ def status_miss_table(availability: pd.DataFrame, player_games: pd.DataFrame, se
     a = availability[availability.season.isin(seasons) & availability.player_id.notna()]
     played = player_games[player_games.minutes > 0][["game_id", "player_id"]].assign(played=True)
     mpg = player_games[player_games.minutes > 0].groupby(["season", "player_id"]).minutes.mean().rename("mpg")
-    m = a.merge(played, on=["game_id", "player_id"], how="left").merge(mpg.reset_index(), on=["season", "player_id"], how="left")
+    m = a.merge(played, on=["game_id", "player_id"], how="left").merge(
+        mpg.reset_index(), on=["season", "player_id"], how="left"
+    )
     m["missed"] = ~m.played.astype("boolean").fillna(False).astype(bool)
     m["rotation"] = m.mpg.fillna(0) >= ROTATION_MPG
     return m.groupby(["injury_status", "rotation"]).missed.agg(p_miss="mean", n="size").reset_index()
@@ -91,8 +94,14 @@ def choose_streak_threshold(x: pd.DataFrame) -> dict:
     return {"k": best, "f1": scores, "n_players": int(len(x)), "n_out": int(x.out.sum())}
 
 
-def health_start(roster: pd.DataFrame, statuses: pd.DataFrame | None, rs_end_streak: pd.DataFrame | None,
-                 miss_table: pd.DataFrame | None, coefs: dict, streak_k: int | None = None) -> pd.DataFrame:
+def health_start(
+    roster: pd.DataFrame,
+    statuses: pd.DataFrame | None,
+    rs_end_streak: pd.DataFrame | None,
+    miss_table: pd.DataFrame | None,
+    coefs: dict,
+    streak_k: int | None = None,
+) -> pd.DataFrame:
     """Per team: expected missing f and f*value at playoff start, and the per-100 effect.
     ``statuses``: player_id, team_id, injury_status from the pre-playoff report (or None).
     Without statuses: ``rs_end_streak`` (player_id, team_id, streak from
@@ -113,35 +122,48 @@ def health_start(roster: pd.DataFrame, statuses: pd.DataFrame | None, rs_end_str
         r["source"] = "rs_end_absence"
     r["exp_f"] = r.p_miss * r.f
     r["exp_fv"] = r.p_miss * r.f * r.value
-    team = r.groupby("team_id").agg(h_minutes=("exp_f", "sum"), h_value=("exp_fv", "sum"),
-                                    source=("source", "first")).reset_index()
+    team = (
+        r.groupby("team_id")
+        .agg(h_minutes=("exp_f", "sum"), h_value=("exp_fv", "sum"), source=("source", "first"))
+        .reset_index()
+    )
     team["h_start"] = coefs["b_min"] * team.h_minutes + coefs["b_val"] * team.h_value
     return team, r
 
 
-def inplay_health(playoff_pg: pd.DataFrame, roster: pd.DataFrame, start_detail: pd.DataFrame,
-                  playoff_games: pd.DataFrame, coefs: dict) -> pd.DataFrame:
+def inplay_health(
+    playoff_pg: pd.DataFrame, roster: pd.DataFrame, start_detail: pd.DataFrame, playoff_games: pd.DataFrame, coefs: dict
+) -> pd.DataFrame:
     """Per playoff team-game: health effect of rotation players who were expected to be
     available at the start (p_miss < 0.5) but logged no minutes in that game."""
     avail = start_detail[(start_detail.p_miss < 0.5) & (start_detail.mpg >= ROTATION_MPG)][
-        ["player_id", "team_id", "f", "value"]]
-    tg = pd.concat([playoff_games[["game_id", "home_team_id"]].rename(columns={"home_team_id": "team_id"}),
-                    playoff_games[["game_id", "away_team_id"]].rename(columns={"away_team_id": "team_id"})])
+        ["player_id", "team_id", "f", "value"]
+    ]
+    tg = pd.concat(
+        [
+            playoff_games[["game_id", "home_team_id"]].rename(columns={"home_team_id": "team_id"}),
+            playoff_games[["game_id", "away_team_id"]].rename(columns={"away_team_id": "team_id"}),
+        ]
+    )
     tg["team_id"] = tg.team_id.astype(int)
     x = tg.merge(avail.assign(team_id=avail.team_id.astype(int)), on="team_id")
     played = playoff_pg[playoff_pg.minutes > 0][["game_id", "player_id"]].assign(played=True)
     x = x.merge(played, on=["game_id", "player_id"], how="left")
     x = x[x.played.isna()]
     x["fv"] = x.f * x.value
-    out = x.groupby(["game_id", "team_id"]).agg(ip_minutes=("f", "sum"), ip_value=("fv", "sum"),
-                                                ip_players=("player_id", "size")).reset_index()
+    out = (
+        x.groupby(["game_id", "team_id"])
+        .agg(ip_minutes=("f", "sum"), ip_value=("fv", "sum"), ip_players=("player_id", "size"))
+        .reset_index()
+    )
     out["h_inplay"] = coefs["b_min"] * out.ip_minutes + coefs["b_val"] * out.ip_value
     return out, x
 
 
 def team_table(theta: pd.DataFrame, recent: pd.DataFrame, hs: pd.DataFrame, season: str) -> pd.DataFrame:
-    t = recent[["team_id", "theta_full", "momentum"]].merge(hs[["team_id", "h_start", "h_minutes", "h_value", "source"]],
-                                                         on="team_id", how="left")
+    t = recent[["team_id", "theta_full", "momentum"]].merge(
+        hs[["team_id", "h_start", "h_minutes", "h_value", "source"]], on="team_id", how="left"
+    )
     t["h_start"] = t.h_start.fillna(0.0)
     t["season"] = season
     return t
@@ -150,16 +172,20 @@ def team_table(theta: pd.DataFrame, recent: pd.DataFrame, hs: pd.DataFrame, seas
 TEAM_COLS = ["theta_full", "momentum", "h_start"]
 
 
-def playoff_rows(pgames: pd.DataFrame, teams: pd.DataFrame, inplay: pd.DataFrame,
-                 team_cols: list[str] | None = None) -> pd.DataFrame:
+def playoff_rows(
+    pgames: pd.DataFrame, teams: pd.DataFrame, inplay: pd.DataFrame, team_cols: list[str] | None = None
+) -> pd.DataFrame:
     cols = team_cols or TEAM_COLS
-    d = pgames[["season", "game_id", "home_team_id", "away_team_id", "is_neutral", "net_rating_margin", "home_win"]].copy()
+    d = pgames[
+        ["season", "game_id", "home_team_id", "away_team_id", "is_neutral", "net_rating_margin", "home_win"]
+    ].copy()
     d["home_team_id"], d["away_team_id"] = d.home_team_id.astype(int), d.away_team_id.astype(int)
     tt = teams.assign(team_id=teams.team_id.astype(int))
     for side in ("home", "away"):
-        d = d.merge(tt[["team_id"] + cols].rename(columns=lambda c: f"{side}_{c}"),
-                    on=f"{side}_team_id", how="left")
-        ip = inplay[["game_id", "team_id", "h_inplay"]].rename(columns={"team_id": f"{side}_team_id", "h_inplay": f"{side}_h_inplay"})
+        d = d.merge(tt[["team_id"] + cols].rename(columns=lambda c: f"{side}_{c}"), on=f"{side}_team_id", how="left")
+        ip = inplay[["game_id", "team_id", "h_inplay"]].rename(
+            columns={"team_id": f"{side}_team_id", "h_inplay": f"{side}_h_inplay"}
+        )
         ip[f"{side}_team_id"] = ip[f"{side}_team_id"].astype(int)
         d = d.merge(ip, on=["game_id", f"{side}_team_id"], how="left")
         d[f"{side}_h_inplay"] = d[f"{side}_h_inplay"].fillna(0.0)
@@ -182,10 +208,14 @@ def fit_playoff(rows: pd.DataFrame, feats: list[str] | None = None) -> dict:
     resid = y - X @ beta
     dof = len(y) - X.shape[1]
     sigma = float(np.sqrt(resid @ resid / dof))
-    cov = sigma ** 2 * np.linalg.inv(X.T @ X)
-    return {"coef": dict(zip(feats, beta)), "se": dict(zip(feats, np.sqrt(np.diag(cov)))),
-            "sigma": sigma, "n_games": int(len(y)),
-            "loglik": float(norm.logpdf(resid, scale=sigma).sum())}
+    cov = sigma**2 * np.linalg.inv(X.T @ X)
+    return {
+        "coef": dict(zip(feats, beta)),
+        "se": dict(zip(feats, np.sqrt(np.diag(cov)))),
+        "sigma": sigma,
+        "n_games": int(len(y)),
+        "loglik": float(norm.logpdf(resid, scale=sigma).sum()),
+    }
 
 
 def rating(teams: pd.DataFrame, pm: dict) -> pd.Series:

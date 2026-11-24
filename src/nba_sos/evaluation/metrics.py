@@ -1,4 +1,5 @@
 """Out-of-sample metrics and time-ordered splits."""
+
 from __future__ import annotations
 
 import numpy as np
@@ -44,8 +45,9 @@ def rolling_splits(all_seasons: list[str], first_train: str, test_seasons: list[
     """Expanding window: train = seasons in [first_train, test) ; raises on any overlap."""
     out = []
     for test in test_seasons:
-        train = [s for s in all_seasons
-                 if season_start_year(first_train) <= season_start_year(s) < season_start_year(test)]
+        train = [
+            s for s in all_seasons if season_start_year(first_train) <= season_start_year(s) < season_start_year(test)
+        ]
         if not train:
             raise ValueError(f"no training seasons before {test}")
         assert all(season_start_year(s) < season_start_year(test) for s in train)

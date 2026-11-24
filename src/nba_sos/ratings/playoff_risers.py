@@ -25,6 +25,7 @@ delta_i = mu_player + e_i, Var(e_i) = sigma^2 / m_i (m_i = playoff minutes):
   sigma^2 from E[delta_i^2] = tau^2 + sigma^2 / m_i
 Career estimate (posterior mean) = sum m_i delta_i / (k + sum m_i), k = sigma^2 / tau^2.
 """
+
 from __future__ import annotations
 
 import json
@@ -64,15 +65,23 @@ def season_deltas(rs: pd.DataFrame, po: pd.DataFrame, beta: dict) -> pd.DataFram
     norms = season_norms(rs)
     b = np.array([beta[f] for f in BOX])
     m = po.merge(rs, on="player_id", suffixes=("_po", "_rs"))
-    cols = [f for f in BOX if f != "ts_x_usg"] + ["ts"]   # raw inputs of the box features
+    cols = [f for f in BOX if f != "ts_x_usg"] + ["ts"]  # raw inputs of the box features
     zr = zscore(m[[f"{c}_rs" for c in cols]].set_axis(cols, axis=1), norms)
     zp = zscore(m[[f"{c}_po" for c in cols]].set_axis(cols, axis=1), norms)
     dz = zp - zr
     w = m.min_total_po.to_numpy(float)
     shift = np.average(dz, axis=0, weights=w)
-    out = pd.DataFrame({"player_id": m.player_id, "player_name": m.player_name_rs,
-                        "rs_min": m.min_total_rs, "po_min": m.min_total_po,
-                        "rs_box": zr @ b, "po_box": zp @ b, "delta_raw": (dz - shift) @ b})
+    out = pd.DataFrame(
+        {
+            "player_id": m.player_id,
+            "player_name": m.player_name_rs,
+            "rs_min": m.min_total_rs,
+            "po_min": m.min_total_po,
+            "rs_box": zr @ b,
+            "po_box": zp @ b,
+            "delta_raw": (dz - shift) @ b,
+        }
+    )
     for c in ("pts_100", "usg", "ts"):
         out[f"d_{c}"] = m[f"{c}_po"].astype(float) - m[f"{c}_rs"].astype(float)
     return out
@@ -113,19 +122,31 @@ def noise_model(d: pd.DataFrame) -> dict:
         i, j = np.triu_indices(len(g), 1)
         prods.append(v[i] * v[j])
         wts.append(np.sqrt(m[i] * m[j]))
-        a, b = g.iloc[::2], g.iloc[1::2]   # split-half: odd- vs even-numbered postseasons
-        halves.append((np.average(a.delta, weights=a.po_min), np.average(b.delta, weights=b.po_min),
-                       a.po_min.sum(), b.po_min.sum()))
+        a, b = g.iloc[::2], g.iloc[1::2]  # split-half: odd- vs even-numbered postseasons
+        halves.append(
+            (
+                np.average(a.delta, weights=a.po_min),
+                np.average(b.delta, weights=b.po_min),
+                a.po_min.sum(),
+                b.po_min.sum(),
+            )
+        )
     prods, wts = np.concatenate(prods), np.concatenate(wts)
     tau2 = float(np.average(prods, weights=wts))
     tau2_se = float(np.sqrt(np.average((prods - tau2) ** 2, weights=wts) / len(prods)))
     inv_m = 1.0 / d.po_min.to_numpy(float)
-    sigma2 = float(np.sum(inv_m * (d.delta.to_numpy(float) ** 2 - tau2)) / np.sum(inv_m ** 2))
+    sigma2 = float(np.sum(inv_m * (d.delta.to_numpy(float) ** 2 - tau2)) / np.sum(inv_m**2))
     h = pd.DataFrame(halves, columns=["a", "b", "ma", "mb"])
     big = h[(h.ma >= 300) & (h.mb >= 300)]
-    return {"tau2": tau2, "tau2_se": tau2_se, "sigma2": sigma2,
-            "k_minutes": sigma2 / tau2 if tau2 > 0 else float("inf"), "pairs": int(len(prods)),
-            "split_half_corr": float(big.a.corr(big.b)), "split_half_players": int(len(big))}
+    return {
+        "tau2": tau2,
+        "tau2_se": tau2_se,
+        "sigma2": sigma2,
+        "k_minutes": sigma2 / tau2 if tau2 > 0 else float("inf"),
+        "pairs": int(len(prods)),
+        "split_half_corr": float(big.a.corr(big.b)),
+        "split_half_players": int(len(big)),
+    }
 
 
 def _wavg(g: pd.DataFrame, col: str) -> float:
@@ -139,11 +160,23 @@ def career(d: pd.DataFrame, noise: dict, min_minutes: float) -> pd.DataFrame:
     for pid, g in d.groupby("player_id"):
         m = float(g.po_min.sum())
         raw = _wavg(g, "delta")
-        rows.append({"player_id": pid, "player_name": g.sort_values("season").player_name.iloc[-1],
-                     "postseasons": len(g), "first": g.season.min(), "last": g.season.max(), "po_min": m,
-                     "rs_box": _wavg(g, "rs_box"), "raw_delta": raw,
-                     "d_pts_100": _wavg(g, "d_pts_100"), "d_ts": _wavg(g, "d_ts"), "d_usg": _wavg(g, "d_usg"),
-                     "est": raw * m / (k + m), "est_sd": float(np.sqrt(1.0 / (1.0 / tau2 + m / sigma2)))})
+        rows.append(
+            {
+                "player_id": pid,
+                "player_name": g.sort_values("season").player_name.iloc[-1],
+                "postseasons": len(g),
+                "first": g.season.min(),
+                "last": g.season.max(),
+                "po_min": m,
+                "rs_box": _wavg(g, "rs_box"),
+                "raw_delta": raw,
+                "d_pts_100": _wavg(g, "d_pts_100"),
+                "d_ts": _wavg(g, "d_ts"),
+                "d_usg": _wavg(g, "d_usg"),
+                "est": raw * m / (k + m),
+                "est_sd": float(np.sqrt(1.0 / (1.0 / tau2 + m / sigma2))),
+            }
+        )
     c = pd.DataFrame(rows)
     c["p_positive"] = norm.cdf(c.est / c.est_sd)
     return c[c.po_min >= min_minutes].sort_values("est", ascending=False).reset_index(drop=True)
@@ -162,18 +195,31 @@ def run(paths: Paths, min_career_minutes: float = 800.0, min_season_minutes: flo
     theta = T.fit_pooled(gf, use_health=False, heteroscedastic=True)["theta"]
     rows = []
     for s in sorted(pgames.season.unique()):
-        m = season_deltas(V.season_player_stats(store, s), V.season_player_stats(store, s, "playoff_"),
-                          meta[s]["box_beta"])
-        m = m.merge(opponent_strength(nba_stats.load(store, "playoff_player_game_logs", s),
-                                      pgames[pgames.season == s], theta[theta.season == s]),
-                    on="player_id", how="left")
+        m = season_deltas(
+            V.season_player_stats(store, s), V.season_player_stats(store, s, "playoff_"), meta[s]["box_beta"]
+        )
+        m = m.merge(
+            opponent_strength(
+                nba_stats.load(store, "playoff_player_game_logs", s),
+                pgames[pgames.season == s],
+                theta[theta.season == s],
+            ),
+            on="player_id",
+            how="left",
+        )
         m["season"] = s
         rows.append(m)
     d = pd.concat(rows, ignore_index=True)
     d = d[d.po_min >= min_season_minutes].reset_index(drop=True)
     d, slope = opponent_adjust(d)
     nm = noise_model(d)
-    nm.update({"opponent_slope": slope, "player_seasons": int(len(d)),
-               "min_season_minutes": min_season_minutes, "min_career_minutes": min_career_minutes})
+    nm.update(
+        {
+            "opponent_slope": slope,
+            "player_seasons": int(len(d)),
+            "min_season_minutes": min_season_minutes,
+            "min_career_minutes": min_career_minutes,
+        }
+    )
     d["est"] = d.delta * d.po_min / (nm["k_minutes"] + d.po_min)
     return {"seasons": d, "career": career(d, nm, min_career_minutes), "noise": nm}

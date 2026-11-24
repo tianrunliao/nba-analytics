@@ -3,6 +3,7 @@
 Writes everything under data/processed/ and reports/, then fails if any validation
 check with severity 'error' did not pass (the audit report is written first so the
 failure can be inspected)."""
+
 from __future__ import annotations
 
 import logging
@@ -62,8 +63,9 @@ def build_all(paths: Paths, cfg: dict) -> dict:
 
     # injuries
     sel = av.select_reports(games, store, cfg["data_sources"]["injury_reports"])
-    parsed, parse_info = av.parse_reports(sel.report_path.dropna().unique().tolist(), store,
-                                          paths.interim / "injury_reports_parsed.parquet")
+    parsed, parse_info = av.parse_reports(
+        sel.report_path.dropna().unique().tolist(), store, paths.interim / "injury_reports_parsed.parquet"
+    )
     availability, team_status = av.build_availability(games, sel, parsed, player_games)
 
     features = build_team_game_features(games, venues, availability, team_status, player_games, cfg["features"])
@@ -71,18 +73,26 @@ def build_all(paths: Paths, cfg: dict) -> dict:
     # playoffs: games, player participation, snapshot before each team's first playoff game
     po_games, po_players = [], []
     for season in historical:
-        pgm = build_games(store, season, aliases, venues, _fetched_at(store, "playoff_game_log", season), kind="playoffs")
+        pgm = build_games(
+            store, season, aliases, venues, _fetched_at(store, "playoff_game_log", season), kind="playoffs"
+        )
         results += C.check_playoff_games(pgm, season)
         po_games.append(pgm)
         po_players.append(build_player_games(store, season, "playoff_player_game_logs", PLAYOFF_PREFIX))
     playoff_games = pd.concat(po_games, ignore_index=True)
     playoff_player_games = pd.concat(po_players, ignore_index=True)
-    firsts = pd.concat([first_playoff_games(store, s).assign(season=s)
-                        for s in cfg["data_sources"]["injury_reports"]["playoff_start_seasons"]], ignore_index=True)
+    firsts = pd.concat(
+        [
+            first_playoff_games(store, s).assign(season=s)
+            for s in cfg["data_sources"]["injury_reports"]["playoff_start_seasons"]
+        ],
+        ignore_index=True,
+    )
     first_games = playoff_games[playoff_games.game_id.isin(firsts.game_id)]
     po_sel = av.select_reports(first_games, store, cfg["data_sources"]["injury_reports"])
-    po_parsed, po_parse_info = av.parse_reports(po_sel.report_path.dropna().unique().tolist(), store,
-                                                paths.interim / "injury_reports_parsed.parquet")
+    po_parsed, po_parse_info = av.parse_reports(
+        po_sel.report_path.dropna().unique().tolist(), store, paths.interim / "injury_reports_parsed.parquet"
+    )
     po_availability, po_team_status = av.build_availability(first_games, po_sel, po_parsed, player_games)
     counts = matchups.matchup_counts(schedule)
     deviations = matchups.structure_deviations(counts)
@@ -91,20 +101,39 @@ def build_all(paths: Paths, cfg: dict) -> dict:
 
     # leakage guard on the produced table (not only in tests)
     leak = features[features.as_of_timestamp.notna() & (features.as_of_timestamp >= features.tipoff_utc)]
-    results.append(C._res("features_as_of_before_tipoff", "all", len(leak) > 0,
-                          "every as_of_timestamp < tipoff", f"{len(leak)} rows with as_of >= tipoff"))
-    results.append(C._res("matchup_matrix_symmetric", "all", matchups.symmetry_violations(counts) > 0,
-                          "N_ij == N_ji", "asymmetric meeting counts"))
+    results.append(
+        C._res(
+            "features_as_of_before_tipoff",
+            "all",
+            len(leak) > 0,
+            "every as_of_timestamp < tipoff",
+            f"{len(leak)} rows with as_of >= tipoff",
+        )
+    )
+    results.append(
+        C._res(
+            "matchup_matrix_symmetric",
+            "all",
+            matchups.symmetry_violations(counts) > 0,
+            "N_ij == N_ji",
+            "asymmetric meeting counts",
+        )
+    )
 
     out = paths.processed
     out.mkdir(parents=True, exist_ok=True)
     tables = {
         "games": games.drop(columns=["_pair", "_in_schedule"]),
         "prior_season_games": all_games[all_games.season.isin(prior)].drop(columns=["_pair", "_in_schedule"]),
-        "schedule": schedule, "player_games": player_games,
-        "injury_report_selection": sel, "player_availability": availability,
-        "injury_team_status": team_status, "team_game_features": features,
-        "matchup_counts": counts, "static_sos": sos, "static_sos_per_game": sos_per_game,
+        "schedule": schedule,
+        "player_games": player_games,
+        "injury_report_selection": sel,
+        "player_availability": availability,
+        "injury_team_status": team_status,
+        "team_game_features": features,
+        "matchup_counts": counts,
+        "static_sos": sos,
+        "static_sos_per_game": sos_per_game,
         "baseline_predictions": pred,
         "playoff_games": playoff_games.drop(columns=["_pair", "_in_schedule"]),
         "playoff_player_games": playoff_player_games,
@@ -119,11 +148,30 @@ def build_all(paths: Paths, cfg: dict) -> dict:
     checks = C.apply_known_exceptions(C.results_frame(results), cfg["data_sources"].get("known_exceptions", {}))
     checks.to_csv(paths.reports / "validation_results.csv", index=False)
 
-    write_audit(paths, cfg, store=store, games=games, all_games=all_games, schedule=schedule,
-                checks=checks, excluded=excluded, venues=venues, aliases=aliases, counts=counts,
-                deviations=deviations, selection=sel, parse_info=parse_info, parsed=parsed,
-                availability=availability, team_status=team_status, player_games=player_games,
-                features=features, sos=sos, backtest=bt, predictions=pred)
+    write_audit(
+        paths,
+        cfg,
+        store=store,
+        games=games,
+        all_games=all_games,
+        schedule=schedule,
+        checks=checks,
+        excluded=excluded,
+        venues=venues,
+        aliases=aliases,
+        counts=counts,
+        deviations=deviations,
+        selection=sel,
+        parse_info=parse_info,
+        parsed=parsed,
+        availability=availability,
+        team_status=team_status,
+        player_games=player_games,
+        features=features,
+        sos=sos,
+        backtest=bt,
+        predictions=pred,
+    )
 
     failed = checks[(checks.severity == "error") & ~checks.passed]
     if len(failed):

@@ -33,13 +33,16 @@ def test_new_format_slots_are_quarter_hourly():
 
 @needs_injury_pdfs
 # ------------------------------------------------------------------ parsing (real PDFs)
-@pytest.mark.parametrize("name,players,not_submitted,pages", [
-    ("2019-11-15_05PM.pdf", 132, 7, 6),       # Nov-Dec 2019: Reason before Current Status
-    ("2019-12-08_05PM.pdf", 111, 11, 6),      # 2019-20 variant with a Previous Status column
-    ("2021-12-01_05PM.pdf", 102, 6, 5),       # spaced text, header on every page
-    ("2023-11-10_05PM.pdf", 111, 2, 7),       # unspaced text, header on page 1 only
-    ("2026-11-17_05_30PM.pdf", 123, 10, 9),   # current format
-])
+@pytest.mark.parametrize(
+    "name,players,not_submitted,pages",
+    [
+        ("2019-11-15_05PM.pdf", 132, 7, 6),  # Nov-Dec 2019: Reason before Current Status
+        ("2019-12-08_05PM.pdf", 111, 11, 6),  # 2019-20 variant with a Previous Status column
+        ("2021-12-01_05PM.pdf", 102, 6, 5),  # spaced text, header on every page
+        ("2023-11-10_05PM.pdf", 111, 2, 7),  # unspaced text, header on page 1 only
+        ("2026-11-17_05_30PM.pdf", 123, 10, 9),  # current format
+    ],
+)
 def test_parse_real_reports(name, players, not_submitted, pages):
     df, info = ir.parse_report_pdf(PDFS / name)
     r = ir.resolve_rows(df, nickname_keys())
@@ -54,11 +57,13 @@ def test_parse_real_reports(name, players, not_submitted, pages):
 @needs_injury_pdfs
 def test_parse_2021_matches_pdfplumber_tables_and_header_time():
     import pdfplumber
+
     df, info = ir.parse_report_pdf(PDFS / "2021-12-01_05PM.pdf")
     assert info["report_time_et"] == datetime(2021, 12, 1, 17, 30)
     with pdfplumber.open(PDFS / "2021-12-01_05PM.pdf") as p:
-        table_players = [(row[4], row[5]) for pg in p.pages for t in pg.extract_tables()
-                         for row in t[1:] if row[4] and row[5]]
+        table_players = [
+            (row[4], row[5]) for pg in p.pages for t in pg.extract_tables() for row in t[1:] if row[4] and row[5]
+        ]
     parsed = list(zip(df[~df.not_submitted].player, df[~df.not_submitted].status))
     assert parsed == table_players
 
@@ -73,25 +78,42 @@ def test_wrapped_reason_is_reattached():
 
 def test_team_resolution_prefers_longest_nickname():
     # "charlottehornets" ends with both "hornets" and "nets"
-    df = pd.DataFrame({"game_date": ["10/24/2021"], "matchup": ["CHA@BKN"], "team": ["Charlotte Hornets"],
-                       "player": ["Rozier, Terry"], "status": ["Out"], "not_submitted": [False]})
+    df = pd.DataFrame(
+        {
+            "game_date": ["10/24/2021"],
+            "matchup": ["CHA@BKN"],
+            "team": ["Charlotte Hornets"],
+            "player": ["Rozier, Terry"],
+            "status": ["Out"],
+            "not_submitted": [False],
+        }
+    )
     assert ir.resolve_rows(df, nickname_keys()).team_tricode.iloc[0] == "CHA"
 
 
-@pytest.mark.parametrize("raw,key", [
-    ("Porter Jr., Michael", "michaelporterjr"),
-    ("PorterJr.,Michael", "michaelporterjr"),
-    ("Bogdanović, Bogdan", "bogdanbogdanovic"),
-    ("Wright IV, McKinley", "mckinleywrightiv"),
-])
+@pytest.mark.parametrize(
+    "raw,key",
+    [
+        ("Porter Jr., Michael", "michaelporterjr"),
+        ("PorterJr.,Michael", "michaelporterjr"),
+        ("Bogdanović, Bogdan", "bogdanbogdanovic"),
+        ("Wright IV, McKinley", "mckinleywrightiv"),
+    ],
+)
 def test_player_key_normalisation(raw, key):
     assert ir.player_key_from_report(raw) == key
 
 
 # ------------------------------------------------------------------ fetch walk-back
 def test_fetch_walks_back_and_requires_publication_before_tipoff(tmp_path):
-    cfg = {"base_url": "https://x/Injury-Report_", "new_start_et": "2025-12-22T09:00",
-           "max_slot_lookback": 4, "sleep_between_requests_s": 0, "request_timeout_s": 5, "user_agent": "t"}
+    cfg = {
+        "base_url": "https://x/Injury-Report_",
+        "new_start_et": "2025-12-22T09:00",
+        "max_slot_lookback": 4,
+        "sleep_between_requests_s": 0,
+        "request_timeout_s": 5,
+        "user_agent": "t",
+    }
     tip = pd.Timestamp("2023-11-11 00:00", tz="UTC")  # 19:00 ET
     pdf = b"%PDF-1.4 fake"
     served = {
@@ -132,15 +154,21 @@ def test_parse_2018_19_nine_column_layout():
 
 def test_network_errors_are_retried_then_skipped_not_fatal(tmp_path):
     import requests as rq
-    cfg = {"base_url": "https://x/Injury-Report_", "sleep_between_requests_s": 0, "request_timeout_s": 5,
-           "user_agent": "t"}
+
+    cfg = {
+        "base_url": "https://x/Injury-Report_",
+        "sleep_between_requests_s": 0,
+        "request_timeout_s": 5,
+        "user_agent": "t",
+    }
     calls = []
 
     def flaky(url, timeout, ua):
         calls.append(url)
         raise rq.exceptions.ConnectionError("dns")
 
-    rec = ir.fetch_report(RawStore(tmp_path), "Injury-Report_2020-08-06_02PM.pdf", cfg, {}, client=flaky,
-                          sleep=lambda s: None)
+    rec = ir.fetch_report(
+        RawStore(tmp_path), "Injury-Report_2020-08-06_02PM.pdf", cfg, {}, client=flaky, sleep=lambda s: None
+    )
     assert rec["path"] is None and rec["http_status"] is None and len(calls) == ir.NETWORK_RETRIES
-    assert RawStore(tmp_path).read_manifest() == []          # not recorded as missing: retried next run
+    assert RawStore(tmp_path).read_manifest() == []  # not recorded as missing: retried next run

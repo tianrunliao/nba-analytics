@@ -20,8 +20,14 @@ def _window(rows):
 
 
 def test_window_sos_positive_for_strong_opponents_and_home_court_split():
-    w = _window([(1, "AAA", "g1", 3, "A", False), (1, "AAA", "g2", 3, "A", False),
-                 (2, "BBB", "g3", 4, "H", False), (2, "BBB", "g4", 4, "H", False)])
+    w = _window(
+        [
+            (1, "AAA", "g1", 3, "A", False),
+            (1, "AAA", "g2", 3, "A", False),
+            (2, "BBB", "g3", 4, "H", False),
+            (2, "BBB", "g4", 4, "H", False),
+        ]
+    )
     st = pd.DataFrame({"team_id": [3, 4], "S": [6.0, -6.0]})
     out = window.window_sos(w, st, PARAMS).set_index("team")
     assert out.loc["AAA", "d_sos"] > 0 > out.loc["BBB", "d_sos"]
