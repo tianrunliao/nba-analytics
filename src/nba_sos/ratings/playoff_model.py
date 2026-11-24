@@ -119,7 +119,7 @@ def health_start(
     else:
         r = r.merge(rs_end_streak, on=["player_id", "team_id"], how="left")
         r["p_miss"] = ((r.streak.fillna(0) >= streak_k) & (r.mpg >= ROTATION_MPG)).astype(float)
-        r["injury_status"] = np.where(r.p_miss > 0, "absent_rs_end", None)
+        r["injury_status"] = np.where(r.p_miss > 0, "absent_rs_end", np.array(None, dtype=object))
         r["source"] = "rs_end_absence"
     r["exp_f"] = r.p_miss * r.f
     r["exp_fv"] = r.p_miss * r.f * r.value
